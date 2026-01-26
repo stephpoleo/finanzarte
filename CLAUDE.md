@@ -90,6 +90,13 @@ Supports automatic dark mode.
 - [x] Dashboard with financial overview
 - [x] Settings page
 - [x] Theme and styling
+- [x] Graceful handling when Supabase not configured
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality
+
+## Development Notes
+
+- App works without Supabase configured (shows login page with warning in console)
+- Auth guards wait for initialization before checking authentication state
+- All services handle unconfigured Supabase gracefully
