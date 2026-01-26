@@ -1,0 +1,7 @@
+{
+  "name": "finanzarte-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
