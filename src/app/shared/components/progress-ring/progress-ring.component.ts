@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
         <circle
           class="progress-ring-bg"
           [attr.stroke]="backgroundColor"
-          stroke-width="8"
+          [attr.stroke-width]="strokeWidth"
           fill="transparent"
           [attr.r]="radius()"
           [attr.cx]="center()"
@@ -20,7 +20,7 @@ import { CommonModule } from '@angular/common';
         <circle
           class="progress-ring-progress"
           [attr.stroke]="color"
-          stroke-width="8"
+          [attr.stroke-width]="strokeWidth"
           fill="transparent"
           [attr.r]="radius()"
           [attr.cx]="center()"
@@ -67,10 +67,11 @@ import { CommonModule } from '@angular/common';
 export class ProgressRingComponent {
   @Input() progress = 0;
   @Input() size = 120;
+  @Input() strokeWidth = 8;
   @Input() color = '#10b981';
   @Input() backgroundColor = '#10b981';
 
-  radius = computed(() => (this.size - 16) / 2);
+  radius = computed(() => (this.size - this.strokeWidth * 2) / 2);
   center = computed(() => this.size / 2);
   circumference = computed(() => 2 * Math.PI * this.radius());
 

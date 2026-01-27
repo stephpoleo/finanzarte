@@ -1,23 +1,15 @@
 import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   IonContent,
   IonHeader,
   IonToolbar,
   IonTitle,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
-  IonButton,
   IonIcon,
-  IonGrid,
-  IonRow,
-  IonCol,
-  IonProgressBar,
   IonRefresher,
   IonRefresherContent,
+  IonButton,
   RefresherEventDetail
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -27,7 +19,12 @@ import {
   trendingUpOutline,
   settingsOutline,
   addCircleOutline,
-  chevronForward
+  chevronForward,
+  homeOutline,
+  home,
+  listOutline,
+  flagOutline,
+  personOutline
 } from 'ionicons/icons';
 import { ProfileService } from '../../core/services/profile.service';
 import { ExpenseService } from '../../core/services/expense.service';
@@ -42,335 +39,367 @@ import { ProgressRingComponent } from '../../shared/components/progress-ring/pro
   imports: [
     CommonModule,
     RouterLink,
+    RouterLinkActive,
     IonContent,
     IonHeader,
     IonToolbar,
     IonTitle,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardContent,
-    IonButton,
     IonIcon,
-    IonGrid,
-    IonRow,
-    IonCol,
-    IonProgressBar,
     IonRefresher,
     IonRefresherContent,
+    IonButton,
     CurrencyMxnPipe,
     PercentagePipe,
     ProgressRingComponent
   ],
   template: `
-    <ion-header>
-      <ion-toolbar color="primary">
-        <ion-title>Dashboard</ion-title>
-        <ion-button slot="end" fill="clear" routerLink="/settings">
-          <ion-icon name="settings-outline" color="light"></ion-icon>
+    <ion-header class="ion-no-border">
+      <ion-toolbar>
+        <ion-title>
+          <span class="header-title">Finanzarte</span>
+        </ion-title>
+        <ion-button slot="end" fill="clear" routerLink="/settings" class="settings-btn">
+          <ion-icon name="settings-outline"></ion-icon>
         </ion-button>
       </ion-toolbar>
     </ion-header>
 
-    <ion-content>
+    <ion-content class="has-bottom-nav">
       <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
 
-      <div class="dashboard-content">
-        <!-- Main Balance Card -->
-        <ion-card class="balance-card">
-          <ion-card-content>
-            <div class="balance-header">
-              <span class="balance-label">Disponible para Ahorro</span>
-              <ion-icon name="trending-up-outline" color="success"></ion-icon>
-            </div>
-            <div class="balance-amount">{{ availableForSavings() | currencyMxn }}</div>
-            <div class="balance-subtitle">
-              Después de gastos mensuales
-            </div>
-          </ion-card-content>
-        </ion-card>
+      <div class="dashboard-container stagger-children">
+        <!-- Hero Card - Available for Savings -->
+        <div class="hero-card animate-in">
+          <div class="hero-label">Disponible para Ahorro</div>
+          <div class="hero-value">{{ availableForSavings() | currencyMxn }}</div>
+          <div class="hero-subtitle">Después de gastos mensuales</div>
+        </div>
 
-        <!-- Summary Cards -->
-        <ion-grid>
-          <ion-row>
-            <ion-col size="6">
-              <ion-card class="summary-card" routerLink="/salary">
-                <ion-card-content>
-                  <ion-icon name="wallet-outline" color="primary"></ion-icon>
-                  <span class="summary-label">Salario Neto</span>
-                  <span class="summary-value">{{ profile.profile()?.net_salary | currencyMxn }}</span>
-                </ion-card-content>
-              </ion-card>
-            </ion-col>
-            <ion-col size="6">
-              <ion-card class="summary-card" routerLink="/expenses">
-                <ion-card-content>
-                  <ion-icon name="cash-outline" color="danger"></ion-icon>
-                  <span class="summary-label">Gastos Totales</span>
-                  <span class="summary-value">{{ expenses.totalExpenses() | currencyMxn }}</span>
-                </ion-card-content>
-              </ion-card>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+          <a class="stat-card" routerLink="/salary">
+            <div class="stat-icon icon-primary">
+              <ion-icon name="wallet-outline"></ion-icon>
+            </div>
+            <div class="stat-label">Salario Neto</div>
+            <div class="stat-value">{{ profile.profile()?.net_salary | currencyMxn }}</div>
+          </a>
 
-        <!-- Distribution Chart -->
-        <ion-card class="distribution-card">
-          <ion-card-header>
-            <ion-card-title>Distribución del Ingreso</ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <div class="distribution-item">
-              <div class="distribution-info">
-                <span class="distribution-label">Gastos Fijos</span>
-                <span class="distribution-value">{{ expenses.totalFixedExpenses() | currencyMxn }}</span>
+          <a class="stat-card" routerLink="/expenses">
+            <div class="stat-icon icon-danger">
+              <ion-icon name="cash-outline"></ion-icon>
+            </div>
+            <div class="stat-label">Gastos Totales</div>
+            <div class="stat-value">{{ expenses.totalExpenses() | currencyMxn }}</div>
+          </a>
+        </div>
+
+        <!-- Income Distribution -->
+        <div class="section-card">
+          <div class="section-header">
+            <h3 class="section-title">Distribución del Ingreso</h3>
+          </div>
+
+          <div class="progress-list">
+            <div class="progress-bar-container">
+              <div class="progress-header">
+                <span class="progress-label">Gastos Fijos</span>
+                <span class="progress-value">{{ expenses.totalFixedExpenses() | currencyMxn }}</span>
               </div>
-              <ion-progress-bar
-                [value]="fixedExpenseRatio()"
-                color="warning"
-              ></ion-progress-bar>
-              <span class="distribution-percent">{{ fixedExpenseRatio() * 100 | percentage }}</span>
+              <div class="progress-track">
+                <div class="progress-fill fill-warning" [style.width.%]="fixedExpenseRatio() * 100"></div>
+              </div>
+              <div class="progress-footer">
+                <span class="progress-percent">{{ fixedExpenseRatio() * 100 | percentage }}</span>
+              </div>
             </div>
 
-            <div class="distribution-item">
-              <div class="distribution-info">
-                <span class="distribution-label">Gastos Variables</span>
-                <span class="distribution-value">{{ expenses.totalVariableExpenses() | currencyMxn }}</span>
+            <div class="progress-bar-container">
+              <div class="progress-header">
+                <span class="progress-label">Gastos Variables</span>
+                <span class="progress-value">{{ expenses.totalVariableExpenses() | currencyMxn }}</span>
               </div>
-              <ion-progress-bar
-                [value]="variableExpenseRatio()"
-                color="tertiary"
-              ></ion-progress-bar>
-              <span class="distribution-percent">{{ variableExpenseRatio() * 100 | percentage }}</span>
+              <div class="progress-track">
+                <div class="progress-fill fill-primary" [style.width.%]="variableExpenseRatio() * 100"></div>
+              </div>
+              <div class="progress-footer">
+                <span class="progress-percent">{{ variableExpenseRatio() * 100 | percentage }}</span>
+              </div>
             </div>
 
-            <div class="distribution-item">
-              <div class="distribution-info">
-                <span class="distribution-label">Disponible</span>
-                <span class="distribution-value">{{ availableForSavings() | currencyMxn }}</span>
+            <div class="progress-bar-container">
+              <div class="progress-header">
+                <span class="progress-label">Disponible</span>
+                <span class="progress-value">{{ availableForSavings() | currencyMxn }}</span>
               </div>
-              <ion-progress-bar
-                [value]="availableRatio()"
-                color="success"
-              ></ion-progress-bar>
-              <span class="distribution-percent">{{ availableRatio() * 100 | percentage }}</span>
+              <div class="progress-track">
+                <div class="progress-fill fill-success" [style.width.%]="availableRatio() * 100"></div>
+              </div>
+              <div class="progress-footer">
+                <span class="progress-percent">{{ availableRatio() * 100 | percentage }}</span>
+              </div>
             </div>
-          </ion-card-content>
-        </ion-card>
+          </div>
+        </div>
 
-        <!-- Savings Goals Summary -->
-        <ion-card class="goals-card">
-          <ion-card-header>
-            <div class="goals-header">
-              <ion-card-title>Metas de Ahorro</ion-card-title>
-              <ion-button fill="clear" size="small" routerLink="/savings">
-                Ver todas
-                <ion-icon name="chevron-forward" slot="end"></ion-icon>
-              </ion-button>
-            </div>
-          </ion-card-header>
-          <ion-card-content>
-            @if (savingsGoals.goals().length === 0) {
-              <div class="empty-goals">
-                <p>No tienes metas de ahorro</p>
-                <ion-button fill="outline" routerLink="/savings/add">
-                  <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-                  Crear Meta
-                </ion-button>
+        <!-- Savings Goals -->
+        <div class="section-card">
+          <div class="section-header">
+            <h3 class="section-title">Metas de Ahorro</h3>
+            <a class="section-link" routerLink="/savings">
+              Ver todas
+              <ion-icon name="chevron-forward"></ion-icon>
+            </a>
+          </div>
+
+          @if (savingsGoals.goals().length === 0) {
+            <div class="empty-state">
+              <div class="empty-icon">
+                <ion-icon name="flag-outline"></ion-icon>
               </div>
-            } @else {
-              <div class="goals-summary">
+              <p class="empty-text">No tienes metas de ahorro</p>
+              <a class="empty-btn" routerLink="/savings/add">
+                <ion-icon name="add-circle-outline"></ion-icon>
+                Crear Meta
+              </a>
+            </div>
+          } @else {
+            <div class="savings-summary">
+              <div class="savings-ring">
                 <app-progress-ring
                   [progress]="savingsGoals.overallProgress()"
-                  [size]="100"
+                  [size]="80"
+                  [strokeWidth]="8"
                   color="#10b981"
                 >
-                  <span class="progress-text">{{ savingsGoals.overallProgress() | percentage:0 }}</span>
+                  <span class="ring-text">{{ savingsGoals.overallProgress() | percentage:0 }}</span>
                 </app-progress-ring>
-                <div class="goals-info">
-                  <div class="goals-stat">
-                    <span class="stat-label">Total Ahorrado</span>
-                    <span class="stat-value">{{ savingsGoals.totalSaved() | currencyMxn }}</span>
-                  </div>
-                  <div class="goals-stat">
-                    <span class="stat-label">Meta Total</span>
-                    <span class="stat-value">{{ savingsGoals.totalTargeted() | currencyMxn }}</span>
-                  </div>
+              </div>
+              <div class="savings-stats">
+                <div class="savings-stat">
+                  <span class="savings-label">Total Ahorrado</span>
+                  <span class="savings-value highlight">{{ savingsGoals.totalSaved() | currencyMxn }}</span>
+                </div>
+                <div class="savings-stat">
+                  <span class="savings-label">Meta Total</span>
+                  <span class="savings-value">{{ savingsGoals.totalTargeted() | currencyMxn }}</span>
                 </div>
               </div>
-            }
-          </ion-card-content>
-        </ion-card>
+            </div>
+          }
+        </div>
       </div>
+
+      <!-- Bottom Navigation -->
+      <nav class="bottom-nav">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
+          <ion-icon name="home"></ion-icon>
+          <span>Inicio</span>
+        </a>
+        <a routerLink="/expenses" routerLinkActive="active" class="nav-item">
+          <ion-icon name="list-outline"></ion-icon>
+          <span>Gastos</span>
+        </a>
+        <a routerLink="/savings" routerLinkActive="active" class="nav-item">
+          <ion-icon name="flag-outline"></ion-icon>
+          <span>Metas</span>
+        </a>
+        <a routerLink="/settings" routerLinkActive="active" class="nav-item">
+          <ion-icon name="person-outline"></ion-icon>
+          <span>Perfil</span>
+        </a>
+      </nav>
     </ion-content>
   `,
   styles: [`
-    .dashboard-content {
-      padding: 16px;
+    /* Header */
+    ion-toolbar {
+      --background: var(--ion-background-color);
+      --border-width: 0;
     }
 
-    .balance-card {
-      background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
-      color: white;
-      margin: 0 0 16px 0;
-    }
-
-    .balance-card ion-card-content {
-      padding: 24px;
-    }
-
-    .balance-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
-    .balance-label {
-      font-size: 0.875rem;
-      opacity: 0.9;
-    }
-
-    .balance-header ion-icon {
-      font-size: 24px;
-      color: #86efac;
-    }
-
-    .balance-amount {
-      font-size: 2.5rem;
+    .header-title {
       font-weight: 700;
-      margin-bottom: 4px;
+      font-size: 1.25rem;
+      background: linear-gradient(135deg, var(--ion-color-primary) 0%, #00a86b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    .balance-subtitle {
-      font-size: 0.875rem;
-      opacity: 0.8;
+    .settings-btn {
+      --color: var(--ion-color-medium);
+      font-size: 1.25rem;
     }
 
-    .summary-card {
-      margin: 0;
+    /* Container */
+    .dashboard-container {
+      padding: var(--space-md);
+      padding-bottom: calc(var(--bottom-nav-height) + var(--space-xl));
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-md);
+      margin-bottom: var(--space-lg);
+    }
+
+    .stats-grid .stat-card {
+      text-decoration: none;
       cursor: pointer;
     }
 
-    .summary-card ion-card-content {
+    /* Section Card */
+    .section-card {
+      background: var(--ion-card-background, #ffffff);
+      border-radius: var(--radius-lg);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .section-card .section-header {
+      padding: 0 0 var(--space-md) 0;
+    }
+
+    .progress-list {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      padding: 16px;
     }
 
-    .summary-card ion-icon {
-      font-size: 28px;
-      margin-bottom: 8px;
-    }
-
-    .summary-label {
-      font-size: 0.75rem;
-      color: var(--ion-color-medium);
-      margin-bottom: 4px;
-    }
-
-    .summary-value {
-      font-size: 1.125rem;
-      font-weight: 600;
-    }
-
-    .distribution-card {
-      margin: 16px 0;
-    }
-
-    .distribution-item {
-      margin-bottom: 16px;
-    }
-
-    .distribution-item:last-child {
-      margin-bottom: 0;
-    }
-
-    .distribution-info {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 6px;
-    }
-
-    .distribution-label {
-      font-size: 0.875rem;
-      color: var(--ion-color-medium);
-    }
-
-    .distribution-value {
-      font-size: 0.875rem;
-      font-weight: 600;
-    }
-
-    .distribution-percent {
-      display: block;
-      text-align: right;
-      font-size: 0.75rem;
-      color: var(--ion-color-medium);
-      margin-top: 4px;
-    }
-
-    .goals-card {
-      margin: 16px 0 0 0;
-    }
-
-    .goals-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .goals-header ion-card-title {
-      font-size: 1.125rem;
-    }
-
-    .empty-goals {
+    /* Empty State */
+    .empty-state {
       text-align: center;
-      padding: 16px 0;
+      padding: var(--space-lg) 0;
     }
 
-    .empty-goals p {
-      color: var(--ion-color-medium);
-      margin-bottom: 16px;
-    }
-
-    .goals-summary {
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-full);
+      background: rgba(0, 0, 0, 0.05);
       display: flex;
       align-items: center;
-      gap: 24px;
+      justify-content: center;
+      margin: 0 auto var(--space-md);
+
+      ion-icon {
+        font-size: 28px;
+        color: var(--ion-color-medium);
+      }
     }
 
-    .progress-text {
-      font-size: 1.25rem;
+    .empty-text {
+      color: var(--ion-color-medium);
+      margin-bottom: var(--space-md);
+      font-size: var(--text-sm);
+    }
+
+    .empty-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--ion-color-primary);
+      color: white;
+      border-radius: var(--radius-full);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      text-decoration: none;
+
+      &:active {
+        opacity: 0.8;
+      }
+    }
+
+    /* Savings Summary */
+    .savings-summary {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+    }
+
+    .savings-ring {
+      flex-shrink: 0;
+    }
+
+    .ring-text {
+      font-size: var(--text-lg);
       font-weight: 700;
       color: var(--ion-color-success);
     }
 
-    .goals-info {
+    .savings-stats {
       flex: 1;
     }
 
-    .goals-stat {
+    .savings-stat {
       display: flex;
       flex-direction: column;
-      margin-bottom: 12px;
+      margin-bottom: var(--space-sm);
+
+      &:last-child {
+        margin-bottom: 0;
+      }
     }
 
-    .goals-stat:last-child {
-      margin-bottom: 0;
-    }
-
-    .stat-label {
-      font-size: 0.75rem;
+    .savings-label {
+      font-size: var(--text-xs);
       color: var(--ion-color-medium);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
     }
 
-    .stat-value {
-      font-size: 1.125rem;
+    .savings-value {
+      font-size: var(--text-lg);
       font-weight: 600;
+      color: var(--ion-text-color);
+
+      &.highlight {
+        color: var(--ion-color-primary);
+      }
+    }
+
+    /* Responsive - Tablet and Desktop */
+    @media (min-width: 768px) {
+      .dashboard-container {
+        max-width: 720px;
+        margin: 0 auto;
+        padding-bottom: var(--space-xl);
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .dashboard-container {
+        max-width: 900px;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-lg);
+      }
+    }
+
+    /* Dark Mode */
+    @media (prefers-color-scheme: dark) {
+      .section-card {
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .empty-icon {
+        background: rgba(255, 255, 255, 0.1);
+      }
     }
   `]
 })
@@ -386,7 +415,12 @@ export class DashboardPage implements OnInit {
       trendingUpOutline,
       settingsOutline,
       addCircleOutline,
-      chevronForward
+      chevronForward,
+      homeOutline,
+      home,
+      listOutline,
+      flagOutline,
+      personOutline
     });
   }
 

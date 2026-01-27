@@ -69,14 +69,32 @@ npx ionic cap open android  # Open Android Studio
 npx ionic cap open ios      # Open Xcode
 ```
 
-## Theme
+## Theme & Design System
 
 Mexican-inspired color palette:
 - Primary: Mexican Green (#006847)
 - Danger: Mexican Red (#ce1126)
 - Success: Emerald (#10b981)
 
+Modern UI features:
+- Bottom navigation bar for mobile
+- Hero cards with gradients
+- Stat cards with icons
+- Animated progress bars
+- Responsive grid layouts
+- Staggered animations on load
+
 Supports automatic dark mode.
+
+## Responsive Breakpoints
+
+Optimized for common devices:
+- **Small phones** (iPhone SE): 375px
+- **Standard phones** (iPhone 14, Pixel, Galaxy): 390-412px
+- **Tablets**: 768px+
+- **Desktop**: 1024px+
+
+Bottom navigation hides on tablet/desktop (768px+).
 
 ## Current Status
 
