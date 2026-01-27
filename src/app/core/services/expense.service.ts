@@ -2,6 +2,17 @@ import { Injectable, signal, computed } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { Expense, ExpenseType, ExpenseCategory } from '../../models';
+import { environment } from '../../../environments/environment';
+
+// Mock expenses for dev mode
+const MOCK_EXPENSES: Expense[] = [
+  { id: '1', user_id: 'dev-user-123', name: 'Renta', amount: 8000, type: 'fixed', category: 'rent', created_at: new Date().toISOString() },
+  { id: '2', user_id: 'dev-user-123', name: 'Luz', amount: 500, type: 'fixed', category: 'utilities', created_at: new Date().toISOString() },
+  { id: '3', user_id: 'dev-user-123', name: 'Internet', amount: 600, type: 'fixed', category: 'utilities', created_at: new Date().toISOString() },
+  { id: '4', user_id: 'dev-user-123', name: 'Netflix', amount: 200, type: 'fixed', category: 'subscriptions', created_at: new Date().toISOString() },
+  { id: '5', user_id: 'dev-user-123', name: 'Comida', amount: 4000, type: 'variable', category: 'food', created_at: new Date().toISOString() },
+  { id: '6', user_id: 'dev-user-123', name: 'Transporte', amount: 1500, type: 'variable', category: 'transport', created_at: new Date().toISOString() },
+];
 
 @Injectable({
   providedIn: 'root'
@@ -34,11 +45,23 @@ export class ExpenseService {
   constructor(
     private supabase: SupabaseService,
     private auth: AuthService
-  ) {}
+  ) {
+    // In dev mode, load mock expenses immediately
+    if ((environment as any).devMode) {
+      this.expensesData.set([...MOCK_EXPENSES]);
+    }
+  }
 
   async loadExpenses(): Promise<Expense[]> {
+    // Dev mode: return mock expenses
+    if ((environment as any).devMode) {
+      return this.expensesData();
+    }
+
     const userId = this.auth.user()?.id;
     if (!userId) return [];
+
+    if (!this.supabase.isConfigured) return [];
 
     const { data, error } = await this.supabase.client
       .from('expenses')
@@ -61,9 +84,28 @@ export class ExpenseService {
     type: ExpenseType;
     category: ExpenseCategory;
   }): Promise<{ data: Expense | null; error: Error | null }> {
+    // Dev mode: add to local mock data
+    if ((environment as any).devMode) {
+      const newExpense: Expense = {
+        id: Date.now().toString(),
+        user_id: 'dev-user-123',
+        name: expense.name,
+        amount: expense.amount,
+        type: expense.type,
+        category: expense.category,
+        created_at: new Date().toISOString()
+      };
+      this.expensesData.update(expenses => [newExpense, ...expenses]);
+      return { data: newExpense, error: null };
+    }
+
     const userId = this.auth.user()?.id;
     if (!userId) {
       return { data: null, error: new Error('User not authenticated') };
+    }
+
+    if (!this.supabase.isConfigured) {
+      return { data: null, error: new Error('Supabase not configured') };
     }
 
     const { data, error } = await this.supabase.client
@@ -92,6 +134,18 @@ export class ExpenseService {
     id: string,
     updates: Partial<Omit<Expense, 'id' | 'user_id' | 'created_at'>>
   ): Promise<{ error: Error | null }> {
+    // Dev mode: update local mock data
+    if ((environment as any).devMode) {
+      this.expensesData.update(expenses =>
+        expenses.map(e => e.id === id ? { ...e, ...updates } : e)
+      );
+      return { error: null };
+    }
+
+    if (!this.supabase.isConfigured) {
+      return { error: new Error('Supabase not configured') };
+    }
+
     const { error } = await this.supabase.client
       .from('expenses')
       .update(updates)
@@ -107,6 +161,18 @@ export class ExpenseService {
   }
 
   async deleteExpense(id: string): Promise<{ error: Error | null }> {
+    // Dev mode: delete from local mock data
+    if ((environment as any).devMode) {
+      this.expensesData.update(expenses =>
+        expenses.filter(e => e.id !== id)
+      );
+      return { error: null };
+    }
+
+    if (!this.supabase.isConfigured) {
+      return { error: new Error('Supabase not configured') };
+    }
+
     const { error } = await this.supabase.client
       .from('expenses')
       .delete()
@@ -122,6 +188,10 @@ export class ExpenseService {
   }
 
   clearExpenses(): void {
-    this.expensesData.set([]);
+    if ((environment as any).devMode) {
+      this.expensesData.set([...MOCK_EXPENSES]);
+    } else {
+      this.expensesData.set([]);
+    }
   }
 }

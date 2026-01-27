@@ -97,6 +97,18 @@ Supports automatic dark mode.
 
 ## Development Notes
 
+- **Dev Mode**: Set `devMode: true` in `environment.ts` to bypass login and use mock data
 - App works without Supabase configured (shows login page with warning in console)
 - Auth guards wait for initialization before checking authentication state
 - All services handle unconfigured Supabase gracefully
+
+## Dev Mode
+
+When `devMode: true` in environment.ts:
+- Auto-login with mock user (dev@finanzarte.com)
+- Mock profile with $25,000 gross salary
+- Sample expenses (Renta, Luz, Internet, Netflix, Comida, Transporte)
+- Sample savings goals (Fondo de Emergencia, Vacaciones)
+- All CRUD operations work locally (data resets on refresh)
+
+To use real authentication, set `devMode: false` and configure Supabase credentials.

@@ -3,6 +3,17 @@ import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { TaxCalculationService } from './tax-calculation.service';
 import { UserProfile } from '../../models';
+import { environment } from '../../../environments/environment';
+
+// Mock profile for dev mode
+const MOCK_PROFILE: UserProfile = {
+  id: 'dev-user-123',
+  full_name: 'Usuario de Prueba',
+  gross_salary: 25000,
+  net_salary: 21500,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString()
+};
 
 @Injectable({
   providedIn: 'root'
@@ -16,11 +27,23 @@ export class ProfileService {
     private supabase: SupabaseService,
     private auth: AuthService,
     private taxCalculation: TaxCalculationService
-  ) {}
+  ) {
+    // In dev mode, load mock profile immediately
+    if ((environment as any).devMode) {
+      this.profileData.set(MOCK_PROFILE);
+    }
+  }
 
   async loadProfile(): Promise<UserProfile | null> {
+    // Dev mode: return mock profile
+    if ((environment as any).devMode) {
+      return this.profileData();
+    }
+
     const userId = this.auth.user()?.id;
     if (!userId) return null;
+
+    if (!this.supabase.isConfigured) return null;
 
     const { data, error } = await this.supabase.client
       .from('profiles')
@@ -38,12 +61,29 @@ export class ProfileService {
   }
 
   async updateSalary(grossSalary: number): Promise<{ error: Error | null }> {
+    const breakdown = this.taxCalculation.calculateTaxBreakdown(grossSalary);
+
+    // Dev mode: update mock profile locally
+    if ((environment as any).devMode) {
+      const currentProfile = this.profileData();
+      if (currentProfile) {
+        this.profileData.set({
+          ...currentProfile,
+          gross_salary: grossSalary,
+          net_salary: breakdown.netSalary
+        });
+      }
+      return { error: null };
+    }
+
     const userId = this.auth.user()?.id;
     if (!userId) {
       return { error: new Error('User not authenticated') };
     }
 
-    const breakdown = this.taxCalculation.calculateTaxBreakdown(grossSalary);
+    if (!this.supabase.isConfigured) {
+      return { error: new Error('Supabase not configured') };
+    }
 
     const { error } = await this.supabase.client
       .from('profiles')
@@ -69,9 +109,22 @@ export class ProfileService {
   }
 
   async updateProfile(updates: Partial<UserProfile>): Promise<{ error: Error | null }> {
+    // Dev mode: update mock profile locally
+    if ((environment as any).devMode) {
+      const currentProfile = this.profileData();
+      if (currentProfile) {
+        this.profileData.set({ ...currentProfile, ...updates });
+      }
+      return { error: null };
+    }
+
     const userId = this.auth.user()?.id;
     if (!userId) {
       return { error: new Error('User not authenticated') };
+    }
+
+    if (!this.supabase.isConfigured) {
+      return { error: new Error('Supabase not configured') };
     }
 
     const { error } = await this.supabase.client
@@ -93,6 +146,10 @@ export class ProfileService {
   }
 
   clearProfile(): void {
-    this.profileData.set(null);
+    if ((environment as any).devMode) {
+      this.profileData.set(MOCK_PROFILE);
+    } else {
+      this.profileData.set(null);
+    }
   }
 }

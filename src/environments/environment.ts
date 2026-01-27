@@ -4,6 +4,8 @@
 
 export const environment = {
   production: false,
+  // Set to true to bypass login and use mock data for development
+  devMode: true,
   supabase: {
     url: 'YOUR_SUPABASE_URL',
     anonKey: 'YOUR_SUPABASE_ANON_KEY'
