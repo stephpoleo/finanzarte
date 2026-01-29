@@ -164,11 +164,17 @@ import { AuthService } from '../../../core/services/auth.service';
     .input-item {
       --background: var(--ion-color-light);
       --border-radius: 12px;
+      --color: #1a1a1a;
       margin-bottom: 16px;
     }
 
     .input-item ion-icon {
       color: var(--ion-color-medium);
+    }
+
+    .input-item ion-input {
+      --color: #1a1a1a;
+      --placeholder-color: #888;
     }
 
     .error-text, .success-text {

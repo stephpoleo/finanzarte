@@ -51,11 +51,14 @@ All tables have Row Level Security (RLS) enabled.
 
 ## Environment Setup
 
-Update `src/environments/environment.ts`:
+1. Copy `.env.example` to `.env` (if starting fresh)
+2. Copy `src/environments/environment.example.ts` to `environment.ts`
+3. Fill in credentials from `.env` or Supabase dashboard:
+
 ```typescript
 supabase: {
-  url: 'YOUR_SUPABASE_URL',
-  anonKey: 'YOUR_SUPABASE_ANON_KEY'
+  url: 'YOUR_SUPABASE_URL',        // from .env: SUPABASE_URL
+  anonKey: 'YOUR_SUPABASE_ANON_KEY' // from .env: SUPABASE_ANON_KEY
 }
 ```
 
@@ -109,6 +112,7 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Settings page
 - [x] Theme and styling
 - [x] Graceful handling when Supabase not configured
+- [x] Supabase connection working (auth + database)
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality
@@ -130,3 +134,41 @@ When `devMode: true` in environment.ts:
 - All CRUD operations work locally (data resets on refresh)
 
 To use real authentication, set `devMode: false` and configure Supabase credentials.
+
+## Supabase Setup
+
+### Required SQL (run in Supabase SQL Editor)
+
+After creating tables from `supabase/schema.sql`, run this to enable automatic profile creation:
+
+```sql
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name)
+  VALUES (new.id, new.raw_user_meta_data->>'full_name');
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+CREATE POLICY "Users can update own profile" ON profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+CREATE POLICY "Users can view own profile" ON profiles
+  FOR SELECT USING (auth.uid() = id);
+```
+
+### Security Notes
+
+- Credentials are stored in `.env` file (not committed to git)
+- Environment files (`src/environments/environment.ts`, `environment.prod.ts`) are in `.gitignore`
+- Copy `environment.example.ts` to `environment.ts` and fill credentials from `.env`
+- The `anonKey` is safe to use client-side (RLS protects data)
+- Profile creation uses database trigger with `SECURITY DEFINER` to bypass RLS

@@ -84,7 +84,7 @@ export class AuthService {
       return { error: { message: 'Supabase not configured', status: 500 } as AuthError };
     }
 
-    const { data, error } = await this.supabase.client.auth.signUp({
+    const { error } = await this.supabase.client.auth.signUp({
       email,
       password,
       options: {
@@ -94,15 +94,7 @@ export class AuthService {
       }
     });
 
-    if (!error && data.user) {
-      // Create profile
-      await this.supabase.client.from('profiles').upsert({
-        id: data.user.id,
-        full_name: fullName,
-        gross_salary: 0,
-        net_salary: 0
-      });
-    }
+    // Profile is created automatically by database trigger
 
     return { error };
   }

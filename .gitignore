@@ -65,6 +65,13 @@ yarn-error.log
 testem.log
 /typings
 
+# Environment files with credentials
+.env
+.env.local
+.env.production
+src/environments/environment.ts
+src/environments/environment.prod.ts
+
 # System files
 .DS_Store
 Thumbs.db
