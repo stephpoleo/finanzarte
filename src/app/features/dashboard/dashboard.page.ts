@@ -1,36 +1,27 @@
 import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
   IonContent,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
   IonIcon,
   IonRefresher,
   IonRefresherContent,
-  IonButton,
   RefresherEventDetail
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
-  walletOutline,
-  cashOutline,
+  menuOutline,
+  createOutline,
+  addOutline,
+  statsChartOutline,
   trendingUpOutline,
-  settingsOutline,
-  addCircleOutline,
-  chevronForward,
-  homeOutline,
-  home,
-  listOutline,
-  flagOutline,
-  personOutline
+  settingsOutline
 } from 'ionicons/icons';
 import { ProfileService } from '../../core/services/profile.service';
 import { ExpenseService } from '../../core/services/expense.service';
 import { SavingsGoalService } from '../../core/services/savings-goal.service';
 import { CurrencyMxnPipe } from '../../shared/pipes/currency-mxn.pipe';
-import { PercentagePipe } from '../../shared/pipes/percentage.pipe';
 import { ProgressRingComponent } from '../../shared/components/progress-ring/progress-ring.component';
 
 @Component({
@@ -38,389 +29,394 @@ import { ProgressRingComponent } from '../../shared/components/progress-ring/pro
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     RouterLink,
-    RouterLinkActive,
     IonContent,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
     IonIcon,
     IonRefresher,
     IonRefresherContent,
-    IonButton,
     CurrencyMxnPipe,
-    PercentagePipe,
     ProgressRingComponent
   ],
   template: `
-    <ion-header class="ion-no-border">
-      <ion-toolbar>
-        <ion-title>
-          <span class="header-title">Finanzarte</span>
-        </ion-title>
-        <ion-button slot="end" fill="clear" routerLink="/settings" class="settings-btn">
-          <ion-icon name="settings-outline"></ion-icon>
-        </ion-button>
-      </ion-toolbar>
-    </ion-header>
-
-    <ion-content class="has-bottom-nav">
+    <ion-content class="has-bottom-bar">
       <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
 
-      <div class="dashboard-container stagger-children">
-        <!-- Hero Card - Available for Savings -->
-        <div class="hero-card animate-in">
-          <div class="hero-label">Disponible para Ahorro</div>
-          <div class="hero-value">{{ availableForSavings() | currencyMxn }}</div>
-          <div class="hero-subtitle">Después de gastos mensuales</div>
+      <!-- App Header -->
+      <header class="app-header">
+        <div class="header-brand">
+          <div class="brand-logo">
+            <ion-icon name="stats-chart-outline"></ion-icon>
+          </div>
+          <div class="brand-text">
+            <div class="brand-name">finanzarte</div>
+            <div class="brand-tagline">Tu aliado financiero</div>
+          </div>
         </div>
+        <button class="header-menu" (click)="openMenu()">
+          <ion-icon name="menu-outline"></ion-icon>
+        </button>
+      </header>
 
-        <!-- Stats Grid -->
-        <div class="stats-grid">
-          <a class="stat-card" routerLink="/salary">
-            <div class="stat-icon icon-primary">
-              <ion-icon name="wallet-outline"></ion-icon>
+      <div class="page-container stagger-children">
+        <!-- Hero Card - Net Income -->
+        <a class="hero-card" routerLink="/salary">
+          <div class="hero-header">
+            <div class="hero-title-group">
+              <div class="hero-icon">$</div>
+              <span class="hero-label">Ingreso Neto</span>
             </div>
-            <div class="stat-label">Salario Neto</div>
-            <div class="stat-value">{{ profile.profile()?.net_salary | currencyMxn }}</div>
-          </a>
-
-          <a class="stat-card" routerLink="/expenses">
-            <div class="stat-icon icon-danger">
-              <ion-icon name="cash-outline"></ion-icon>
+            <div class="hero-edit">
+              <ion-icon name="create-outline"></ion-icon>
             </div>
-            <div class="stat-label">Gastos Totales</div>
-            <div class="stat-value">{{ expenses.totalExpenses() | currencyMxn }}</div>
-          </a>
-        </div>
+          </div>
+          <div class="hero-value">{{ profile.profile()?.net_salary | currencyMxn }}</div>
+        </a>
 
         <!-- Income Distribution -->
         <div class="section-card">
           <div class="section-header">
-            <h3 class="section-title">Distribución del Ingreso</h3>
-          </div>
-
-          <div class="progress-list">
-            <div class="progress-bar-container">
-              <div class="progress-header">
-                <span class="progress-label">Gastos Fijos</span>
-                <span class="progress-value">{{ expenses.totalFixedExpenses() | currencyMxn }}</span>
-              </div>
-              <div class="progress-track">
-                <div class="progress-fill fill-warning" [style.width.%]="fixedExpenseRatio() * 100"></div>
-              </div>
-              <div class="progress-footer">
-                <span class="progress-percent">{{ fixedExpenseRatio() * 100 | percentage }}</span>
-              </div>
-            </div>
-
-            <div class="progress-bar-container">
-              <div class="progress-header">
-                <span class="progress-label">Gastos Variables</span>
-                <span class="progress-value">{{ expenses.totalVariableExpenses() | currencyMxn }}</span>
-              </div>
-              <div class="progress-track">
-                <div class="progress-fill fill-primary" [style.width.%]="variableExpenseRatio() * 100"></div>
-              </div>
-              <div class="progress-footer">
-                <span class="progress-percent">{{ variableExpenseRatio() * 100 | percentage }}</span>
-              </div>
-            </div>
-
-            <div class="progress-bar-container">
-              <div class="progress-header">
-                <span class="progress-label">Disponible</span>
-                <span class="progress-value">{{ availableForSavings() | currencyMxn }}</span>
-              </div>
-              <div class="progress-track">
-                <div class="progress-fill fill-success" [style.width.%]="availableRatio() * 100"></div>
-              </div>
-              <div class="progress-footer">
-                <span class="progress-percent">{{ availableRatio() * 100 | percentage }}</span>
-              </div>
+            <div class="section-title-group">
+              <ion-icon name="stats-chart-outline" class="section-icon"></ion-icon>
+              <h3 class="section-title">Distribución de Ingresos</h3>
             </div>
           </div>
+
+          @if (profile.profile()?.net_salary && profile.profile()!.net_salary > 0) {
+            <div class="distribution-chart">
+              <div class="chart-bar">
+                <div class="chart-segment fixed" [style.width.%]="fixedExpenseRatio() * 100">
+                  @if (fixedExpenseRatio() > 0.15) {
+                    <span class="segment-label">Fijos</span>
+                  }
+                </div>
+                <div class="chart-segment variable" [style.width.%]="variableExpenseRatio() * 100">
+                  @if (variableExpenseRatio() > 0.15) {
+                    <span class="segment-label">Variables</span>
+                  }
+                </div>
+                <div class="chart-segment available" [style.width.%]="availableRatio() * 100">
+                  @if (availableRatio() > 0.15) {
+                    <span class="segment-label">Disponible</span>
+                  }
+                </div>
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <span class="legend-dot fixed"></span>
+                  <span class="legend-text">Fijos: {{ expenses.totalFixedExpenses() | currencyMxn }}</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot variable"></span>
+                  <span class="legend-text">Variables: {{ expenses.totalVariableExpenses() | currencyMxn }}</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot available"></span>
+                  <span class="legend-text">Disponible: {{ availableForSavings() | currencyMxn }}</span>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="section-empty">
+              Ingresa tu ingreso neto para ver la distribución
+            </div>
+          }
         </div>
 
-        <!-- Savings Goals -->
+        <!-- Expenses Section -->
         <div class="section-card">
           <div class="section-header">
-            <h3 class="section-title">Metas de Ahorro</h3>
-            <a class="section-link" routerLink="/savings">
-              Ver todas
-              <ion-icon name="chevron-forward"></ion-icon>
+            <div class="section-title-group">
+              <h3 class="section-title">Gastos</h3>
+            </div>
+          </div>
+
+          <!-- Quick Add Expense Form -->
+          <div class="expense-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nombre</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  placeholder="Ej: Renta"
+                  [(ngModel)]="newExpense.name"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Monto</label>
+                <input
+                  type="number"
+                  class="form-input"
+                  placeholder="0.00"
+                  [(ngModel)]="newExpense.amount"
+                />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Tipo</label>
+                <select class="form-select" [(ngModel)]="newExpense.type">
+                  <option value="fixed">Fijo</option>
+                  <option value="variable">Variable</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Categoría</label>
+                <select class="form-select" [(ngModel)]="newExpense.category">
+                  <option value="rent">Renta</option>
+                  <option value="utilities">Servicios</option>
+                  <option value="transport">Transporte</option>
+                  <option value="food">Alimentación</option>
+                  <option value="entertainment">Entretenimiento</option>
+                  <option value="health">Salud</option>
+                  <option value="other">Otros</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary" (click)="addExpense()">
+              <ion-icon name="add-outline"></ion-icon>
+              Agregar Gasto
+            </button>
+          </div>
+
+          @if (expenses.expenses().length === 0) {
+            <div class="section-empty">
+              No hay gastos registrados
+            </div>
+          } @else {
+            <div class="expense-list">
+              @for (expense of expenses.expenses().slice(0, 5); track expense.id) {
+                <div class="expense-item">
+                  <div class="expense-info">
+                    <div class="expense-name">{{ expense.name }}</div>
+                    <div class="expense-category">{{ expense.category | titlecase }}</div>
+                  </div>
+                  <div class="expense-amount">-{{ expense.amount | currencyMxn }}</div>
+                </div>
+              }
+              @if (expenses.expenses().length > 5) {
+                <a routerLink="/expenses" class="view-all-link">
+                  Ver todos los gastos ({{ expenses.expenses().length }})
+                </a>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Savings Goals Section -->
+        <div class="section-card">
+          <div class="section-header">
+            <div class="section-title-group">
+              <ion-icon name="settings-outline" class="section-icon"></ion-icon>
+              <h3 class="section-title">Metas de Ahorro</h3>
+            </div>
+            <a routerLink="/savings/add" class="section-action">
+              <ion-icon name="add-outline"></ion-icon>
             </a>
           </div>
 
+          <!-- Savings Highlight -->
+          <div class="savings-highlight">
+            <div class="savings-header">
+              <ion-icon name="trending-up-outline" class="savings-icon"></ion-icon>
+              <span class="savings-label">Ahorro Disponible</span>
+            </div>
+            <div class="savings-value">{{ availableForSavings() | currencyMxn }}</div>
+          </div>
+
           @if (savingsGoals.goals().length === 0) {
-            <div class="empty-state">
-              <div class="empty-icon">
-                <ion-icon name="flag-outline"></ion-icon>
-              </div>
-              <p class="empty-text">No tienes metas de ahorro</p>
-              <a class="empty-btn" routerLink="/savings/add">
-                <ion-icon name="add-circle-outline"></ion-icon>
-                Crear Meta
-              </a>
+            <div class="section-empty">
+              No hay metas de ahorro
             </div>
           } @else {
-            <div class="savings-summary">
-              <div class="savings-ring">
-                <app-progress-ring
-                  [progress]="savingsGoals.overallProgress()"
-                  [size]="80"
-                  [strokeWidth]="8"
-                  color="#10b981"
-                >
-                  <span class="ring-text">{{ savingsGoals.overallProgress() | percentage:0 }}</span>
-                </app-progress-ring>
-              </div>
-              <div class="savings-stats">
-                <div class="savings-stat">
-                  <span class="savings-label">Total Ahorrado</span>
-                  <span class="savings-value highlight">{{ savingsGoals.totalSaved() | currencyMxn }}</span>
-                </div>
-                <div class="savings-stat">
-                  <span class="savings-label">Meta Total</span>
-                  <span class="savings-value">{{ savingsGoals.totalTargeted() | currencyMxn }}</span>
-                </div>
-              </div>
+            <div class="goals-list">
+              @for (goal of savingsGoals.goals().slice(0, 3); track goal.id) {
+                <a class="goal-card" [routerLink]="['/savings', goal.id]">
+                  <div class="goal-progress-ring">
+                    <app-progress-ring
+                      [progress]="(goal.current_amount / goal.target_amount) * 100"
+                      [size]="48"
+                      [strokeWidth]="4"
+                      color="#10b981"
+                    >
+                    </app-progress-ring>
+                  </div>
+                  <div class="goal-info">
+                    <div class="goal-name">{{ goal.name }}</div>
+                    <div class="goal-amounts">
+                      <span class="goal-current">{{ goal.current_amount | currencyMxn }}</span>
+                      <span> / {{ goal.target_amount | currencyMxn }}</span>
+                    </div>
+                  </div>
+                </a>
+              }
             </div>
           }
         </div>
       </div>
 
-      <!-- Bottom Navigation -->
-      <nav class="bottom-nav">
-        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item">
-          <ion-icon name="home"></ion-icon>
-          <span>Inicio</span>
-        </a>
-        <a routerLink="/expenses" routerLinkActive="active" class="nav-item">
-          <ion-icon name="list-outline"></ion-icon>
-          <span>Gastos</span>
-        </a>
-        <a routerLink="/savings" routerLinkActive="active" class="nav-item">
-          <ion-icon name="flag-outline"></ion-icon>
-          <span>Metas</span>
-        </a>
-        <a routerLink="/settings" routerLinkActive="active" class="nav-item">
-          <ion-icon name="person-outline"></ion-icon>
-          <span>Perfil</span>
-        </a>
-      </nav>
+      <!-- Bottom Summary Bar -->
+      <div class="bottom-bar">
+        <div class="bar-item">
+          <span class="bar-label">Ingresos</span>
+          <span class="bar-value income">{{ profile.profile()?.net_salary | currencyMxn }}</span>
+        </div>
+        <div class="bar-item">
+          <span class="bar-label">Gastos</span>
+          <span class="bar-value expense">{{ expenses.totalExpenses() | currencyMxn }}</span>
+        </div>
+        <div class="bar-item">
+          <span class="bar-label">Balance</span>
+          <span class="bar-value balance">{{ availableForSavings() | currencyMxn }}</span>
+        </div>
+      </div>
     </ion-content>
   `,
   styles: [`
-    /* Header */
-    ion-toolbar {
-      --background: var(--ion-background-color);
-      --border-width: 0;
+    /* Distribution Chart */
+    .distribution-chart {
+      margin-top: var(--space-md);
     }
 
-    .header-title {
-      font-weight: 700;
-      font-size: 1.25rem;
-      background: linear-gradient(135deg, var(--ion-color-primary) 0%, #00a86b 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .settings-btn {
-      --color: var(--ion-color-medium);
-      font-size: 1.25rem;
-    }
-
-    /* Container */
-    .dashboard-container {
-      padding: var(--space-md);
-      padding-bottom: calc(var(--bottom-nav-height) + var(--space-xl));
-    }
-
-    /* Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--space-md);
-      margin-bottom: var(--space-lg);
-    }
-
-    .stats-grid .stat-card {
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    /* Section Card */
-    .section-card {
-      background: var(--ion-card-background, #ffffff);
-      border-radius: var(--radius-lg);
-      padding: var(--space-lg);
-      margin-bottom: var(--space-lg);
-      box-shadow: var(--shadow-sm);
-      border: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .section-card .section-header {
-      padding: 0 0 var(--space-md) 0;
-    }
-
-    .progress-list {
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: var(--space-lg) 0;
-    }
-
-    .empty-icon {
-      width: 64px;
-      height: 64px;
+    .chart-bar {
+      height: 24px;
+      background: var(--color-gray-100);
       border-radius: var(--radius-full);
-      background: rgba(0, 0, 0, 0.05);
+      display: flex;
+      overflow: hidden;
+    }
+
+    .chart-segment {
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto var(--space-md);
+      transition: width 0.5s ease;
 
-      ion-icon {
-        font-size: 28px;
-        color: var(--ion-color-medium);
+      &.fixed {
+        background: #f59e0b;
+      }
+
+      &.variable {
+        background: var(--color-purple);
+      }
+
+      &.available {
+        background: var(--color-primary);
+      }
+
+      .segment-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: white;
       }
     }
 
-    .empty-text {
-      color: var(--ion-color-medium);
-      margin-bottom: var(--space-md);
-      font-size: var(--text-sm);
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+      margin-top: var(--space-md);
     }
 
-    .empty-btn {
-      display: inline-flex;
+    .legend-item {
+      display: flex;
       align-items: center;
       gap: var(--space-xs);
-      padding: var(--space-sm) var(--space-md);
-      background: var(--ion-color-primary);
-      color: white;
-      border-radius: var(--radius-full);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+
+      &.fixed { background: #f59e0b; }
+      &.variable { background: var(--color-purple); }
+      &.available { background: var(--color-primary); }
+    }
+
+    .legend-text {
       font-size: var(--text-sm);
-      font-weight: 600;
+      color: var(--color-gray-600);
+    }
+
+    /* Expense Form */
+    .expense-form {
+      background: var(--color-gray-50);
+      border-radius: var(--radius-lg);
+      padding: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+
+    /* View All Link */
+    .view-all-link {
+      display: block;
+      text-align: center;
+      padding: var(--space-md);
+      color: var(--color-purple);
+      font-size: var(--text-sm);
+      font-weight: 500;
       text-decoration: none;
 
-      &:active {
-        opacity: 0.8;
+      &:hover {
+        text-decoration: underline;
       }
     }
 
-    /* Savings Summary */
-    .savings-summary {
+    /* Goals List */
+    .goals-list {
+      margin-top: var(--space-md);
+    }
+
+    .goal-card {
+      text-decoration: none;
       display: flex;
       align-items: center;
-      gap: var(--space-lg);
-    }
-
-    .savings-ring {
-      flex-shrink: 0;
-    }
-
-    .ring-text {
-      font-size: var(--text-lg);
-      font-weight: 700;
-      color: var(--ion-color-success);
-    }
-
-    .savings-stats {
-      flex: 1;
-    }
-
-    .savings-stat {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: var(--space-sm);
+      gap: var(--space-md);
+      padding: var(--space-sm) 0;
+      border-bottom: 1px solid var(--color-gray-100);
 
       &:last-child {
-        margin-bottom: 0;
+        border-bottom: none;
       }
     }
 
-    .savings-label {
-      font-size: var(--text-xs);
-      color: var(--ion-color-medium);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 2px;
+    /* Page Container */
+    .page-container {
+      padding-bottom: calc(var(--bottom-bar-height) + var(--space-lg));
     }
 
-    .savings-value {
-      font-size: var(--text-lg);
-      font-weight: 600;
-      color: var(--ion-text-color);
-
-      &.highlight {
-        color: var(--ion-color-primary);
-      }
-    }
-
-    /* Responsive - Tablet and Desktop */
+    /* Responsive */
     @media (min-width: 768px) {
-      .dashboard-container {
+      .page-container {
         max-width: 720px;
         margin: 0 auto;
-        padding-bottom: var(--space-xl);
-      }
-
-      .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (min-width: 1024px) {
-      .dashboard-container {
-        max-width: 900px;
-      }
-
-      .content-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--space-lg);
-      }
-    }
-
-    /* Dark Mode */
-    @media (prefers-color-scheme: dark) {
-      .section-card {
-        border-color: rgba(255, 255, 255, 0.1);
-      }
-
-      .empty-icon {
-        background: rgba(255, 255, 255, 0.1);
       }
     }
   `]
 })
 export class DashboardPage implements OnInit {
+  newExpense = {
+    name: '',
+    amount: 0,
+    type: 'fixed' as 'fixed' | 'variable',
+    category: 'rent' as 'rent' | 'utilities' | 'transport' | 'food' | 'entertainment' | 'health' | 'other'
+  };
+
   constructor(
     public profile: ProfileService,
     public expenses: ExpenseService,
     public savingsGoals: SavingsGoalService
   ) {
     addIcons({
-      walletOutline,
-      cashOutline,
+      menuOutline,
+      createOutline,
+      addOutline,
+      statsChartOutline,
       trendingUpOutline,
-      settingsOutline,
-      addCircleOutline,
-      chevronForward,
-      homeOutline,
-      home,
-      listOutline,
-      flagOutline,
-      personOutline
+      settingsOutline
     });
   }
 
@@ -439,6 +435,29 @@ export class DashboardPage implements OnInit {
   async handleRefresh(event: CustomEvent<RefresherEventDetail>): Promise<void> {
     await this.loadData();
     event.detail.complete();
+  }
+
+  openMenu(): void {
+    // TODO: Implement menu functionality
+  }
+
+  async addExpense(): Promise<void> {
+    if (!this.newExpense.name || !this.newExpense.amount) return;
+
+    await this.expenses.addExpense({
+      name: this.newExpense.name,
+      amount: this.newExpense.amount,
+      type: this.newExpense.type,
+      category: this.newExpense.category
+    });
+
+    // Reset form
+    this.newExpense = {
+      name: '',
+      amount: 0,
+      type: 'fixed',
+      category: 'rent'
+    };
   }
 
   availableForSavings = computed(() => {
