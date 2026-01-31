@@ -17,7 +17,7 @@ Finanzarte is a personal finance management mobile app for Mexican users built w
 src/app/
 ├── core/
 │   ├── guards/          # Route guards (authGuard, publicGuard)
-│   └── services/        # Core services (auth, supabase, profile, etc.)
+│   └── services/        # Core services (see Services section below)
 ├── features/
 │   ├── auth/            # Login, Register pages
 │   ├── dashboard/       # Main dashboard
@@ -37,17 +37,79 @@ src/app/
 1. **Mexican Tax Calculator** - ISR 2024 brackets, IMSS contributions, employment subsidy
 2. **Expense Tracking** - Fixed and variable expenses with categories
 3. **Savings Goals** - Create goals, log deposits, track progress
-4. **Dashboard** - Available savings = Net Salary - Total Expenses
+4. **Dashboard** - 5 tabs for complete financial planning
+
+## Dashboard Tabs
+
+1. **Presupuesto** - Income sources, expenses, available savings
+2. **Emergencia** - Emergency fund calculator (1-24 months coverage)
+3. **Largo Plazo** - 5 financial levels (Security → Abundance)
+4. **Retiro** - Retirement planning with compound interest projections
+5. **Inversiones** - Investment portfolio with Rule of 120 risk allocation
+
+## Data Models
+
+Located in `src/app/models/`:
+
+| Model | Description |
+|-------|-------------|
+| `UserProfile` | User profile with birth_date, salary info |
+| `IncomeSource` | Income sources with frequency (monthly/biweekly/weekly/annual) |
+| `Expense` | Fixed/variable expenses with categories |
+| `SavingsGoal` | Savings targets with color, icon, progress |
+| `SavingsDeposit` | Deposit history for goals |
+| `Investment` | Investment portfolio (stocks, bonds, ETF, crypto, CETES, AFORE) |
+| `UserSettings` | Financial planning settings (emergency, long-term, retirement) |
+
+## Services
+
+Located in `src/app/core/services/`:
+
+| Service | Description |
+|---------|-------------|
+| `AuthService` | Authentication (login, register, logout) |
+| `ProfileService` | User profile CRUD |
+| `IncomeSourceService` | Income sources CRUD with frequency support |
+| `ExpenseService` | Expenses CRUD (fixed/variable) |
+| `SavingsGoalService` | Savings goals and deposits CRUD |
+| `InvestmentService` | Investment portfolio CRUD with risk allocation |
+| `UserSettingsService` | Financial settings (emergency, long-term, retirement) |
+| `TaxCalculationService` | Mexican tax calculations (ISR, IMSS) |
+| `SupabaseService` | Supabase client wrapper |
+
+All services support:
+- Mock data for dev mode (`devMode: true`)
+- Supabase persistence for production
+- Angular signals for reactive state management
 
 ## Database Schema
 
 Located in `supabase/schema.sql`:
-- `profiles` - User profile with salary info
-- `expenses` - User expenses (fixed/variable)
-- `savings_goals` - Savings targets
-- `savings_deposits` - Deposit history
 
-All tables have Row Level Security (RLS) enabled.
+| Table | Description |
+|-------|-------------|
+| `profiles` | User profile with birth_date, salary info |
+| `income_sources` | Multiple income sources per user |
+| `expenses` | Fixed and variable expenses |
+| `savings_goals` | Savings targets with color/icon |
+| `savings_deposits` | Deposit history with deposit_date |
+| `investments` | Investment portfolio |
+| `user_settings` | Financial planning parameters |
+
+**Features:**
+- Row Level Security (RLS) on all tables
+- Automatic profile + settings creation on signup (triggers)
+- Auto-update of savings goal amounts on deposit (trigger)
+- Views: `user_expense_totals`, `user_income_totals`, `savings_goal_progress`, `user_investment_summary`, `user_portfolio_risk`
+- Function: `get_available_savings(user_id)`
+
+## Investment Types
+
+- **High Risk:** stocks, crypto, etf
+- **Medium Risk:** mutual-funds, real-estate
+- **Low Risk:** bonds, cetes, afore
+
+Rule of 120: `120 - age = % in risky investments`
 
 ## Environment Setup
 
@@ -103,16 +165,22 @@ Bottom navigation hides on tablet/desktop (768px+).
 
 - [x] Project setup with Ionic + Angular + Capacitor
 - [x] Supabase integration and schema
-- [x] Authentication (login, register, logout)
+- [x] Authentication (login, register with birthdate, logout)
 - [x] Tax calculation service (ISR 2024, IMSS)
 - [x] Salary setup page with breakdown
 - [x] Expense management (CRUD)
 - [x] Savings goals with deposits
-- [x] Dashboard with financial overview
+- [x] Dashboard with 5 tabs (Presupuesto, Emergencia, Largo Plazo, Retiro, Inversiones)
+- [x] Emergency fund calculator (1-24 months)
+- [x] Long-term savings with 5 financial levels
+- [x] Retirement planning calculator
+- [x] Investment portfolio with Rule of 120
 - [x] Settings page
 - [x] Theme and styling
 - [x] Graceful handling when Supabase not configured
 - [x] Supabase connection working (auth + database)
+- [x] Persist investments to Supabase (InvestmentService)
+- [x] Persist user settings to Supabase (UserSettingsService)
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality
@@ -137,33 +205,18 @@ To use real authentication, set `devMode: false` and configure Supabase credenti
 
 ## Supabase Setup
 
-### Required SQL (run in Supabase SQL Editor)
+### Initial Setup
 
-After creating tables from `supabase/schema.sql`, run this to enable automatic profile creation:
+1. Create a new Supabase project
+2. Copy the full `supabase/schema.sql` file content
+3. Run it in the Supabase SQL Editor
 
-```sql
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger AS $$
-BEGIN
-  INSERT INTO public.profiles (id, full_name)
-  VALUES (new.id, new.raw_user_meta_data->>'full_name');
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
-DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
-CREATE POLICY "Users can update own profile" ON profiles
-  FOR UPDATE USING (auth.uid() = id);
-
-DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
-CREATE POLICY "Users can view own profile" ON profiles
-  FOR SELECT USING (auth.uid() = id);
-```
+The schema includes:
+- All tables with RLS policies
+- Automatic profile creation trigger (with birth_date)
+- Automatic user_settings creation trigger
+- Auto-update of savings goals on deposits
+- Helpful views and functions
 
 ### Security Notes
 

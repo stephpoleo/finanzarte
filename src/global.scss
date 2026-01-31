@@ -176,67 +176,74 @@ ion-content.has-bottom-bar {
     color: var(--color-gray-600);
     font-size: 24px;
     cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+
+    &:hover {
+      color: var(--color-gray-900);
+    }
   }
 }
 
 /* =====================================================
    HERO CARD - Income Display
    ===================================================== */
+a.hero-card,
 .hero-card {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  border-radius: var(--radius-xl);
-  padding: var(--space-lg);
-  color: white;
-  position: relative;
-  overflow: hidden;
-  margin: var(--space-md);
+  display: block;
+  text-decoration: none;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 20px;
+  padding: 24px;
+  color: white !important;
+  margin: 16px;
+
+  &:hover {
+    opacity: 0.95;
+  }
 
   .hero-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-md);
+    margin-bottom: 16px;
+  }
 
-    .hero-title-group {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
+  .hero-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-      .hero-icon {
-        width: 36px;
-        height: 36px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: var(--radius-sm);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-      }
+  .hero-icon {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+  }
 
-      .hero-label {
-        font-size: var(--text-base);
-        font-weight: 500;
-        opacity: 0.95;
-      }
-    }
+  .hero-label {
+    font-size: 16px;
+    font-weight: 500;
+  }
 
-    .hero-edit {
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0.8;
-      cursor: pointer;
-
-      &:hover {
-        opacity: 1;
-      }
-    }
+  .hero-edit {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
   }
 
   .hero-value {
-    font-size: var(--text-4xl);
+    font-size: 2.5rem;
     font-weight: 700;
     line-height: 1.1;
   }

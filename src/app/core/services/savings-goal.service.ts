@@ -5,16 +5,18 @@ import { SavingsGoal, SavingsDeposit } from '../../models';
 import { environment } from '../../../environments/environment';
 
 // Mock data for dev mode
+const now = new Date().toISOString();
+const today = now.split('T')[0];
 const MOCK_GOALS: SavingsGoal[] = [
-  { id: '1', user_id: 'dev-user-123', name: 'Fondo de Emergencia', target_amount: 50000, current_amount: 15000, deadline: '2024-12-31', monthly_target: 3000, created_at: new Date().toISOString() },
-  { id: '2', user_id: 'dev-user-123', name: 'Vacaciones', target_amount: 20000, current_amount: 8500, deadline: '2024-06-30', monthly_target: null, created_at: new Date().toISOString() },
+  { id: '1', user_id: 'dev-user-123', name: 'Fondo de Emergencia', target_amount: 50000, current_amount: 15000, deadline: '2024-12-31', monthly_target: 3000, color: '#22c55e', icon: 'shield-checkmark-outline', created_at: now, updated_at: now },
+  { id: '2', user_id: 'dev-user-123', name: 'Vacaciones', target_amount: 20000, current_amount: 8500, deadline: '2024-06-30', monthly_target: null, color: '#3b82f6', icon: 'airplane-outline', created_at: now, updated_at: now },
 ];
 
 const MOCK_DEPOSITS: SavingsDeposit[] = [
-  { id: '1', goal_id: '1', user_id: 'dev-user-123', amount: 5000, note: 'Depósito inicial', created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '2', goal_id: '1', user_id: 'dev-user-123', amount: 5000, note: 'Segundo depósito', created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '3', goal_id: '1', user_id: 'dev-user-123', amount: 5000, note: null, created_at: new Date().toISOString() },
-  { id: '4', goal_id: '2', user_id: 'dev-user-123', amount: 8500, note: 'Ahorro vacaciones', created_at: new Date().toISOString() },
+  { id: '1', goal_id: '1', user_id: 'dev-user-123', amount: 5000, note: 'Depósito inicial', deposit_date: '2024-11-01', created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: '2', goal_id: '1', user_id: 'dev-user-123', amount: 5000, note: 'Segundo depósito', deposit_date: '2024-11-15', created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: '3', goal_id: '1', user_id: 'dev-user-123', amount: 5000, note: null, deposit_date: today, created_at: now },
+  { id: '4', goal_id: '2', user_id: 'dev-user-123', amount: 8500, note: 'Ahorro vacaciones', deposit_date: today, created_at: now },
 ];
 
 @Injectable({
@@ -103,7 +105,10 @@ export class SavingsGoalService {
     target_amount: number;
     deadline?: string | null;
     monthly_target?: number | null;
+    color?: string;
+    icon?: string;
   }): Promise<{ data: SavingsGoal | null; error: Error | null }> {
+    const now = new Date().toISOString();
     // Dev mode: add to local mock data
     if ((environment as any).devMode) {
       const newGoal: SavingsGoal = {
@@ -114,7 +119,10 @@ export class SavingsGoalService {
         current_amount: 0,
         deadline: goal.deadline || null,
         monthly_target: goal.monthly_target || null,
-        created_at: new Date().toISOString()
+        color: goal.color || '#6366f1',
+        icon: goal.icon || 'flag-outline',
+        created_at: now,
+        updated_at: now
       };
       this.goalsData.update(goals => [newGoal, ...goals]);
       return { data: newGoal, error: null };
@@ -137,7 +145,9 @@ export class SavingsGoalService {
         target_amount: goal.target_amount,
         current_amount: 0,
         deadline: goal.deadline || null,
-        monthly_target: goal.monthly_target || null
+        monthly_target: goal.monthly_target || null,
+        color: goal.color || '#6366f1',
+        icon: goal.icon || 'flag-outline'
       })
       .select()
       .single();
@@ -236,7 +246,10 @@ export class SavingsGoalService {
     goal_id: string;
     amount: number;
     note?: string | null;
+    deposit_date?: string;
   }): Promise<{ data: SavingsDeposit | null; error: Error | null }> {
+    const now = new Date().toISOString();
+    const today = now.split('T')[0];
     // Dev mode: add to local mock data
     if ((environment as any).devMode) {
       const newDeposit: SavingsDeposit = {
@@ -245,7 +258,8 @@ export class SavingsGoalService {
         user_id: 'dev-user-123',
         amount: deposit.amount,
         note: deposit.note || null,
-        created_at: new Date().toISOString()
+        deposit_date: deposit.deposit_date || today,
+        created_at: now
       };
       this.depositsData.update(deposits => [newDeposit, ...deposits]);
 
@@ -277,7 +291,8 @@ export class SavingsGoalService {
         goal_id: deposit.goal_id,
         user_id: userId,
         amount: deposit.amount,
-        note: deposit.note || null
+        note: deposit.note || null,
+        deposit_date: deposit.deposit_date || today
       })
       .select()
       .single();

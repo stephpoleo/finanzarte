@@ -15,10 +15,14 @@ import {
   IonSpinner,
   IonIcon,
   IonButtons,
-  IonBackButton
+  IonBackButton,
+  IonDatetime,
+  IonDatetimeButton,
+  IonModal,
+  IonLabel
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { mailOutline, lockClosedOutline, personOutline } from 'ionicons/icons';
+import { mailOutline, lockClosedOutline, personOutline, calendarOutline } from 'ionicons/icons';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -40,7 +44,11 @@ import { AuthService } from '../../../core/services/auth.service';
     IonSpinner,
     IonIcon,
     IonButtons,
-    IonBackButton
+    IonBackButton,
+    IonDatetime,
+    IonDatetimeButton,
+    IonModal,
+    IonLabel
   ],
   template: `
     <ion-header>
@@ -68,6 +76,25 @@ import { AuthService } from '../../../core/services/auth.service';
               placeholder="Nombre completo"
               autocomplete="name"
             ></ion-input>
+          </ion-item>
+
+          <ion-item lines="none" class="input-item birthdate-item">
+            <ion-icon name="calendar-outline" slot="start"></ion-icon>
+            <ion-label>Fecha de nacimiento</ion-label>
+            <ion-datetime-button datetime="birthdate" slot="end"></ion-datetime-button>
+            <ion-modal [keepContentsMounted]="true">
+              <ng-template>
+                <ion-datetime
+                  id="birthdate"
+                  presentation="date"
+                  [preferWheel]="true"
+                  [max]="maxBirthDate"
+                  [min]="minBirthDate"
+                  (ionChange)="onBirthDateChange($event)"
+                  [value]="registerForm.get('birthDate')?.value"
+                ></ion-datetime>
+              </ng-template>
+            </ion-modal>
           </ion-item>
 
           <ion-item lines="none" class="input-item">
@@ -177,6 +204,19 @@ import { AuthService } from '../../../core/services/auth.service';
       --placeholder-color: #888;
     }
 
+    .birthdate-item {
+      --padding-end: 8px;
+    }
+
+    .birthdate-item ion-label {
+      color: #888;
+      font-size: 1rem;
+    }
+
+    .birthdate-item ion-datetime-button {
+      --background: transparent;
+    }
+
     .error-text, .success-text {
       display: block;
       text-align: center;
@@ -217,25 +257,47 @@ export class RegisterPage {
   errorMessage = signal('');
   successMessage = signal('');
 
+  // Date limits for birthdate picker (18-100 years old)
+  maxBirthDate: string;
+  minBirthDate: string;
+
   constructor(
     private fb: FormBuilder,
     private auth: AuthService,
     private router: Router
   ) {
-    addIcons({ mailOutline, lockClosedOutline, personOutline });
+    addIcons({ mailOutline, lockClosedOutline, personOutline, calendarOutline });
+
+    // Set date limits
+    const today = new Date();
+    const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+    const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+    this.maxBirthDate = maxDate.toISOString();
+    this.minBirthDate = minDate.toISOString();
+
+    // Default to 30 years ago
+    const defaultDate = new Date(today.getFullYear() - 30, today.getMonth(), today.getDate());
 
     this.registerForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.minLength(2)]],
+      birthDate: [defaultDate.toISOString(), [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]]
     });
   }
 
+  onBirthDateChange(event: any): void {
+    const value = event.detail.value;
+    if (value) {
+      this.registerForm.patchValue({ birthDate: value });
+    }
+  }
+
   async onSubmit(): Promise<void> {
     if (!this.registerForm.valid) return;
 
-    const { fullName, email, password, confirmPassword } = this.registerForm.value;
+    const { fullName, birthDate, email, password, confirmPassword } = this.registerForm.value;
 
     if (password !== confirmPassword) {
       this.errorMessage.set('Las contraseñas no coinciden');
@@ -246,7 +308,10 @@ export class RegisterPage {
     this.errorMessage.set('');
     this.successMessage.set('');
 
-    const { error } = await this.auth.signUp(email, password, fullName);
+    // Extract just the date part (YYYY-MM-DD)
+    const birthDateOnly = birthDate ? birthDate.split('T')[0] : null;
+
+    const { error } = await this.auth.signUp(email, password, fullName, birthDateOnly);
 
     this.isLoading.set(false);
 

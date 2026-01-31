@@ -73,9 +73,9 @@ export class AuthService {
     }
   }
 
-  async signUp(email: string, password: string, fullName: string): Promise<{ error: AuthError | null }> {
+  async signUp(email: string, password: string, fullName: string, birthDate?: string | null): Promise<{ error: AuthError | null }> {
     if ((environment as any).devMode) {
-      this.currentUser.set({ ...MOCK_USER, email, user_metadata: { full_name: fullName } });
+      this.currentUser.set({ ...MOCK_USER, email, user_metadata: { full_name: fullName, birth_date: birthDate } });
       this.router.navigate(['/dashboard']);
       return { error: null };
     }
@@ -89,7 +89,8 @@ export class AuthService {
       password,
       options: {
         data: {
-          full_name: fullName
+          full_name: fullName,
+          birth_date: birthDate
         }
       }
     });

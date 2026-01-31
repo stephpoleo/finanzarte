@@ -1,6 +1,11 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   IonContent,
@@ -13,7 +18,7 @@ import {
   IonInputPasswordToggle,
   IonText,
   IonSpinner,
-  IonIcon
+  IonIcon,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { mailOutline, lockClosedOutline } from 'ionicons/icons';
@@ -27,16 +32,13 @@ import { AuthService } from '../../../core/services/auth.service';
     ReactiveFormsModule,
     RouterLink,
     IonContent,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
     IonButton,
     IonItem,
     IonInput,
     IonInputPasswordToggle,
     IonText,
     IonSpinner,
-    IonIcon
+    IonIcon,
   ],
   template: `
     <ion-content class="ion-padding">
@@ -90,87 +92,91 @@ import { AuthService } from '../../../core/services/auth.service';
         </form>
 
         <div class="register-link">
-          <p>¿No tienes cuenta? <a routerLink="/auth/register">Regístrate</a></p>
+          <p>
+            ¿No tienes cuenta? <a routerLink="/auth/register">Regístrate</a>
+          </p>
         </div>
       </div>
     </ion-content>
   `,
-  styles: [`
-    .login-container {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      min-height: 100%;
-      max-width: 400px;
-      margin: 0 auto;
-    }
+  styles: [
+    `
+      .login-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+      }
 
-    .logo-section {
-      text-align: center;
-      margin-bottom: 48px;
-    }
+      .logo-section {
+        text-align: center;
+        margin-bottom: 48px;
+      }
 
-    .app-title {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: var(--ion-color-primary);
-      margin: 0;
-    }
+      .app-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--ion-color-primary);
+        margin: 0;
+      }
 
-    .app-subtitle {
-      color: var(--ion-color-medium);
-      margin-top: 8px;
-    }
+      .app-subtitle {
+        color: var(--ion-color-medium);
+        margin-top: 8px;
+      }
 
-    .input-item {
-      --background: var(--ion-color-light);
-      --border-radius: 12px;
-      --color: #1a1a1a;
-      margin-bottom: 16px;
-    }
+      .input-item {
+        --background: var(--ion-color-light);
+        --border-radius: 12px;
+        --color: #1a1a1a;
+        margin-bottom: 16px;
+      }
 
-    .input-item ion-icon {
-      color: var(--ion-color-medium);
-    }
+      .input-item ion-icon {
+        color: var(--ion-color-medium);
+      }
 
-    .input-item ion-input {
-      --color: #1a1a1a;
-      --placeholder-color: #888;
-    }
+      .input-item ion-input {
+        --color: #1a1a1a;
+        --placeholder-color: #888;
+      }
 
-    .error-text {
-      display: block;
-      text-align: center;
-      margin-bottom: 16px;
-    }
+      .error-text {
+        display: block;
+        text-align: center;
+        margin-bottom: 16px;
+      }
 
-    .error-text p {
-      margin: 0;
-      font-size: 0.875rem;
-    }
+      .error-text p {
+        margin: 0;
+        font-size: 0.875rem;
+      }
 
-    .submit-button {
-      margin-top: 24px;
-      --border-radius: 12px;
-      height: 50px;
-      font-weight: 600;
-    }
+      .submit-button {
+        margin-top: 24px;
+        --border-radius: 12px;
+        height: 50px;
+        font-weight: 600;
+      }
 
-    .register-link {
-      text-align: center;
-      margin-top: 24px;
-    }
+      .register-link {
+        text-align: center;
+        margin-top: 24px;
+      }
 
-    .register-link p {
-      color: var(--ion-color-medium);
-    }
+      .register-link p {
+        color: var(--ion-color-medium);
+      }
 
-    .register-link a {
-      color: var(--ion-color-primary);
-      text-decoration: none;
-      font-weight: 600;
-    }
-  `]
+      .register-link a {
+        color: var(--ion-color-primary);
+        text-decoration: none;
+        font-weight: 600;
+      }
+    `,
+  ],
 })
 export class LoginPage {
   loginForm: FormGroup;
@@ -179,13 +185,13 @@ export class LoginPage {
 
   constructor(
     private fb: FormBuilder,
-    private auth: AuthService
+    private auth: AuthService,
   ) {
     addIcons({ mailOutline, lockClosedOutline });
 
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }
 
