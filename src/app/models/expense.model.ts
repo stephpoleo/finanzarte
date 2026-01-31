@@ -20,6 +20,7 @@ export interface Expense {
   type: ExpenseType;
   category: ExpenseCategory;
   created_at: string;
+  updated_at: string;
 }
 
 export const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string; icon: string }[] = [

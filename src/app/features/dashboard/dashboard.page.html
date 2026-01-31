@@ -1,0 +1,576 @@
+<ion-content class="has-bottom-bar">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <ion-icon name="wallet-outline"></ion-icon>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-name">finanzarte</h1>
+          <p class="brand-tagline">Tu aliado financiero</p>
+        </div>
+      </div>
+      <button class="logout-btn" (click)="logout()" title="Cerrar sesión">
+        <ion-icon name="log-out-outline"></ion-icon>
+      </button>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs-wrapper">
+      <div class="nav-tabs">
+        <button class="nav-tab" [class.active-blue]="activeTab === 'presupuesto'" (click)="activeTab = 'presupuesto'">
+          <ion-icon name="home-outline"></ion-icon>
+          <span>Presupuesto</span>
+        </button>
+        <button class="nav-tab" [class.active-green]="activeTab === 'emergencia'" (click)="activeTab = 'emergencia'">
+          <ion-icon name="shield-outline"></ion-icon>
+          <span>Emergencia</span>
+        </button>
+        <button class="nav-tab" [class.active-amber]="activeTab === 'largo-plazo'" (click)="activeTab = 'largo-plazo'">
+          <ion-icon name="leaf-outline"></ion-icon>
+          <span>Largo Plazo</span>
+        </button>
+        <button class="nav-tab" [class.active-purple]="activeTab === 'retiro'" (click)="activeTab = 'retiro'">
+          <ion-icon name="flag-outline"></ion-icon>
+          <span>Retiro</span>
+        </button>
+        <button class="nav-tab" [class.active-indigo]="activeTab === 'inversiones'" (click)="activeTab = 'inversiones'">
+          <ion-icon name="trending-up-outline"></ion-icon>
+          <span>Inversiones</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Budget Tab -->
+    @if (activeTab === 'presupuesto') {
+      <main class="main-content">
+        <div class="page-header">
+          <h2 class="page-title">Presupuesto Mensual</h2>
+          <p class="page-subtitle">Gestiona tus ingresos y gastos</p>
+        </div>
+
+        <!-- Income Card -->
+        <div class="income-card">
+          <div class="income-header">
+            <div class="income-title-row">
+              <div class="income-icon-box"><ion-icon name="cash-outline"></ion-icon></div>
+              <span class="income-title">Ingresos Totales</span>
+            </div>
+            <div class="income-btns">
+              <button class="icon-btn" (click)="openCalculatorModal()"><ion-icon name="calculator-outline"></ion-icon></button>
+              <button class="icon-btn" (click)="toggleAddIncomeForm()"><ion-icon name="add-outline"></ion-icon></button>
+            </div>
+          </div>
+          <div class="income-amount">{{ incomeSources.totalIncome() | currencyMxn }}</div>
+
+          @if (isAddingIncome) {
+            <div class="income-form">
+              <div class="form-field">
+                <label>Fuente de Ingreso</label>
+                <input type="text" placeholder="Ej: Salario, Freelance" [(ngModel)]="newIncome.name" />
+              </div>
+              <div class="form-field">
+                <label>Monto Neto</label>
+                <input type="number" placeholder="0.00" [(ngModel)]="newIncome.amount" />
+              </div>
+              <div class="form-btns">
+                <button class="btn-primary-light" (click)="addIncome()">Agregar</button>
+                <button class="btn-secondary-light" (click)="cancelAddIncome()">Cancelar</button>
+              </div>
+            </div>
+          }
+
+          @if (incomeSources.incomeSources().length > 0 && !isAddingIncome) {
+            <div class="income-list">
+              @for (source of incomeSources.incomeSources(); track source.id) {
+                <div class="income-item">
+                  <ion-icon name="briefcase-outline"></ion-icon>
+                  <span class="income-item-name">{{ source.name }}</span>
+                  <span class="income-item-badge">{{ source.amount | currencyMxn }}</span>
+                  <button class="income-item-delete" (click)="deleteIncomeSource(source.id)">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </button>
+                </div>
+              }
+            </div>
+          }
+
+          @if (incomeSources.incomeSources().length === 0 && !isAddingIncome) {
+            <p class="income-empty">Agrega tus fuentes de ingreso</p>
+          }
+        </div>
+
+        <!-- Charts Carousel -->
+        <div class="card">
+          <div class="charts-header">
+            <div>
+              <h3 class="card-title">{{ chartTitles[currentChart] }}</h3>
+              <p class="card-subtitle">{{ chartSubtitles[currentChart] }}</p>
+            </div>
+            <div class="charts-nav">
+              <button class="nav-arrow" (click)="prevChart()"><ion-icon name="chevron-back-outline"></ion-icon></button>
+              <div class="dots">
+                @for (i of [0, 1, 2]; track i) {
+                  <span class="dot" [class.active]="currentChart === i"></span>
+                }
+              </div>
+              <button class="nav-arrow" (click)="nextChart()"><ion-icon name="chevron-forward-outline"></ion-icon></button>
+            </div>
+          </div>
+
+          @if (hasChartData()) {
+            <div class="chart-wrapper">
+              <svg class="pie-chart" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="70" fill="none" stroke="#e5e7eb" stroke-width="24"/>
+                @for (seg of getChartSegments(); track $index) {
+                  <circle cx="100" cy="100" r="70" fill="none" [attr.stroke]="seg.color" stroke-width="24"
+                    [attr.stroke-dasharray]="seg.dashArray" [attr.stroke-dashoffset]="seg.offset" transform="rotate(-90 100 100)"/>
+                }
+              </svg>
+              @if (currentChart === 2) {
+                <div class="chart-center">
+                  <span class="chart-pct">{{ savingsRate() }}%</span>
+                  <span class="chart-lbl">Ahorro</span>
+                </div>
+              }
+            </div>
+            <div class="chart-legend">
+              @for (item of getChartLegend(); track item.label) {
+                <div class="legend-row">
+                  <span class="legend-dot" [style.background]="item.color"></span>
+                  <span class="legend-name">{{ item.label }}</span>
+                  <span class="legend-val">{{ item.value | currencyMxn }}</span>
+                </div>
+              }
+            </div>
+            @if (currentChart === 2 && incomeSources.totalIncome() > 0) {
+              <div class="rate-box">
+                <span class="rate-title">Tasa de Ahorro</span>
+                <div class="rate-row">
+                  <span class="rate-pct" [class.good]="savingsRate() >= 20" [class.warn]="savingsRate() >= 10 && savingsRate() < 20" [class.bad]="savingsRate() < 10">{{ savingsRate() }}%</span>
+                  <span class="rate-msg">@if (savingsRate() >= 20) {¡Excelente!} @else if (savingsRate() >= 10) {Buen ritmo} @else {Puedes mejorar}</span>
+                </div>
+              </div>
+            }
+          } @else {
+            <div class="chart-empty">
+              @if (currentChart === 0) {Agrega fuentes de ingreso para ver la distribución}
+              @else if (currentChart === 1) {Agrega gastos para ver la distribución}
+              @else {Completa tu presupuesto para ver el resumen}
+            </div>
+          }
+        </div>
+
+        <!-- Quick Insights -->
+        @if (incomeSources.totalIncome() > 0) {
+          <div class="card">
+            <div class="card-header-row">
+              <ion-icon name="bulb-outline" class="icon-amber"></ion-icon>
+              <h3 class="card-title">Análisis Rápido</h3>
+            </div>
+            <div class="insights">
+              @for (insight of getInsights(); track $index) {
+                <div class="insight" [class]="insight.type">
+                  <ion-icon [name]="insight.icon"></ion-icon>
+                  <span>{{ insight.message }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Expenses -->
+        <div class="card">
+          <h3 class="card-title">Gastos</h3>
+          <div class="expense-form">
+            <div class="form-grid">
+              <div class="form-field"><label>Nombre</label><input type="text" placeholder="Ej: Renta" [(ngModel)]="newExpense.name"/></div>
+              <div class="form-field"><label>Monto</label><input type="number" placeholder="0.00" [(ngModel)]="newExpense.amount"/></div>
+            </div>
+            <div class="form-grid">
+              <div class="form-field">
+                <label>Tipo</label>
+                <select [(ngModel)]="newExpense.type"><option value="fixed">Fijo</option><option value="variable">Variable</option></select>
+              </div>
+              <div class="form-field">
+                <label>Categoría</label>
+                <select [(ngModel)]="newExpense.category">
+                  @for (cat of expenseCategories; track cat.value) {<option [value]="cat.value">{{ cat.label }}</option>}
+                </select>
+              </div>
+            </div>
+            <button class="btn-dark" (click)="addExpense()"><ion-icon name="add-outline"></ion-icon> Agregar Gasto</button>
+          </div>
+
+          @if (getFixedExpenses().length > 0) {
+            <div class="expense-section">
+              <div class="expense-section-hdr"><span>Gastos Fijos</span><span class="expense-section-total">{{ expenses.totalFixedExpenses() | currencyMxn }}</span></div>
+              @for (exp of getFixedExpenses(); track exp.id) {
+                <div class="expense-row">
+                  <div class="expense-icon" [style.background]="getCategoryColor(exp.category)"><ion-icon [name]="getCategoryIcon(exp.category)"></ion-icon></div>
+                  <div class="expense-info"><span class="expense-name">{{ exp.name }}</span><span class="expense-cat">{{ getCategoryLabel(exp.category) }}</span></div>
+                  <span class="expense-amt">{{ exp.amount | currencyMxn }}</span>
+                  <button class="expense-del" (click)="deleteExpense(exp.id)"><ion-icon name="trash-outline"></ion-icon></button>
+                </div>
+              }
+            </div>
+          }
+
+          @if (getVariableExpenses().length > 0) {
+            <div class="expense-section">
+              <div class="expense-section-hdr"><span>Gastos Variables</span><span class="expense-section-total">{{ expenses.totalVariableExpenses() | currencyMxn }}</span></div>
+              @for (exp of getVariableExpenses(); track exp.id) {
+                <div class="expense-row">
+                  <div class="expense-icon" [style.background]="getCategoryColor(exp.category)"><ion-icon [name]="getCategoryIcon(exp.category)"></ion-icon></div>
+                  <div class="expense-info"><span class="expense-name">{{ exp.name }}</span><span class="expense-cat">{{ getCategoryLabel(exp.category) }}</span></div>
+                  <span class="expense-amt">{{ exp.amount | currencyMxn }}</span>
+                  <button class="expense-del" (click)="deleteExpense(exp.id)"><ion-icon name="trash-outline"></ion-icon></button>
+                </div>
+              }
+            </div>
+          }
+
+          @if (expenses.expenses().length === 0) {
+            <p class="empty-msg">No hay gastos registrados</p>
+          }
+        </div>
+
+        <!-- Savings Goals -->
+        <div class="card">
+          <div class="card-header-row">
+            <div class="card-header-left"><ion-icon name="flag-outline" class="icon-purple"></ion-icon><h3 class="card-title">Metas de Ahorro</h3></div>
+            <a routerLink="/savings/add" class="add-btn"><ion-icon name="add-outline"></ion-icon></a>
+          </div>
+          <div class="savings-banner">
+            <div class="banner-row"><ion-icon name="trending-up-outline"></ion-icon><span>Ahorro Disponible</span></div>
+            <span class="banner-amount">{{ availableForSavings() | currencyMxn }}</span>
+          </div>
+          @if (savingsGoals.goals().length > 0) {
+            <div class="goals-list">
+              @for (goal of savingsGoals.goals().slice(0, 3); track goal.id) {
+                <a class="goal-row" [routerLink]="['/savings', goal.id]">
+                  <app-progress-ring [progress]="(goal.current_amount / goal.target_amount) * 100" [size]="48" [strokeWidth]="4" color="#8b5cf6"></app-progress-ring>
+                  <div class="goal-info"><span class="goal-name">{{ goal.name }}</span><span class="goal-amounts"><span class="goal-current">{{ goal.current_amount | currencyMxn }}</span> de {{ goal.target_amount | currencyMxn }}</span></div>
+                  <span class="goal-pct">{{ ((goal.current_amount / goal.target_amount) * 100) | number:'1.0-0' }}%</span>
+                </a>
+              }
+            </div>
+          } @else {
+            <p class="empty-msg">No hay metas de ahorro</p>
+          }
+        </div>
+      </main>
+    }
+
+    <!-- Emergency Tab -->
+    @if (activeTab === 'emergencia') {
+      <main class="main-content">
+        <div class="page-header"><h2 class="page-title">Ahorro de Emergencia</h2><p class="page-subtitle">Construye tu red de seguridad</p></div>
+        <div class="emergency-card">
+          <div class="emergency-header"><div class="emergency-icon"><ion-icon name="shield-outline"></ion-icon></div><div><h3>Fondo de Emergencia</h3><p>Tu red de seguridad financiera</p></div></div>
+          <div class="emergency-stats"><span class="stat-label">Ahorros Actuales</span><span class="stat-value">{{ emergencyCurrentSavings | currencyMxn }}</span><span class="stat-hint"><ion-icon name="checkmark-circle-outline"></ion-icon> Cubres {{ emergencyMonthsCovered | number:'1.1-1' }} meses</span></div>
+          <div class="emergency-rec"><span class="rec-label">Recomendación</span><span class="rec-pct">Destina {{ emergencyRecommendedPercentage }}% de tu ingreso</span><span class="rec-amount">{{ emergencyRecommendedAmount | currencyMxn }}</span></div>
+        </div>
+        <div class="card"><h3 class="card-title">Configuración</h3>
+          <div class="form-field"><label>Ingreso Mensual Neto</label><input type="number" [(ngModel)]="emergencyMonthlyIncome" placeholder="5000"/><span class="hint">Tu ingreso después de impuestos</span></div>
+          <div class="form-field"><label>Gastos Mensuales</label><input type="number" [(ngModel)]="emergencyMonthlyExpenses" placeholder="2000"/><span class="hint">Incluye todos tus gastos esenciales</span></div>
+          <div class="form-field"><label>Ahorros Actuales</label><input type="number" [(ngModel)]="emergencyCurrentSavings" placeholder="0.00"/></div>
+        </div>
+        <div class="card"><h3 class="card-title">Ruta de Ahorro</h3><p class="card-subtitle">Progresa dedicando el % recomendado</p>
+          <div class="milestones">
+            @for (m of emergencyMilestones; track m.months) {
+              <div class="milestone" [class.done]="emergencyMonthsCovered >= m.months" [class.current]="isCurrentMilestone(m.months)">
+                <div class="milestone-hdr">
+                  <div class="milestone-left">
+                    @if (emergencyMonthsCovered >= m.months) {<ion-icon name="checkmark-circle" class="check"></ion-icon>} @else {<ion-icon name="ellipse-outline" class="circle"></ion-icon>}
+                    <div><span class="milestone-label" [style.color]="m.color">{{ m.label }}</span><span class="milestone-target">Meta: {{ (emergencyMonthlyExpenses * m.months) | currencyMxn }}</span></div>
+                  </div>
+                  <span class="milestone-badge">{{ m.recommendedPercentage }}%</span>
+                </div>
+                @if (emergencyMonthsCovered < m.months) {<div class="progress-bar"><div class="progress-fill" [style.width.%]="getMilestoneProgress(m.months)"></div></div>}
+              </div>
+            }
+          </div>
+        </div>
+        <div class="card tips"><h3>💡 ¿Por qué este sistema?</h3>
+          <ul><li><strong>0-1 mes:</strong> Prioridad máxima (100%).</li><li><strong>1-3 meses:</strong> Mantén 100% hasta cobertura básica.</li><li><strong>3-6 meses:</strong> Reduce a 75%.</li><li><strong>6-12 meses:</strong> 50% es suficiente.</li><li><strong>12+ meses:</strong> 25% para mantener.</li></ul>
+        </div>
+      </main>
+    }
+
+    <!-- Long Term Tab -->
+    @if (activeTab === 'largo-plazo') {
+      <main class="main-content">
+        <div class="page-header"><h2 class="page-title">Ahorro a Largo Plazo</h2><p class="page-subtitle">Tu camino a la libertad financiera</p></div>
+
+        <div class="hero-card amber">
+          <div class="hero-header"><div class="hero-icon"><ion-icon name="leaf-outline"></ion-icon></div><div><h3>Ahorro a Largo Plazo</h3><p>Tu camino a la libertad financiera</p></div></div>
+          <div class="hero-stat">
+            <span class="stat-label">Ahorros Invertidos Actuales</span>
+            <span class="stat-value">{{ ltCurrentSavings | currencyMxn }}</span>
+            <span class="stat-hint">@if (ltCurrentLevel) {<ion-icon name="checkmark-circle-outline"></ion-icon> Nivel: {{ ltCurrentLevel.name }}} @else {Comienza tu camino a la libertad}</span>
+          </div>
+          <div class="hero-grid">
+            <div class="hero-box"><span class="box-label">Ingreso Pasivo Mensual</span><span class="box-value">{{ ltMonthlyPassiveIncome | currencyMxn }}</span><span class="box-hint">Regla del 4% anual</span></div>
+            <div class="hero-box"><span class="box-label">Cobertura de Gastos</span><span class="box-value">{{ ltCoveragePercentage | number:'1.0-0' }}%</span><span class="box-hint">@if (ltCoveragePercentage >= 100) {¡Libertad alcanzada!} @else {de tus gastos}</span></div>
+          </div>
+        </div>
+
+        <div class="alert-warning"><ion-icon name="warning-outline"></ion-icon><p><strong>¡Importante!</strong> Este dinero DEBE estar invertido. Sin rendimientos, la inflación destruye tu poder adquisitivo (~4-6% anual). Considera ETFs indexados, CETES, fondos de inversión o bonos.</p></div>
+
+        <div class="card"><h3 class="card-title">Configuración</h3>
+          <div class="form-field"><label>Gastos Mensuales Totales</label><input type="number" [(ngModel)]="ltMonthlyExpenses" placeholder="0.00"/><span class="hint">Todos tus gastos mensuales</span></div>
+          <div class="form-field"><label>Ahorros Actuales para Largo Plazo</label><input type="number" [(ngModel)]="ltCurrentSavings" placeholder="0.00"/><span class="hint">Solo cuenta dinero invertido</span></div>
+          <div class="form-field"><label>Ahorro Mensual</label><input type="number" [(ngModel)]="ltMonthlySavings" placeholder="0.00"/><span class="hint">¿Cuánto puedes invertir cada mes?</span></div>
+          <div class="form-field"><label>Retorno Anual Esperado (%)</label><input type="number" [(ngModel)]="ltAnnualReturn" placeholder="8"/><span class="hint">Conservador: 5-7% | Moderado: 8-10% | Agresivo: 12%+</span></div>
+        </div>
+
+        <div class="card"><h3 class="card-title">Niveles de Libertad Financiera</h3><p class="card-subtitle">Cada nivel representa un hito en tu independencia económica</p>
+          <div class="levels-list">
+            @for (level of financialLevels; track level.name) {
+              <div class="level-card" [class.completed]="isLevelCompleted(level)" [class.current]="ltNextLevel?.name === level.name">
+                <div class="level-header">
+                  <div class="level-left">
+                    <div class="level-icon" [class]="level.bgClass"><ion-icon [name]="level.icon"></ion-icon></div>
+                    <div><span class="level-name" [class]="level.color">{{ level.name }}</span><span class="level-desc">{{ level.description }}</span><span class="level-meaning">{{ level.meaning }}</span></div>
+                  </div>
+                  @if (isLevelCompleted(level)) {<ion-icon name="checkmark-circle" class="level-check"></ion-icon>}
+                </div>
+                <div class="level-target"><span>Meta de ahorro</span><span class="level-amount">{{ getLevelTarget(level) | currencyMxn }}</span></div>
+                <div class="progress-bar"><div class="progress-fill" [style.width.%]="getLevelProgress(level)"></div></div>
+                @if (!isLevelCompleted(level) && isYearsValid(getYearsToLevel(level))) {
+                  <div class="level-time"><ion-icon name="time-outline"></ion-icon> <strong>{{ getYearsToLevel(level) | number:'1.1-1' }} años</strong> para alcanzar</div>
+                }
+                @if (isLevelCompleted(level)) {<div class="level-done">✓ ¡Nivel alcanzado!</div>}
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (ltNextLevel) {
+          <div class="card next-level">
+            <h3 class="card-title">Siguiente Nivel: {{ ltNextLevel.name }}</h3>
+            <div class="next-info"><span>Meta</span><span class="next-amount">{{ getLevelTarget(ltNextLevel) | currencyMxn }}</span></div>
+            <div class="next-info"><span>Falta por ahorrar</span><span class="next-amount">{{ getLevelTarget(ltNextLevel) - ltCurrentSavings | currencyMxn }}</span></div>
+            @if (isYearsValid(getYearsToLevel(ltNextLevel))) {
+              <div class="next-time"><span class="time-label">Tiempo estimado</span><span class="time-value">{{ getYearsToLevel(ltNextLevel) | number:'1.1-1' }} años</span><span class="time-hint">Ahorrando {{ ltMonthlySavings | currencyMxn }}/mes con {{ ltAnnualReturn }}% retorno</span></div>
+            }
+          </div>
+        }
+
+        <div class="card compound-card">
+          <h3 class="card-title"><ion-icon name="trending-up-outline"></ion-icon> El Poder del Interés Compuesto</h3>
+          <div class="projection-grid">
+            <div class="projection-item"><span class="proj-label">5 años</span><span class="proj-value">{{ getProjectedSavings(5) | currencyMxn }}</span></div>
+            <div class="projection-item"><span class="proj-label">10 años</span><span class="proj-value">{{ getProjectedSavings(10) | currencyMxn }}</span></div>
+            <div class="projection-item"><span class="proj-label">20 años</span><span class="proj-value">{{ getProjectedSavings(20) | currencyMxn }}</span></div>
+          </div>
+          <p class="proj-note">* Proyecciones asumiendo {{ ltAnnualReturn }}% de retorno anual</p>
+        </div>
+
+        <div class="card tips">
+          <h3>💡 La Regla del 4%</h3>
+          <p>Si retiras el 4% anualmente de tu capital invertido, este debería durar indefinidamente. Es decir: $1,000,000 te da $40,000/año ($3,333/mes) de forma perpetua.</p>
+          <div class="formula">Gastos mensuales × 12 × 25 = Capital necesario</div>
+          <div class="result">Con gastos de {{ ltMonthlyExpenses | currencyMxn }}/mes, necesitas <strong>{{ ltAnnualExpenses * 25 | currencyMxn }}</strong> invertidos</div>
+        </div>
+      </main>
+    }
+
+    <!-- Retirement Tab -->
+    @if (activeTab === 'retiro') {
+      <main class="main-content">
+        <div class="page-header"><h2 class="page-title">Plan de Retiro</h2><p class="page-subtitle">Prepara tu futuro financiero</p></div>
+
+        <div class="hero-card purple">
+          <div class="hero-header"><div class="hero-icon"><ion-icon name="flag-outline"></ion-icon></div><div><h3>Plan de Retiro</h3><p>Planifica tu futuro financiero</p></div></div>
+          <div class="hero-stat">
+            <span class="stat-label">Proyección al Retiro</span>
+            <span class="stat-value">{{ retTotalFund | currencyMxn }}</span>
+            <span class="stat-hint">En {{ retYearsToRetirement }} años ({{ retRetirementAge }} años)</span>
+          </div>
+          <div class="hero-grid">
+            <div class="hero-box"><ion-icon name="calendar-outline"></ion-icon><span class="box-label">Años hasta retiro</span><span class="box-value">{{ retYearsToRetirement }}</span></div>
+            <div class="hero-box"><ion-icon name="trending-up-outline"></ion-icon><span class="box-label">Retorno anual</span><span class="box-value">{{ retExpectedReturn }}%</span></div>
+          </div>
+        </div>
+
+        <div class="card"><h3 class="card-title">Parámetros de Planificación</h3>
+          <div class="form-grid-2">
+            <div class="form-field"><label>Edad Actual</label><input type="number" [(ngModel)]="retCurrentAge" placeholder="30"/></div>
+            <div class="form-field"><label>Edad de Retiro</label><input type="number" [(ngModel)]="retRetirementAge" placeholder="65"/></div>
+          </div>
+          <div class="form-field"><label>Ahorros Actuales para Retiro</label><input type="number" [(ngModel)]="retCurrentSavings" placeholder="0.00"/></div>
+          <div class="form-field"><label>Contribución Mensual</label><input type="number" [(ngModel)]="retMonthlyContribution" placeholder="0.00"/></div>
+          <div class="form-field"><label>Retorno Anual Esperado (%)</label><input type="number" [(ngModel)]="retExpectedReturn" placeholder="7"/></div>
+        </div>
+
+        <div class="card"><h3 class="card-title">Análisis de Suficiencia</h3>
+          <div class="analysis-row"><span>Fondo Proyectado</span><span class="analysis-value">{{ retTotalFund | currencyMxn }}</span></div>
+          <div class="analysis-row"><span>Fondo Recomendado</span><span class="analysis-value">{{ retRecommendedFund | currencyMxn }}</span></div>
+          <div class="progress-bar"><div class="progress-fill" [style.width.%]="retFundProgress"></div></div>
+          <p class="analysis-hint">@if (retTotalFund >= retRecommendedFund) {✓ Tu plan está en camino a cumplir las recomendaciones} @else {Considera aumentar tu contribución mensual}</p>
+          <div class="ret-income-box">
+            <span class="income-label">Ingreso Mensual Estimado</span>
+            <span class="income-value">{{ retMonthlyIncome | currencyMxn }}</span>
+            <span class="income-hint">Usando la regla del 4% de retiro anual</span>
+          </div>
+        </div>
+      </main>
+    }
+
+    <!-- Investments Tab -->
+    @if (activeTab === 'inversiones') {
+      <main class="main-content">
+        <div class="page-header"><h2 class="page-title">Inversiones</h2><p class="page-subtitle">Haz crecer tu patrimonio</p></div>
+
+        <div class="hero-card blue">
+          <div class="hero-header"><div class="hero-icon"><ion-icon name="trending-up-outline"></ion-icon></div><div><h3>Inversiones</h3><p>Haz crecer tu patrimonio</p></div></div>
+          <div class="hero-grid">
+            <div class="hero-box large"><ion-icon name="cash-outline"></ion-icon><span class="box-label">Total Invertido</span><span class="box-value big">{{ totalInvested | currencyMxn }}</span></div>
+            <div class="hero-box large"><ion-icon name="pie-chart-outline"></ion-icon><span class="box-label">Retorno Promedio</span><span class="box-value big">{{ weightedReturn | number:'1.1-1' }}%</span></div>
+          </div>
+          <div class="hero-box full"><span class="box-label">Retorno Anual Proyectado</span><span class="box-value">{{ projectedAnnualReturn | currencyMxn }}</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header-row"><h3 class="card-title">Tu Portafolio</h3><button class="add-btn" (click)="toggleInvestmentForm()"><ion-icon name="add-outline"></ion-icon></button></div>
+
+          @if (showInvestmentForm) {
+            <div class="investment-form">
+              <div class="form-field"><label>Nombre de la Inversión</label><input type="text" [(ngModel)]="newInvestment.name" placeholder="Ej: S&P 500 ETF"/></div>
+              <div class="form-grid-2">
+                <div class="form-field"><label>Tipo</label>
+                  <select [(ngModel)]="newInvestment.type">@for (t of investmentTypes; track t.value) {<option [value]="t.value">{{ t.label }}</option>}</select>
+                </div>
+                <div class="form-field"><label>Monto Invertido</label><input type="number" [(ngModel)]="newInvestment.amount" placeholder="0.00"/></div>
+              </div>
+              <div class="form-field"><label>Retorno Anual Esperado (%)</label><input type="number" [(ngModel)]="newInvestment.expected_return" placeholder="8"/></div>
+              <div class="form-btns"><button class="btn-primary" (click)="addInvestment()">Agregar Inversión</button><button class="btn-secondary" (click)="toggleInvestmentForm()">Cancelar</button></div>
+            </div>
+          }
+
+          <div class="investments-list">
+            @for (inv of investmentSvc.investments(); track inv.id) {
+              <div class="investment-row">
+                <div class="inv-icon" [style.background]="getInvestmentTypeColor(inv.type)"><ion-icon name="trending-up-outline"></ion-icon></div>
+                <div class="inv-info"><span class="inv-name">{{ inv.name }}</span><span class="inv-type">{{ getInvestmentTypeLabel(inv.type) }}</span></div>
+                <div class="inv-values"><span class="inv-amount">{{ inv.amount | currencyMxn }}</span><span class="inv-return">{{ inv.expected_return }}% anual</span></div>
+                <button class="inv-delete" (click)="deleteInvestment(inv.id)"><ion-icon name="trash-outline"></ion-icon></button>
+              </div>
+            }
+          </div>
+
+          @if (investmentSvc.investments().length === 0 && !showInvestmentForm) {
+            <p class="empty-msg">No hay inversiones registradas</p>
+          }
+        </div>
+
+        <!-- Rule of 120 Card - Always visible -->
+        <div class="card rule120-card" [class.balanced]="riskAllocationStatus === 'balanced'" [class.too-risky]="riskAllocationStatus === 'too-risky'" [class.too-conservative]="riskAllocationStatus === 'too-conservative'">
+          <div class="rule120-header">
+            <div class="rule120-icon"><ion-icon name="scale-outline"></ion-icon></div>
+            <div>
+              <h3 class="card-title">Regla del 120</h3>
+              <p class="card-subtitle">Balance riesgo vs seguridad según tu edad</p>
+            </div>
+          </div>
+
+          <div class="rule120-formula">
+            <span class="formula-text">120 - {{ retCurrentAge }} años = </span>
+            <span class="formula-result">{{ rule120RecommendedRisk }}% en riesgo</span>
+          </div>
+
+          <div class="allocation-comparison">
+            <div class="alloc-section">
+              <div class="alloc-label">Recomendado para ti</div>
+              <div class="alloc-bars">
+                <div class="alloc-bar-container">
+                  <div class="alloc-bar risky" [style.width.%]="rule120RecommendedRisk"></div>
+                  <div class="alloc-bar conservative" [style.width.%]="rule120RecommendedConservative"></div>
+                </div>
+                <div class="alloc-legend">
+                  <span class="legend-risky">{{ rule120RecommendedRisk }}% Riesgo</span>
+                  <span class="legend-conservative">{{ rule120RecommendedConservative }}% Conservador</span>
+                </div>
+              </div>
+            </div>
+
+            @if (investmentSvc.investments().length > 0) {
+              <div class="alloc-section">
+                <div class="alloc-label">Tu portafolio actual</div>
+                <div class="alloc-bars">
+                  <div class="alloc-bar-container">
+                    <div class="alloc-bar risky" [style.width.%]="currentRiskyPercentage"></div>
+                    <div class="alloc-bar conservative" [style.width.%]="currentConservativePercentage"></div>
+                  </div>
+                  <div class="alloc-legend">
+                    <span class="legend-risky">{{ currentRiskyPercentage | number:'1.0-0' }}% Riesgo</span>
+                    <span class="legend-conservative">{{ currentConservativePercentage | number:'1.0-0' }}% Conservador</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="rule120-status" [class]="riskAllocationStatus">
+                {{ getRiskStatusMessage() }}
+              </div>
+            } @else {
+              <div class="alloc-empty">
+                <p>Agrega inversiones para ver cómo se compara tu portafolio con la recomendación</p>
+              </div>
+            }
+          </div>
+
+          <div class="rule120-types">
+            <div class="type-group">
+              <span class="type-label risky">🔥 Mayor riesgo/rendimiento:</span>
+              <span class="type-list">Acciones, ETFs, Cripto</span>
+            </div>
+            <div class="type-group">
+              <span class="type-label conservative">🛡️ Menor riesgo/rendimiento:</span>
+              <span class="type-list">Bonos, Bienes Raíces, Fondos Mutuos</span>
+            </div>
+          </div>
+        </div>
+
+        @if (investmentSvc.investments().length > 0) {
+          <div class="card"><h3 class="card-title">Distribución por Tipo</h3>
+            <div class="distribution-list">
+              @for (item of getInvestmentsByType(); track item.type.value) {
+                <div class="dist-row">
+                  <div class="dist-info"><span>{{ item.type.label }}</span><span class="dist-amount">{{ item.total | currencyMxn }} ({{ item.percentage | number:'1.1-1' }}%)</span></div>
+                  <div class="dist-bar"><div class="dist-fill" [style.width.%]="item.percentage" [style.background]="item.type.color"></div></div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="card compound-card"><h3 class="card-title"><ion-icon name="trending-up-outline"></ion-icon> Proyección a Futuro</h3>
+            <div class="projection-grid">
+              <div class="projection-item"><span class="proj-label">1 año</span><span class="proj-value">{{ getInvestmentProjection(1) | currencyMxn }}</span></div>
+              <div class="projection-item"><span class="proj-label">5 años</span><span class="proj-value">{{ getInvestmentProjection(5) | currencyMxn }}</span></div>
+              <div class="projection-item"><span class="proj-label">10 años</span><span class="proj-value">{{ getInvestmentProjection(10) | currencyMxn }}</span></div>
+            </div>
+            <p class="proj-note">* Proyecciones basadas en tu retorno promedio de {{ weightedReturn | number:'1.1-1' }}%</p>
+          </div>
+        }
+      </main>
+    }
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="bottom-bar">
+    <div class="bar-item"><span class="bar-label">Ingresos</span><span class="bar-value green">{{ incomeSources.totalIncome() | currencyMxn }}</span></div>
+    <div class="bar-item"><span class="bar-label">Gastos</span><span class="bar-value red">{{ expenses.totalExpenses() | currencyMxn }}</span></div>
+    <div class="bar-item"><span class="bar-label">Balance</span><span class="bar-value blue" [class.red]="availableForSavings() < 0">{{ availableForSavings() | currencyMxn }}</span></div>
+  </div>
+</ion-content>
+
+@if (showCalculatorModal) {
+  <app-salary-calculator-modal [initialNetSalary]="calculatorInitialValue" (salarySelected)="onSalaryCalculated($event)" (cancelled)="closeCalculatorModal()"></app-salary-calculator-modal>
+}

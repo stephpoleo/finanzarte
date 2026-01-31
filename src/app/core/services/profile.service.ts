@@ -5,10 +5,11 @@ import { TaxCalculationService } from './tax-calculation.service';
 import { UserProfile } from '../../models';
 import { environment } from '../../../environments/environment';
 
-// Mock profile for dev mode
+// Mock profile for dev mode (30 years old)
 const MOCK_PROFILE: UserProfile = {
   id: 'dev-user-123',
   full_name: 'Usuario de Prueba',
+  birth_date: new Date(new Date().getFullYear() - 30, 0, 15).toISOString().split('T')[0],
   gross_salary: 25000,
   net_salary: 21500,
   created_at: new Date().toISOString(),
@@ -101,6 +102,49 @@ export class ProfileService {
           ...currentProfile,
           gross_salary: grossSalary,
           net_salary: breakdown.netSalary
+        });
+      }
+    }
+
+    return { error: error ? new Error(error.message) : null };
+  }
+
+  async updateNetSalary(netSalary: number): Promise<{ error: Error | null }> {
+    // Dev mode: update mock profile locally
+    if ((environment as any).devMode) {
+      const currentProfile = this.profileData();
+      if (currentProfile) {
+        this.profileData.set({
+          ...currentProfile,
+          net_salary: netSalary
+        });
+      }
+      return { error: null };
+    }
+
+    const userId = this.auth.user()?.id;
+    if (!userId) {
+      return { error: new Error('User not authenticated') };
+    }
+
+    if (!this.supabase.isConfigured) {
+      return { error: new Error('Supabase not configured') };
+    }
+
+    const { error } = await this.supabase.client
+      .from('profiles')
+      .update({
+        net_salary: netSalary,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId);
+
+    if (!error) {
+      const currentProfile = this.profileData();
+      if (currentProfile) {
+        this.profileData.set({
+          ...currentProfile,
+          net_salary: netSalary
         });
       }
     }

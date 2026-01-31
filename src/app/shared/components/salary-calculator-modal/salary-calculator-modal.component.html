@@ -1,0 +1,136 @@
+<div class="modal-backdrop" (click)="close()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Calculadora de Ingreso Neto</h2>
+      <button class="modal-close" (click)="close()">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Calculator Card -->
+      <div class="calculator-card">
+        <div class="calculator-header">
+          <ion-icon name="calculator-outline"></ion-icon>
+          <span>Calculadora de Ingreso</span>
+        </div>
+
+        <!-- Toggle for calculation mode -->
+        <div class="toggle-section">
+          <div class="toggle-info">
+            <span class="toggle-label">Calcular desde salario bruto</span>
+            <span class="toggle-desc">Aplica deducciones mexicanas automáticamente</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" [(ngModel)]="calculateFromGross" (change)="onModeChange()">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        @if (!calculateFromGross) {
+          <!-- Direct Net Salary Input -->
+          <div class="form-section">
+            <label class="form-label">Ingreso Neto Mensual</label>
+            <input
+              type="number"
+              class="form-input"
+              [(ngModel)]="netSalary"
+              placeholder="0.00"
+              inputmode="decimal"
+            />
+            <span class="form-hint">Ingreso después de impuestos y deducciones</span>
+          </div>
+        } @else {
+          <!-- Gross Salary Calculator -->
+          <div class="form-section">
+            <label class="form-label">Salario Bruto Mensual</label>
+            <input
+              type="number"
+              class="form-input"
+              [(ngModel)]="grossSalary"
+              (ngModelChange)="calculateTaxes()"
+              placeholder="0.00"
+              inputmode="decimal"
+            />
+            <span class="form-hint">Ingreso antes de impuestos y deducciones</span>
+          </div>
+
+          @if (breakdown) {
+            <!-- Mandatory Deductions -->
+            <div class="deductions-section">
+              <h4 class="deductions-title">Deducciones Obligatorias</h4>
+
+              <div class="deduction-item">
+                <div class="deduction-info">
+                  <span class="deduction-name">IMSS ({{ imssPercentage }}%)</span>
+                  <span class="deduction-desc">Seguridad social</span>
+                </div>
+                <span class="deduction-amount">-{{ breakdown.imss | currencyMxn }}</span>
+              </div>
+
+              <div class="deduction-item">
+                <div class="deduction-info">
+                  <span class="deduction-name">ISR (Impuesto)</span>
+                  <span class="deduction-desc">Impuesto sobre la renta</span>
+                </div>
+                <span class="deduction-amount">-{{ breakdown.isr | currencyMxn }}</span>
+              </div>
+            </div>
+
+            <!-- Optional Deductions -->
+            <div class="deductions-section">
+              <h4 class="deductions-title">Deducciones Opcionales</h4>
+
+              <div class="form-group-inline">
+                <label class="form-label">Fondo de Ahorro (%)</label>
+                <input
+                  type="number"
+                  class="form-input small"
+                  [(ngModel)]="savingsFundPercent"
+                  (ngModelChange)="calculateTaxes()"
+                  placeholder="0"
+                  min="0"
+                  max="13"
+                />
+              </div>
+
+              <div class="form-group-inline">
+                <label class="form-label">Otras Deducciones</label>
+                <input
+                  type="number"
+                  class="form-input small"
+                  [(ngModel)]="otherDeductions"
+                  (ngModelChange)="calculateTaxes()"
+                  placeholder="0.00"
+                />
+              </div>
+              <span class="form-hint">INFONAVIT, pensión alimenticia, préstamos, etc.</span>
+            </div>
+
+            <!-- Result Card -->
+            <div class="result-card">
+              <span class="result-label">Ingreso Neto Mensual</span>
+              <span class="result-value">{{ calculatedNetSalary | currencyMxn }}</span>
+              <span class="result-hint">Total deducciones: {{ totalDeductions | currencyMxn }} ({{ deductionPercentage }}%)</span>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="disclaimer">
+              <ion-icon name="information-circle-outline"></ion-icon>
+              <span>Los cálculos son aproximados y pueden variar según tu situación fiscal específica.</span>
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-primary" (click)="useAmount()">
+        Usar este monto
+      </button>
+      <button class="btn-secondary" (click)="close()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>

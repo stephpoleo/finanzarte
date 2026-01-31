@@ -3,7 +3,11 @@
     "allow": [
       "Bash(dir /b /s)",
       "WebSearch",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npm run build:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(tar:*)",
+      "Bash(unzip:*)"
     ]
   }
 }
