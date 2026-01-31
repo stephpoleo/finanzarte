@@ -134,39 +134,6 @@ npx ionic cap open android  # Open Android Studio
 npx ionic cap open ios      # Open Xcode
 ```
 
-## Mobile Testing (Local Network)
-
-Puedes ver la app en tu teléfono sin instalar nada, usando la misma red WiFi:
-
-### 1. Obtener tu IP local
-
-```bash
-# Windows
-ipconfig | findstr "IPv4"
-
-# Mac/Linux
-ifconfig | grep "inet "
-```
-
-### 2. Iniciar servidor accesible en red
-
-```bash
-npx ng serve --host 0.0.0.0 --port 4200 --disable-host-check
-```
-
-**Explicación de los flags:**
-- `--host 0.0.0.0` → Acepta conexiones desde cualquier IP (no solo localhost)
-- `--port 4200` → Puerto donde corre el servidor (puedes cambiarlo si está ocupado)
-- `--disable-host-check` → Permite acceso desde otros dispositivos sin verificación de host
-
-### 3. Acceder desde el teléfono
-
-1. Conecta tu teléfono a la **misma red WiFi** que tu computadora
-2. Abre el navegador (Chrome, Safari)
-3. Ve a: `http://TU_IP:4200` (ej: `http://192.168.1.74:4200`)
-
-> **Tip:** Guarda la URL como acceso directo en tu pantalla de inicio para acceso rápido.
-
 ## Theme & Design System
 
 Mexican-inspired color palette:
