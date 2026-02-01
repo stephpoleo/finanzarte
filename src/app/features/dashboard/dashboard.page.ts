@@ -57,7 +57,9 @@ import {
   logOutOutline,
   cardOutline,
   medicalOutline,
-  schoolOutline
+  schoolOutline,
+  lockClosedOutline,
+  lockOpenOutline
 } from 'ionicons/icons';
 import { ProfileService } from '../../core/services/profile.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -67,7 +69,7 @@ import { IncomeSourceService } from '../../core/services/income-source.service';
 import { InvestmentService } from '../../core/services/investment.service';
 import { UserSettingsService } from '../../core/services/user-settings.service';
 import { CurrencyMxnPipe } from '../../shared/pipes/currency-mxn.pipe';
-import { ExpenseCategory, EXPENSE_CATEGORIES, Investment, InvestmentType, InvestmentTypeInfo, INVESTMENT_TYPES, FINANCIAL_LEVELS, FinancialLevel, EMERGENCY_MILESTONES, SavingsGoal } from '../../models';
+import { ExpenseCategory, EXPENSE_CATEGORIES, Investment, InvestmentType, InvestmentTypeInfo, INVESTMENT_TYPES, FINANCIAL_LEVELS, FinancialLevel, EMERGENCY_MILESTONES, EmergencyMilestone, SavingsGoal } from '../../models';
 import { ProgressRingComponent } from '../../shared/components/progress-ring/progress-ring.component';
 import { SalaryCalculatorModalComponent, SalaryCalculatorResult } from '../../shared/components/salary-calculator-modal/salary-calculator-modal.component';
 import { SavingsGoalModalComponent, SavingsGoalResult } from '../../shared/components/savings-goal-modal/savings-goal-modal.component';
@@ -130,6 +132,7 @@ export class DashboardPage implements OnInit {
   // Savings goal modal state
   showGoalModal = false;
   editingGoal: SavingsGoal | null = null;
+  savingsGoalsUnlocked = false; // Bypass lock even without 1 month emergency fund
 
   // Expense form state
   isAddingExpense = false;
@@ -193,6 +196,7 @@ export class DashboardPage implements OnInit {
 
   // Emergency tab state - synced with UserSettingsService
   emergencyMilestones = EMERGENCY_MILESTONES;
+  emergencyCalcBase: 'expenses' | 'income' = 'expenses';
 
   // Use getters/setters to sync with service
   get emergencyCurrentSavings(): number { return this.userSettings.emergencyCurrentSavings(); }
@@ -306,7 +310,9 @@ export class DashboardPage implements OnInit {
       logOutOutline,
       cardOutline,
       medicalOutline,
-      schoolOutline
+      schoolOutline,
+      lockClosedOutline,
+      lockOpenOutline
     });
   }
 
@@ -477,6 +483,16 @@ export class DashboardPage implements OnInit {
   onGoalUpdated(result: SavingsGoalResult): void {
     this.showGoalModal = false;
     this.editingGoal = null;
+  }
+
+  // Savings goals lock - require at least 1 month emergency fund
+  get savingsGoalsLocked(): boolean {
+    if (this.savingsGoalsUnlocked) return false;
+    return this.emergencyMonthsCovered < 1;
+  }
+
+  unlockSavingsGoals(): void {
+    this.savingsGoalsUnlocked = true;
   }
 
   // Expense methods
@@ -871,8 +887,9 @@ export class DashboardPage implements OnInit {
 
   // Emergency tab computed values
   get emergencyMonthsCovered(): number {
-    if (this.emergencyMonthlyExpenses <= 0) return 0;
-    return this.emergencyCurrentSavings / this.emergencyMonthlyExpenses;
+    const base = this.emergencyCalcBaseAmount;
+    if (base <= 0) return 0;
+    return this.emergencyCurrentSavings / base;
   }
 
   get emergencyRecommendedPercentage(): number {
@@ -884,20 +901,55 @@ export class DashboardPage implements OnInit {
     return 25;
   }
 
+  get emergencyAvailableSavings(): number {
+    return Math.max(0, this.emergencyMonthlyIncome - this.emergencyMonthlyExpenses);
+  }
+
   get emergencyRecommendedAmount(): number {
-    return (this.emergencyMonthlyIncome * this.emergencyRecommendedPercentage) / 100;
+    return (this.emergencyAvailableSavings * this.emergencyRecommendedPercentage) / 100;
   }
 
   isCurrentMilestone(months: number): boolean {
-    const covered = this.emergencyMonthsCovered;
-    if (months === 1) return covered < 1;
-    if (months === 3) return covered >= 1 && covered < 3;
-    if (months === 6) return covered >= 3 && covered < 6;
-    if (months === 12) return covered >= 6 && covered < 12;
-    return covered >= 12 && covered < 24;
+    const savings = this.emergencyCurrentSavings;
+    const baseTarget = 10000;
+
+    if (months === 0) return savings < baseTarget;
+    if (months === 1) return savings >= baseTarget && this.emergencyMonthsCovered < 1;
+    if (months === 3) return this.emergencyMonthsCovered >= 1 && this.emergencyMonthsCovered < 3;
+    if (months === 6) return this.emergencyMonthsCovered >= 3 && this.emergencyMonthsCovered < 6;
+    if (months === 12) return this.emergencyMonthsCovered >= 6 && this.emergencyMonthsCovered < 12;
+    return this.emergencyMonthsCovered >= 12 && this.emergencyMonthsCovered < 24;
+  }
+
+  isMilestoneDone(months: number): boolean {
+    const savings = this.emergencyCurrentSavings;
+    const baseTarget = 10000;
+
+    if (months === 0) return savings >= baseTarget;
+    return this.emergencyMonthsCovered >= months;
+  }
+
+  get emergencyCalcBaseAmount(): number {
+    return this.emergencyCalcBase === 'income'
+      ? this.emergencyMonthlyIncome
+      : this.emergencyMonthlyExpenses;
+  }
+
+  getMilestoneTarget(milestone: EmergencyMilestone): number {
+    if (milestone.fixedTarget !== undefined) {
+      return milestone.fixedTarget;
+    }
+    return this.emergencyCalcBaseAmount * milestone.months;
   }
 
   getMilestoneProgress(months: number): number {
+    const savings = this.emergencyCurrentSavings;
+    const baseTarget = 10000;
+
+    if (months === 0) {
+      return Math.min(100, Math.max(0, (savings / baseTarget) * 100));
+    }
+
     const covered = this.emergencyMonthsCovered;
     const prevMonths = months === 1 ? 0 : months === 3 ? 1 : months === 6 ? 3 : months === 12 ? 6 : 12;
     const range = months - prevMonths;

@@ -41,11 +41,23 @@ src/app/
 
 ## Dashboard Tabs
 
-1. **Presupuesto** - Income sources, expenses, available savings
-2. **Emergencia** - Emergency fund calculator (1-24 months coverage)
-3. **Largo Plazo** - 5 financial levels (Security → Abundance)
-4. **Retiro** - Retirement planning with compound interest projections
-5. **Inversiones** - Investment portfolio with Rule of 120 risk allocation
+1. **Presupuesto** (Green) - Income sources, expenses, available savings
+2. **Emergencia** (Cyan) - Emergency fund calculator with milestone roadmap
+3. **Largo Plazo** (Amber) - 5 financial levels (Security → Abundance)
+4. **Retiro** (Purple) - Retirement planning with compound interest projections
+5. **Inversiones** (Indigo) - Investment portfolio with Rule of 120 risk allocation
+
+### Emergency Fund Tab Features
+- **Milestone roadmap**: Base ($10k) → 1 month → 3 months → 6 months → 12 months → 24 months
+- **Toggle**: Calculate based on monthly expenses OR monthly income
+- **Recommendation**: Shows % of available savings to dedicate (not income)
+- **Inline editable savings**: Edit emergency fund amount directly in the hero card
+- **Auto-sync**: Income and expenses sync automatically from Presupuesto tab
+
+### Savings Goals Lock
+- Savings goals are **locked** until user has at least 1 month of emergency fund
+- User can bypass the lock with a warning about the importance of emergency fund first
+- Encourages building financial safety net before setting other savings goals
 
 ## Data Models
 
@@ -141,6 +153,13 @@ Mexican-inspired color palette:
 - Danger: Mexican Red (#ce1126)
 - Success: Emerald (#10b981)
 
+Dashboard tab colors:
+- Presupuesto: Green (#10b981)
+- Emergencia: Cyan (#06b6d4)
+- Largo Plazo: Amber (#f59e0b)
+- Retiro: Purple (#8b5cf6)
+- Inversiones: Indigo (#6366f1)
+
 Modern UI features:
 - Bottom navigation bar for mobile
 - Hero cards with gradients
@@ -201,6 +220,12 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Delete savings goals (immediate deletion, no confirmation)
 - [x] Centralized mock data (src/app/data/mock-data.ts)
 - [x] Login page redesign (gradient background, white card, modern styling)
+- [x] Emergency tab redesign (cyan color scheme, distinct from Presupuesto green)
+- [x] Emergency fund Base milestone ($10k minimum)
+- [x] Emergency fund toggle (calculate by expenses or income)
+- [x] Emergency recommendation based on available savings (income - expenses)
+- [x] Inline editable emergency savings in hero card
+- [x] Savings goals lock until 1 month emergency fund (with bypass option)
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality

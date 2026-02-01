@@ -27,7 +27,7 @@
           <ion-icon name="home-outline"></ion-icon>
           <span>Presupuesto</span>
         </button>
-        <button class="nav-tab" [class.active-green]="activeTab === 'emergencia'" (click)="activeTab = 'emergencia'">
+        <button class="nav-tab" [class.active-cyan]="activeTab === 'emergencia'" (click)="activeTab = 'emergencia'">
           <ion-icon name="shield-outline"></ion-icon>
           <span>Emergencia</span>
         </button>
@@ -360,31 +360,54 @@
         }
 
         <!-- Savings Goals -->
-        <div class="card">
+        <div class="card" [class.locked]="savingsGoalsLocked">
           <div class="card-header-row">
-            <div class="card-header-left"><ion-icon name="flag-outline" class="icon-purple"></ion-icon><h3 class="card-title">Metas de Ahorro</h3></div>
-            <button class="add-btn" (click)="openGoalModal()"><ion-icon name="add-outline"></ion-icon></button>
+            <div class="card-header-left">
+              <ion-icon [name]="savingsGoalsLocked ? 'lock-closed-outline' : 'flag-outline'" [class.icon-purple]="!savingsGoalsLocked" [class.icon-locked]="savingsGoalsLocked"></ion-icon>
+              <h3 class="card-title">Metas de Ahorro</h3>
+            </div>
+            @if (!savingsGoalsLocked) {
+              <button class="add-btn" (click)="openGoalModal()"><ion-icon name="add-outline"></ion-icon></button>
+            }
           </div>
-          <div class="savings-banner">
-            <div class="banner-row"><ion-icon name="trending-up-outline"></ion-icon><span>Ahorro Disponible</span></div>
-            <span class="banner-amount">{{ availableForSavings() | currencyMxn }}</span>
-          </div>
-          @if (savingsGoals.goals().length > 0) {
-            <div class="goals-list">
-              @for (goal of savingsGoals.goals().slice(0, 3); track goal.id) {
-                <div class="goal-row">
-                  <a class="goal-link" [routerLink]="['/savings', goal.id]">
-                    <app-progress-ring [progress]="(goal.current_amount / goal.target_amount) * 100" [size]="48" [strokeWidth]="4" color="#8b5cf6"></app-progress-ring>
-                    <div class="goal-info"><span class="goal-name">{{ goal.name }}</span><span class="goal-amounts"><span class="goal-current">{{ goal.current_amount | currencyMxn }}</span> de {{ goal.target_amount | currencyMxn }}</span></div>
-                    <span class="goal-pct">{{ ((goal.current_amount / goal.target_amount) * 100) | number:'1.0-0' }}%</span>
-                  </a>
-                  <button class="goal-edit" (click)="openEditGoalModal(goal, $event)"><ion-icon name="create-outline"></ion-icon></button>
-                  <button class="goal-del" (click)="deleteGoal(goal.id, $event)"><ion-icon name="trash-outline"></ion-icon></button>
-                </div>
-              }
+
+          @if (savingsGoalsLocked) {
+            <div class="goals-locked">
+              <div class="locked-icon"><ion-icon name="shield-outline"></ion-icon></div>
+              <h4>Primero asegura tu fondo de emergencia</h4>
+              <p>Antes de plantearte metas de ahorro, es importante tener al menos <strong>1 mes</strong> de tus {{ emergencyCalcBase === 'income' ? 'ingresos' : 'gastos' }} ahorrado como colchón de seguridad.</p>
+              <div class="locked-progress">
+                <span>Progreso actual: {{ emergencyMonthsCovered | number:'1.1-1' }} meses</span>
+                <div class="progress-bar"><div class="progress-fill" [style.width.%]="(emergencyMonthsCovered / 1) * 100"></div></div>
+              </div>
+              <button class="unlock-btn" (click)="unlockSavingsGoals()">
+                <ion-icon name="lock-open-outline"></ion-icon>
+                Desbloquear de todas formas
+              </button>
+              <p class="unlock-warning">No recomendado: sin un fondo de emergencia, cualquier imprevisto puede obligarte a usar tus ahorros.</p>
             </div>
           } @else {
-            <p class="empty-msg">No hay metas de ahorro</p>
+            <div class="savings-banner">
+              <div class="banner-row"><ion-icon name="trending-up-outline"></ion-icon><span>Ahorro Disponible</span></div>
+              <span class="banner-amount">{{ availableForSavings() | currencyMxn }}</span>
+            </div>
+            @if (savingsGoals.goals().length > 0) {
+              <div class="goals-list">
+                @for (goal of savingsGoals.goals().slice(0, 3); track goal.id) {
+                  <div class="goal-row">
+                    <a class="goal-link" [routerLink]="['/savings', goal.id]">
+                      <app-progress-ring [progress]="(goal.current_amount / goal.target_amount) * 100" [size]="48" [strokeWidth]="4" color="#8b5cf6"></app-progress-ring>
+                      <div class="goal-info"><span class="goal-name">{{ goal.name }}</span><span class="goal-amounts"><span class="goal-current">{{ goal.current_amount | currencyMxn }}</span> de {{ goal.target_amount | currencyMxn }}</span></div>
+                      <span class="goal-pct">{{ ((goal.current_amount / goal.target_amount) * 100) | number:'1.0-0' }}%</span>
+                    </a>
+                    <button class="goal-edit" (click)="openEditGoalModal(goal, $event)"><ion-icon name="create-outline"></ion-icon></button>
+                    <button class="goal-del" (click)="deleteGoal(goal.id, $event)"><ion-icon name="trash-outline"></ion-icon></button>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="empty-msg">No hay metas de ahorro</p>
+            }
           }
         </div>
       </main>
@@ -395,32 +418,41 @@
       <main class="main-content">
         <div class="emergency-card">
           <div class="emergency-header"><div class="emergency-icon"><ion-icon name="shield-outline"></ion-icon></div><div><h3>Fondo de Emergencia</h3><p>Tu red de seguridad financiera</p></div></div>
-          <div class="emergency-stats"><span class="stat-label">Ahorros Actuales</span><span class="stat-value">{{ emergencyCurrentSavings | currencyMxn }}</span><span class="stat-hint"><ion-icon name="checkmark-circle-outline"></ion-icon> Cubres {{ emergencyMonthsCovered | number:'1.1-1' }} meses</span></div>
-          <div class="emergency-rec"><span class="rec-label">Recomendación</span><span class="rec-pct">Destina {{ emergencyRecommendedPercentage }}% de tu ingreso</span><span class="rec-amount">{{ emergencyRecommendedAmount | currencyMxn }}</span></div>
-        </div>
-        <div class="card"><h3 class="card-title">Configuración</h3>
-          <div class="form-field"><label>Ingreso Mensual Neto</label><input type="number" [(ngModel)]="emergencyMonthlyIncome" placeholder="5000"/><span class="hint">Tu ingreso después de impuestos</span></div>
-          <div class="form-field"><label>Gastos Mensuales</label><input type="number" [(ngModel)]="emergencyMonthlyExpenses" placeholder="2000"/><span class="hint">Incluye todos tus gastos esenciales</span></div>
-          <div class="form-field"><label>Ahorros Actuales</label><input type="number" [(ngModel)]="emergencyCurrentSavings" placeholder="0.00"/></div>
+          <div class="emergency-stats">
+            <span class="stat-label">Ahorros Actuales</span>
+            <div class="stat-input-row">
+              <span class="currency-prefix">$</span>
+              <input type="number" class="stat-input" [(ngModel)]="emergencyCurrentSavings" placeholder="0"/>
+            </div>
+            <span class="stat-hint"><ion-icon name="checkmark-circle-outline"></ion-icon> Cubres {{ emergencyMonthsCovered | number:'1.1-1' }} meses de {{ emergencyCalcBase === 'income' ? 'ingresos' : 'gastos' }}</span>
+          </div>
+          <div class="emergency-rec"><span class="rec-label">Recomendación</span><span class="rec-pct">Destina {{ emergencyRecommendedPercentage }}% de tu ahorro</span><span class="rec-amount">{{ emergencyRecommendedAmount | currencyMxn }}</span></div>
         </div>
         <div class="card"><h3 class="card-title">Ruta de Ahorro</h3><p class="card-subtitle">Progresa dedicando el % recomendado</p>
+          <div class="calc-toggle">
+            <span class="toggle-label">Calcular en base a:</span>
+            <div class="toggle-buttons">
+              <button class="toggle-btn" [class.active]="emergencyCalcBase === 'expenses'" (click)="emergencyCalcBase = 'expenses'">Gastos</button>
+              <button class="toggle-btn" [class.active]="emergencyCalcBase === 'income'" (click)="emergencyCalcBase = 'income'">Ingresos</button>
+            </div>
+          </div>
           <div class="milestones">
             @for (m of emergencyMilestones; track m.months) {
-              <div class="milestone" [class.done]="emergencyMonthsCovered >= m.months" [class.current]="isCurrentMilestone(m.months)">
+              <div class="milestone" [class.done]="isMilestoneDone(m.months)" [class.current]="isCurrentMilestone(m.months)">
                 <div class="milestone-hdr">
                   <div class="milestone-left">
-                    @if (emergencyMonthsCovered >= m.months) {<ion-icon name="checkmark-circle" class="check"></ion-icon>} @else {<ion-icon name="ellipse-outline" class="circle"></ion-icon>}
-                    <div><span class="milestone-label" [style.color]="m.color">{{ m.label }}</span><span class="milestone-target">Meta: {{ (emergencyMonthlyExpenses * m.months) | currencyMxn }}</span></div>
+                    @if (isMilestoneDone(m.months)) {<ion-icon name="checkmark-circle" class="check"></ion-icon>} @else {<ion-icon name="ellipse-outline" class="circle"></ion-icon>}
+                    <div><span class="milestone-label" [style.color]="m.color">{{ m.label }}</span><span class="milestone-target">Meta: {{ getMilestoneTarget(m) | currencyMxn }}</span></div>
                   </div>
                   <span class="milestone-badge">{{ m.recommendedPercentage }}%</span>
                 </div>
-                @if (emergencyMonthsCovered < m.months) {<div class="progress-bar"><div class="progress-fill" [style.width.%]="getMilestoneProgress(m.months)"></div></div>}
+                @if (!isMilestoneDone(m.months)) {<div class="progress-bar"><div class="progress-fill" [style.width.%]="getMilestoneProgress(m.months)"></div></div>}
               </div>
             }
           </div>
         </div>
         <div class="card tips"><h3>💡 ¿Por qué este sistema?</h3>
-          <ul><li><strong>0-1 mes:</strong> Prioridad máxima (100%).</li><li><strong>1-3 meses:</strong> Mantén 100% hasta cobertura básica.</li><li><strong>3-6 meses:</strong> Reduce a 75%.</li><li><strong>6-12 meses:</strong> 50% es suficiente.</li><li><strong>12+ meses:</strong> 25% para mantener.</li></ul>
+          <ul><li><strong>Base ($10k):</strong> Mínimo absoluto para cualquier emergencia.</li><li><strong>1-3 meses:</strong> Prioridad máxima (100%).</li><li><strong>3-6 meses:</strong> Reduce a 75%.</li><li><strong>6-12 meses:</strong> 50% es suficiente.</li><li><strong>12+ meses:</strong> 25% para mantener.</li></ul>
         </div>
       </main>
     }

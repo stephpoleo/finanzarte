@@ -110,9 +110,11 @@ export interface EmergencyMilestone {
   label: string;
   color: string;
   recommendedPercentage: number;
+  fixedTarget?: number; // Fixed amount target (overrides months * expenses calculation)
 }
 
 export const EMERGENCY_MILESTONES: EmergencyMilestone[] = [
+  { months: 0, label: 'Base', color: '#dc2626', recommendedPercentage: 100, fixedTarget: 10000 },
   { months: 1, label: '1 mes', color: '#ef4444', recommendedPercentage: 100 },
   { months: 3, label: '3 meses', color: '#f59e0b', recommendedPercentage: 100 },
   { months: 6, label: '6 meses', color: '#eab308', recommendedPercentage: 75 },
