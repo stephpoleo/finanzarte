@@ -3,17 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { Expense, ExpenseType, ExpenseCategory } from '../../models';
 import { environment } from '../../../environments/environment';
-
-// Mock expenses for dev mode
-const mockNow = new Date().toISOString();
-const MOCK_EXPENSES: Expense[] = [
-  { id: '1', user_id: 'dev-user-123', name: 'Renta', amount: 8000, type: 'fixed', category: 'rent', created_at: mockNow, updated_at: mockNow },
-  { id: '2', user_id: 'dev-user-123', name: 'Luz', amount: 500, type: 'fixed', category: 'utilities', created_at: mockNow, updated_at: mockNow },
-  { id: '3', user_id: 'dev-user-123', name: 'Internet', amount: 600, type: 'fixed', category: 'utilities', created_at: mockNow, updated_at: mockNow },
-  { id: '4', user_id: 'dev-user-123', name: 'Netflix', amount: 200, type: 'fixed', category: 'subscriptions', created_at: mockNow, updated_at: mockNow },
-  { id: '5', user_id: 'dev-user-123', name: 'Comida', amount: 4000, type: 'variable', category: 'food', created_at: mockNow, updated_at: mockNow },
-  { id: '6', user_id: 'dev-user-123', name: 'Transporte', amount: 1500, type: 'variable', category: 'transport', created_at: mockNow, updated_at: mockNow },
-];
+import { MOCK_EXPENSES, MOCK_USER_ID } from '../../data/mock-data';
 
 @Injectable({
   providedIn: 'root'
@@ -90,7 +80,7 @@ export class ExpenseService {
     if ((environment as any).devMode) {
       const newExpense: Expense = {
         id: Date.now().toString(),
-        user_id: 'dev-user-123',
+        user_id: MOCK_USER_ID,
         name: expense.name,
         amount: expense.amount,
         type: expense.type,

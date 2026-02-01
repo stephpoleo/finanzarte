@@ -26,10 +26,10 @@ src/app/
 │   ├── savings/         # Savings goals and deposits
 │   └── settings/        # User settings
 ├── shared/
-│   ├── components/      # Reusable components (ProgressRing)
+│   ├── components/      # Reusable components (ProgressRing, SavingsGoalModal, SalaryCalculatorModal)
 │   └── pipes/           # Currency and percentage pipes
 ├── models/              # TypeScript interfaces
-└── data/                # Static data (tax tables)
+└── data/                # Static data (tax tables, mock data)
 ```
 
 ## Key Features
@@ -148,6 +148,8 @@ Modern UI features:
 - Animated progress bars
 - Responsive grid layouts
 - Staggered animations on load
+- Donut charts with segment separators (white lines at boundaries)
+- Aligned chart legends (fixed-width percentages and values)
 
 Supports automatic dark mode.
 
@@ -168,8 +170,8 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Authentication (login, register with birthdate, logout)
 - [x] Tax calculation service (ISR 2024, IMSS)
 - [x] Salary setup page with breakdown
-- [x] Expense management (CRUD)
-- [x] Savings goals with deposits
+- [x] Expense management (CRUD) with inline editing
+- [x] Savings goals with deposits (mobile-first bottom sheet modal, edit support)
 - [x] Dashboard with 5 tabs (Presupuesto, Emergencia, Largo Plazo, Retiro, Inversiones)
 - [x] Emergency fund calculator (1-24 months)
 - [x] Long-term savings with 5 financial levels
@@ -181,6 +183,14 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Supabase connection working (auth + database)
 - [x] Persist investments to Supabase (InvestmentService)
 - [x] Persist user settings to Supabase (UserSettingsService)
+- [x] Edit income sources inline
+- [x] Edit expenses inline with percentage display
+- [x] Animated donut charts with fill effect
+- [x] Percentages shown in chart legends
+- [x] Donut chart separator lines (white lines at segment boundaries)
+- [x] Chart legend alignment (percentages and values aligned)
+- [x] Delete savings goals (immediate deletion, no confirmation)
+- [x] Centralized mock data (src/app/data/mock-data.ts)
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality
@@ -199,7 +209,18 @@ When `devMode: true` in environment.ts:
 - Mock profile with $25,000 gross salary
 - Sample expenses (Renta, Luz, Internet, Netflix, Comida, Transporte)
 - Sample savings goals (Fondo de Emergencia, Vacaciones)
+- Sample investments (VOO ETF, CETES, AFORE)
 - All CRUD operations work locally (data resets on refresh)
+
+**Centralized Mock Data:** All mock data is defined in `src/app/data/mock-data.ts` for easy maintenance. This includes:
+- `MOCK_USER` - Mock authenticated user
+- `MOCK_PROFILE` - User profile (30 years old, $25k salary)
+- `MOCK_EXPENSES` - Sample expenses
+- `MOCK_INCOME_SOURCES` - Income sources
+- `MOCK_GOALS` / `MOCK_DEPOSITS` - Savings goals and deposits
+- `MOCK_INVESTMENTS` - Investment portfolio
+- `MOCK_SETTINGS` - User financial settings
+- `MOCK_USER_ID` - Constant for the mock user ID
 
 To use real authentication, set `devMode: false` and configure Supabase credentials.
 

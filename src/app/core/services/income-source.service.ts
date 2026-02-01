@@ -3,22 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { IncomeSource, IncomeFrequency } from '../../models';
 import { environment } from '../../../environments/environment';
-
-// Mock income sources for dev mode
-const mockNow = new Date().toISOString();
-const MOCK_INCOME_SOURCES: IncomeSource[] = [
-  {
-    id: '1',
-    user_id: 'dev-user-123',
-    name: 'Salario',
-    amount: 21500,
-    is_gross: true,
-    gross_amount: 25000,
-    frequency: 'monthly',
-    created_at: mockNow,
-    updated_at: mockNow
-  }
-];
+import { MOCK_INCOME_SOURCES, MOCK_USER_ID } from '../../data/mock-data';
 
 @Injectable({
   providedIn: 'root'
@@ -80,7 +65,7 @@ export class IncomeSourceService {
     if ((environment as any).devMode) {
       const newSource: IncomeSource = {
         id: Date.now().toString(),
-        user_id: 'dev-user-123',
+        user_id: MOCK_USER_ID,
         name: incomeSource.name,
         amount: incomeSource.amount,
         is_gross: incomeSource.is_gross || false,
