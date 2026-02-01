@@ -1,4 +1,4 @@
-<ion-content class="has-bottom-bar">
+<ion-content>
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
@@ -11,8 +11,8 @@
           <ion-icon name="wallet-outline"></ion-icon>
         </div>
         <div class="brand-text">
-          <h1 class="brand-name">finanzarte</h1>
-          <p class="brand-tagline">Tu aliado financiero</p>
+          <h1 class="brand-name">Finanzarte</h1>
+          <p class="brand-tagline">El arte de las finanzas</p>
         </div>
       </div>
       <button class="logout-btn" (click)="logout()" title="Cerrar sesión">
@@ -23,7 +23,7 @@
     <!-- Navigation Tabs -->
     <nav class="nav-tabs-wrapper">
       <div class="nav-tabs">
-        <button class="nav-tab" [class.active-blue]="activeTab === 'presupuesto'" (click)="activeTab = 'presupuesto'">
+        <button class="nav-tab" [class.active-green]="activeTab === 'presupuesto'" (click)="activeTab = 'presupuesto'">
           <ion-icon name="home-outline"></ion-icon>
           <span>Presupuesto</span>
         </button>
@@ -49,17 +49,12 @@
     <!-- Budget Tab -->
     @if (activeTab === 'presupuesto') {
       <main class="main-content">
-        <div class="page-header">
-          <h2 class="page-title">Presupuesto Mensual</h2>
-          <p class="page-subtitle">Gestiona tus ingresos y gastos</p>
-        </div>
-
         <!-- Income Card -->
         <div class="income-card">
           <div class="income-header">
             <div class="income-title-row">
               <div class="income-icon-box"><ion-icon name="cash-outline"></ion-icon></div>
-              <span class="income-title">Ingresos Totales</span>
+              <span class="income-title">Ingresos Mensuales</span>
             </div>
             <div class="income-btns">
               <button class="icon-btn" (click)="openCalculatorModal()"><ion-icon name="calculator-outline"></ion-icon></button>
@@ -88,20 +83,194 @@
           @if (incomeSources.incomeSources().length > 0 && !isAddingIncome) {
             <div class="income-list">
               @for (source of incomeSources.incomeSources(); track source.id) {
-                <div class="income-item">
-                  <ion-icon name="briefcase-outline"></ion-icon>
-                  <span class="income-item-name">{{ source.name }}</span>
-                  <span class="income-item-badge">{{ source.amount | currencyMxn }}</span>
-                  <button class="income-item-delete" (click)="deleteIncomeSource(source.id)">
-                    <ion-icon name="trash-outline"></ion-icon>
-                  </button>
-                </div>
+                @if (editingIncomeId === source.id) {
+                  <div class="income-edit-form">
+                    <div class="form-row">
+                      <input type="text" [(ngModel)]="editIncome.name" placeholder="Nombre" />
+                      <input type="number" [(ngModel)]="editIncome.amount" placeholder="Monto" />
+                    </div>
+                    <div class="form-btns-inline">
+                      <button class="btn-save" (click)="saveIncomeEdit()"><ion-icon name="checkmark-outline"></ion-icon></button>
+                      <button class="btn-cancel" (click)="cancelIncomeEdit()"><ion-icon name="close-outline"></ion-icon></button>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="income-item">
+                    <ion-icon name="briefcase-outline"></ion-icon>
+                    <span class="income-item-name">{{ source.name }}</span>
+                    <span class="income-item-badge">{{ source.amount | currencyMxn }}</span>
+                    <button class="income-item-edit" (click)="startEditIncome(source)">
+                      <ion-icon name="create-outline"></ion-icon>
+                    </button>
+                    <button class="income-item-delete" (click)="deleteIncomeSource(source.id)">
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                  </div>
+                }
               }
             </div>
           }
 
           @if (incomeSources.incomeSources().length === 0 && !isAddingIncome) {
             <p class="income-empty">Agrega tus fuentes de ingreso</p>
+          }
+        </div>
+
+        <!-- Expenses -->
+        <div class="expense-card">
+          <div class="expense-header">
+            <div class="expense-header-left">
+              <div class="expense-icon-box"><ion-icon name="trending-down-outline"></ion-icon></div>
+              <span class="expense-title">Gastos Mensuales</span>
+            </div>
+            <button class="icon-btn" (click)="toggleAddExpenseForm()"><ion-icon name="add-outline"></ion-icon></button>
+          </div>
+          <div class="expense-amount">{{ expenses.totalExpenses() | currencyMxn }}</div>
+
+          @if (isAddingExpense) {
+            <div class="expense-form">
+              <div class="form-field">
+                <label>Nombre del Gasto</label>
+                <input type="text" placeholder="Ej: Renta, Netflix" [(ngModel)]="newExpense.name" />
+              </div>
+              <div class="form-field">
+                <label>Monto</label>
+                <input type="number" placeholder="0.00" [(ngModel)]="newExpense.amount" />
+              </div>
+              <div class="form-grid-2">
+                <div class="form-field">
+                  <label>Tipo</label>
+                  <select [(ngModel)]="newExpense.type">
+                    <option value="fixed">Fijo</option>
+                    <option value="variable">Variable</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label>Categoría</label>
+                  <select [(ngModel)]="newExpense.category">
+                    @for (cat of expenseCategories; track cat.value) {
+                      <option [value]="cat.value">{{ cat.label }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="form-btns">
+                <button class="btn-primary-dark" (click)="addExpense()">Agregar</button>
+                <button class="btn-secondary-dark" (click)="cancelAddExpense()">Cancelar</button>
+              </div>
+            </div>
+          }
+
+          @if (!isAddingExpense) {
+            @if (getFixedExpenses().length > 0) {
+              <div class="expense-section" [class.expanded]="fixedExpensesExpanded">
+                <div class="expense-section-hdr" (click)="toggleFixedExpenses()">
+                  <div class="expense-section-left">
+                    <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+                    <span>Gastos Fijos</span>
+                    <span class="expense-count">({{ getFixedExpenses().length }})</span>
+                  </div>
+                  <span class="expense-section-total">{{ expenses.totalFixedExpenses() | currencyMxn }}</span>
+                </div>
+                @if (fixedExpensesExpanded) {
+                  <div class="expense-items">
+                    @for (exp of getFixedExpenses(); track exp.id) {
+                      @if (editingExpenseId === exp.id) {
+                        <div class="expense-edit-form">
+                          <div class="form-row">
+                            <input type="text" [(ngModel)]="editExpense.name" placeholder="Nombre" />
+                            <input type="number" [(ngModel)]="editExpense.amount" placeholder="Monto" />
+                          </div>
+                          <div class="form-row">
+                            <select [(ngModel)]="editExpense.type">
+                              <option value="fixed">Fijo</option>
+                              <option value="variable">Variable</option>
+                            </select>
+                            <select [(ngModel)]="editExpense.category">
+                              @for (cat of expenseCategories; track cat.value) {
+                                <option [value]="cat.value">{{ cat.label }}</option>
+                              }
+                            </select>
+                          </div>
+                          <div class="form-btns-inline">
+                            <button class="btn-save" (click)="saveExpenseEdit()"><ion-icon name="checkmark-outline"></ion-icon></button>
+                            <button class="btn-cancel" (click)="cancelExpenseEdit()"><ion-icon name="close-outline"></ion-icon></button>
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="expense-row">
+                          <div class="expense-icon" [style.background]="getCategoryColor(exp.category)"><ion-icon [name]="getCategoryIcon(exp.category)"></ion-icon></div>
+                          <div class="expense-info"><span class="expense-name">{{ exp.name }}</span><span class="expense-cat">{{ getCategoryLabel(exp.category) }}</span></div>
+                          <div class="expense-values">
+                            <span class="expense-amt">{{ exp.amount | currencyMxn }}</span>
+                            <span class="expense-pct">{{ getExpensePercentage(exp.amount) | number:'1.1-1' }}%</span>
+                          </div>
+                          <button class="expense-edit" (click)="startEditExpense(exp)"><ion-icon name="create-outline"></ion-icon></button>
+                          <button class="expense-del" (click)="deleteExpense(exp.id)"><ion-icon name="trash-outline"></ion-icon></button>
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            @if (getVariableExpenses().length > 0) {
+              <div class="expense-section" [class.expanded]="variableExpensesExpanded">
+                <div class="expense-section-hdr" (click)="toggleVariableExpenses()">
+                  <div class="expense-section-left">
+                    <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+                    <span>Gastos Variables</span>
+                    <span class="expense-count">({{ getVariableExpenses().length }})</span>
+                  </div>
+                  <span class="expense-section-total">{{ expenses.totalVariableExpenses() | currencyMxn }}</span>
+                </div>
+                @if (variableExpensesExpanded) {
+                  <div class="expense-items">
+                    @for (exp of getVariableExpenses(); track exp.id) {
+                      @if (editingExpenseId === exp.id) {
+                        <div class="expense-edit-form">
+                          <div class="form-row">
+                            <input type="text" [(ngModel)]="editExpense.name" placeholder="Nombre" />
+                            <input type="number" [(ngModel)]="editExpense.amount" placeholder="Monto" />
+                          </div>
+                          <div class="form-row">
+                            <select [(ngModel)]="editExpense.type">
+                              <option value="fixed">Fijo</option>
+                              <option value="variable">Variable</option>
+                            </select>
+                            <select [(ngModel)]="editExpense.category">
+                              @for (cat of expenseCategories; track cat.value) {
+                                <option [value]="cat.value">{{ cat.label }}</option>
+                              }
+                            </select>
+                          </div>
+                          <div class="form-btns-inline">
+                            <button class="btn-save" (click)="saveExpenseEdit()"><ion-icon name="checkmark-outline"></ion-icon></button>
+                            <button class="btn-cancel" (click)="cancelExpenseEdit()"><ion-icon name="close-outline"></ion-icon></button>
+                          </div>
+                        </div>
+                      } @else {
+                        <div class="expense-row">
+                          <div class="expense-icon" [style.background]="getCategoryColor(exp.category)"><ion-icon [name]="getCategoryIcon(exp.category)"></ion-icon></div>
+                          <div class="expense-info"><span class="expense-name">{{ exp.name }}</span><span class="expense-cat">{{ getCategoryLabel(exp.category) }}</span></div>
+                          <div class="expense-values">
+                            <span class="expense-amt">{{ exp.amount | currencyMxn }}</span>
+                            <span class="expense-pct">{{ getExpensePercentage(exp.amount) | number:'1.1-1' }}%</span>
+                          </div>
+                          <button class="expense-edit" (click)="startEditExpense(exp)"><ion-icon name="create-outline"></ion-icon></button>
+                          <button class="expense-del" (click)="deleteExpense(exp.id)"><ion-icon name="trash-outline"></ion-icon></button>
+                        </div>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            @if (expenses.expenses().length === 0) {
+              <p class="expense-empty">Agrega tus gastos mensuales</p>
+            }
           }
         </div>
 
@@ -126,10 +295,15 @@
           @if (hasChartData()) {
             <div class="chart-wrapper">
               <svg class="pie-chart" viewBox="0 0 200 200">
-                <circle cx="100" cy="100" r="70" fill="none" stroke="#e5e7eb" stroke-width="24"/>
+                <circle cx="100" cy="100" r="70" fill="none" stroke="#f3f4f6" stroke-width="24"/>
                 @for (seg of getChartSegments(); track $index) {
                   <circle cx="100" cy="100" r="70" fill="none" [attr.stroke]="seg.color" stroke-width="24"
                     [attr.stroke-dasharray]="seg.dashArray" [attr.stroke-dashoffset]="seg.offset" transform="rotate(-90 100 100)"/>
+                }
+                <!-- White separator lines between segments -->
+                @for (sep of getChartSeparators(); track $index) {
+                  <line [attr.x1]="sep.x1" [attr.y1]="sep.y1" [attr.x2]="sep.x2" [attr.y2]="sep.y2"
+                        stroke="white" stroke-width="4"/>
                 }
               </svg>
               @if (currentChart === 2) {
@@ -144,6 +318,7 @@
                 <div class="legend-row">
                   <span class="legend-dot" [style.background]="item.color"></span>
                   <span class="legend-name">{{ item.label }}</span>
+                  <span class="legend-pct">{{ getChartPercentage(item.value) | number:'1.1-1' }}%</span>
                   <span class="legend-val">{{ item.value | currencyMxn }}</span>
                 </div>
               }
@@ -184,67 +359,11 @@
           </div>
         }
 
-        <!-- Expenses -->
-        <div class="card">
-          <h3 class="card-title">Gastos</h3>
-          <div class="expense-form">
-            <div class="form-grid">
-              <div class="form-field"><label>Nombre</label><input type="text" placeholder="Ej: Renta" [(ngModel)]="newExpense.name"/></div>
-              <div class="form-field"><label>Monto</label><input type="number" placeholder="0.00" [(ngModel)]="newExpense.amount"/></div>
-            </div>
-            <div class="form-grid">
-              <div class="form-field">
-                <label>Tipo</label>
-                <select [(ngModel)]="newExpense.type"><option value="fixed">Fijo</option><option value="variable">Variable</option></select>
-              </div>
-              <div class="form-field">
-                <label>Categoría</label>
-                <select [(ngModel)]="newExpense.category">
-                  @for (cat of expenseCategories; track cat.value) {<option [value]="cat.value">{{ cat.label }}</option>}
-                </select>
-              </div>
-            </div>
-            <button class="btn-dark" (click)="addExpense()"><ion-icon name="add-outline"></ion-icon> Agregar Gasto</button>
-          </div>
-
-          @if (getFixedExpenses().length > 0) {
-            <div class="expense-section">
-              <div class="expense-section-hdr"><span>Gastos Fijos</span><span class="expense-section-total">{{ expenses.totalFixedExpenses() | currencyMxn }}</span></div>
-              @for (exp of getFixedExpenses(); track exp.id) {
-                <div class="expense-row">
-                  <div class="expense-icon" [style.background]="getCategoryColor(exp.category)"><ion-icon [name]="getCategoryIcon(exp.category)"></ion-icon></div>
-                  <div class="expense-info"><span class="expense-name">{{ exp.name }}</span><span class="expense-cat">{{ getCategoryLabel(exp.category) }}</span></div>
-                  <span class="expense-amt">{{ exp.amount | currencyMxn }}</span>
-                  <button class="expense-del" (click)="deleteExpense(exp.id)"><ion-icon name="trash-outline"></ion-icon></button>
-                </div>
-              }
-            </div>
-          }
-
-          @if (getVariableExpenses().length > 0) {
-            <div class="expense-section">
-              <div class="expense-section-hdr"><span>Gastos Variables</span><span class="expense-section-total">{{ expenses.totalVariableExpenses() | currencyMxn }}</span></div>
-              @for (exp of getVariableExpenses(); track exp.id) {
-                <div class="expense-row">
-                  <div class="expense-icon" [style.background]="getCategoryColor(exp.category)"><ion-icon [name]="getCategoryIcon(exp.category)"></ion-icon></div>
-                  <div class="expense-info"><span class="expense-name">{{ exp.name }}</span><span class="expense-cat">{{ getCategoryLabel(exp.category) }}</span></div>
-                  <span class="expense-amt">{{ exp.amount | currencyMxn }}</span>
-                  <button class="expense-del" (click)="deleteExpense(exp.id)"><ion-icon name="trash-outline"></ion-icon></button>
-                </div>
-              }
-            </div>
-          }
-
-          @if (expenses.expenses().length === 0) {
-            <p class="empty-msg">No hay gastos registrados</p>
-          }
-        </div>
-
         <!-- Savings Goals -->
         <div class="card">
           <div class="card-header-row">
             <div class="card-header-left"><ion-icon name="flag-outline" class="icon-purple"></ion-icon><h3 class="card-title">Metas de Ahorro</h3></div>
-            <a routerLink="/savings/add" class="add-btn"><ion-icon name="add-outline"></ion-icon></a>
+            <button class="add-btn" (click)="openGoalModal()"><ion-icon name="add-outline"></ion-icon></button>
           </div>
           <div class="savings-banner">
             <div class="banner-row"><ion-icon name="trending-up-outline"></ion-icon><span>Ahorro Disponible</span></div>
@@ -253,11 +372,15 @@
           @if (savingsGoals.goals().length > 0) {
             <div class="goals-list">
               @for (goal of savingsGoals.goals().slice(0, 3); track goal.id) {
-                <a class="goal-row" [routerLink]="['/savings', goal.id]">
-                  <app-progress-ring [progress]="(goal.current_amount / goal.target_amount) * 100" [size]="48" [strokeWidth]="4" color="#8b5cf6"></app-progress-ring>
-                  <div class="goal-info"><span class="goal-name">{{ goal.name }}</span><span class="goal-amounts"><span class="goal-current">{{ goal.current_amount | currencyMxn }}</span> de {{ goal.target_amount | currencyMxn }}</span></div>
-                  <span class="goal-pct">{{ ((goal.current_amount / goal.target_amount) * 100) | number:'1.0-0' }}%</span>
-                </a>
+                <div class="goal-row">
+                  <a class="goal-link" [routerLink]="['/savings', goal.id]">
+                    <app-progress-ring [progress]="(goal.current_amount / goal.target_amount) * 100" [size]="48" [strokeWidth]="4" color="#8b5cf6"></app-progress-ring>
+                    <div class="goal-info"><span class="goal-name">{{ goal.name }}</span><span class="goal-amounts"><span class="goal-current">{{ goal.current_amount | currencyMxn }}</span> de {{ goal.target_amount | currencyMxn }}</span></div>
+                    <span class="goal-pct">{{ ((goal.current_amount / goal.target_amount) * 100) | number:'1.0-0' }}%</span>
+                  </a>
+                  <button class="goal-edit" (click)="openEditGoalModal(goal, $event)"><ion-icon name="create-outline"></ion-icon></button>
+                  <button class="goal-del" (click)="deleteGoal(goal.id, $event)"><ion-icon name="trash-outline"></ion-icon></button>
+                </div>
               }
             </div>
           } @else {
@@ -270,7 +393,6 @@
     <!-- Emergency Tab -->
     @if (activeTab === 'emergencia') {
       <main class="main-content">
-        <div class="page-header"><h2 class="page-title">Ahorro de Emergencia</h2><p class="page-subtitle">Construye tu red de seguridad</p></div>
         <div class="emergency-card">
           <div class="emergency-header"><div class="emergency-icon"><ion-icon name="shield-outline"></ion-icon></div><div><h3>Fondo de Emergencia</h3><p>Tu red de seguridad financiera</p></div></div>
           <div class="emergency-stats"><span class="stat-label">Ahorros Actuales</span><span class="stat-value">{{ emergencyCurrentSavings | currencyMxn }}</span><span class="stat-hint"><ion-icon name="checkmark-circle-outline"></ion-icon> Cubres {{ emergencyMonthsCovered | number:'1.1-1' }} meses</span></div>
@@ -306,8 +428,6 @@
     <!-- Long Term Tab -->
     @if (activeTab === 'largo-plazo') {
       <main class="main-content">
-        <div class="page-header"><h2 class="page-title">Ahorro a Largo Plazo</h2><p class="page-subtitle">Tu camino a la libertad financiera</p></div>
-
         <div class="hero-card amber">
           <div class="hero-header"><div class="hero-icon"><ion-icon name="leaf-outline"></ion-icon></div><div><h3>Ahorro a Largo Plazo</h3><p>Tu camino a la libertad financiera</p></div></div>
           <div class="hero-stat">
@@ -385,8 +505,6 @@
     <!-- Retirement Tab -->
     @if (activeTab === 'retiro') {
       <main class="main-content">
-        <div class="page-header"><h2 class="page-title">Plan de Retiro</h2><p class="page-subtitle">Prepara tu futuro financiero</p></div>
-
         <div class="hero-card purple">
           <div class="hero-header"><div class="hero-icon"><ion-icon name="flag-outline"></ion-icon></div><div><h3>Plan de Retiro</h3><p>Planifica tu futuro financiero</p></div></div>
           <div class="hero-stat">
@@ -427,8 +545,6 @@
     <!-- Investments Tab -->
     @if (activeTab === 'inversiones') {
       <main class="main-content">
-        <div class="page-header"><h2 class="page-title">Inversiones</h2><p class="page-subtitle">Haz crecer tu patrimonio</p></div>
-
         <div class="hero-card blue">
           <div class="hero-header"><div class="hero-icon"><ion-icon name="trending-up-outline"></ion-icon></div><div><h3>Inversiones</h3><p>Haz crecer tu patrimonio</p></div></div>
           <div class="hero-grid">
@@ -563,14 +679,12 @@
     }
   </div>
 
-  <!-- Bottom Bar -->
-  <div class="bottom-bar">
-    <div class="bar-item"><span class="bar-label">Ingresos</span><span class="bar-value green">{{ incomeSources.totalIncome() | currencyMxn }}</span></div>
-    <div class="bar-item"><span class="bar-label">Gastos</span><span class="bar-value red">{{ expenses.totalExpenses() | currencyMxn }}</span></div>
-    <div class="bar-item"><span class="bar-label">Balance</span><span class="bar-value blue" [class.red]="availableForSavings() < 0">{{ availableForSavings() | currencyMxn }}</span></div>
-  </div>
 </ion-content>
 
 @if (showCalculatorModal) {
   <app-salary-calculator-modal [initialNetSalary]="calculatorInitialValue" (salarySelected)="onSalaryCalculated($event)" (cancelled)="closeCalculatorModal()"></app-salary-calculator-modal>
+}
+
+@if (showGoalModal) {
+  <app-savings-goal-modal [editGoal]="editingGoal" (goalCreated)="onGoalCreated($event)" (goalUpdated)="onGoalUpdated($event)" (cancelled)="closeGoalModal()"></app-savings-goal-modal>
 }

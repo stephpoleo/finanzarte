@@ -18,6 +18,7 @@ import {
   trendingUpOutline,
   settingsOutline,
   checkmarkCircleOutline,
+  checkmarkOutline,
   alertCircleOutline,
   bulbOutline,
   closeOutline,
@@ -32,6 +33,7 @@ import {
   flagOutline,
   chevronBackOutline,
   chevronForwardOutline,
+  chevronDownOutline,
   briefcaseOutline,
   cashOutline,
   checkmarkCircle,
@@ -52,7 +54,10 @@ import {
   pieChartOutline,
   warningOutline,
   scaleOutline,
-  logOutOutline
+  logOutOutline,
+  cardOutline,
+  medicalOutline,
+  schoolOutline
 } from 'ionicons/icons';
 import { ProfileService } from '../../core/services/profile.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -62,9 +67,10 @@ import { IncomeSourceService } from '../../core/services/income-source.service';
 import { InvestmentService } from '../../core/services/investment.service';
 import { UserSettingsService } from '../../core/services/user-settings.service';
 import { CurrencyMxnPipe } from '../../shared/pipes/currency-mxn.pipe';
-import { ExpenseCategory, EXPENSE_CATEGORIES, Investment, InvestmentType, InvestmentTypeInfo, INVESTMENT_TYPES, FINANCIAL_LEVELS, FinancialLevel, EMERGENCY_MILESTONES } from '../../models';
+import { ExpenseCategory, EXPENSE_CATEGORIES, Investment, InvestmentType, InvestmentTypeInfo, INVESTMENT_TYPES, FINANCIAL_LEVELS, FinancialLevel, EMERGENCY_MILESTONES, SavingsGoal } from '../../models';
 import { ProgressRingComponent } from '../../shared/components/progress-ring/progress-ring.component';
 import { SalaryCalculatorModalComponent, SalaryCalculatorResult } from '../../shared/components/salary-calculator-modal/salary-calculator-modal.component';
+import { SavingsGoalModalComponent, SavingsGoalResult } from '../../shared/components/savings-goal-modal/savings-goal-modal.component';
 
 type TabType = 'presupuesto' | 'emergencia' | 'largo-plazo' | 'retiro' | 'inversiones';
 
@@ -99,7 +105,8 @@ interface Insight {
     IonRefresherContent,
     CurrencyMxnPipe,
     ProgressRingComponent,
-    SalaryCalculatorModalComponent
+    SalaryCalculatorModalComponent,
+    SavingsGoalModalComponent
   ],
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss']
@@ -112,11 +119,20 @@ export class DashboardPage implements OnInit {
   newIncome = { name: '', amount: 0 };
   calculatorForNewIncome = false;
 
+  // Income edit state
+  editingIncomeId: string | null = null;
+  editIncome = { name: '', amount: 0 };
+
   // Calculator modal state
   showCalculatorModal = false;
   calculatorInitialValue = 0;
 
+  // Savings goal modal state
+  showGoalModal = false;
+  editingGoal: SavingsGoal | null = null;
+
   // Expense form state
+  isAddingExpense = false;
   newExpense: {
     name: string;
     amount: number;
@@ -129,8 +145,27 @@ export class DashboardPage implements OnInit {
     category: 'rent'
   };
 
+  // Expense edit state
+  editingExpenseId: string | null = null;
+  editExpense: {
+    name: string;
+    amount: number;
+    type: 'fixed' | 'variable';
+    category: ExpenseCategory;
+  } = {
+    name: '',
+    amount: 0,
+    type: 'fixed',
+    category: 'rent'
+  };
+
+  // Expense sections collapsed state
+  fixedExpensesExpanded = false;
+  variableExpensesExpanded = false;
+
   // Charts carousel state
   currentChart = 0;
+  chartAnimating = false;
   chartTitles = ['Distribución de Ingresos', 'Gastos por Categoría', 'Resumen Presupuestal'];
   chartSubtitles = ['Fuentes de ingreso', 'Distribución de gastos', 'Gastos vs Ahorro'];
 
@@ -232,6 +267,7 @@ export class DashboardPage implements OnInit {
       trendingUpOutline,
       settingsOutline,
       checkmarkCircleOutline,
+      checkmarkOutline,
       alertCircleOutline,
       bulbOutline,
       closeOutline,
@@ -246,6 +282,7 @@ export class DashboardPage implements OnInit {
       flagOutline,
       chevronBackOutline,
       chevronForwardOutline,
+      chevronDownOutline,
       briefcaseOutline,
       cashOutline,
       checkmarkCircle,
@@ -266,13 +303,18 @@ export class DashboardPage implements OnInit {
       pieChartOutline,
       warningOutline,
       scaleOutline,
-      logOutOutline
+      logOutOutline,
+      cardOutline,
+      medicalOutline,
+      schoolOutline
     });
   }
 
   ngOnInit(): void {
     this.loadData();
     this.syncEmergencyFromServices();
+    // Trigger initial chart animation after data loads
+    setTimeout(() => this.triggerChartAnimation(), 100);
   }
 
   async loadData(): Promise<void> {
@@ -351,6 +393,29 @@ export class DashboardPage implements OnInit {
     this.syncEmergencyFromServices();
   }
 
+  startEditIncome(source: { id: string; name: string; amount: number }): void {
+    this.editingIncomeId = source.id;
+    this.editIncome = { name: source.name, amount: source.amount };
+  }
+
+  async saveIncomeEdit(): Promise<void> {
+    if (!this.editingIncomeId || !this.editIncome.name || !this.editIncome.amount) return;
+
+    await this.incomeSources.updateIncomeSource(this.editingIncomeId, {
+      name: this.editIncome.name,
+      amount: this.editIncome.amount
+    });
+
+    this.editingIncomeId = null;
+    this.editIncome = { name: '', amount: 0 };
+    this.syncEmergencyFromServices();
+  }
+
+  cancelIncomeEdit(): void {
+    this.editingIncomeId = null;
+    this.editIncome = { name: '', amount: 0 };
+  }
+
   openCalculatorModal(): void {
     this.calculatorForNewIncome = false;
     this.calculatorInitialValue = 0;
@@ -380,7 +445,62 @@ export class DashboardPage implements OnInit {
     }
   }
 
+  // Savings goal modal methods
+  openGoalModal(): void {
+    this.editingGoal = null;
+    this.showGoalModal = true;
+  }
+
+  openEditGoalModal(goal: SavingsGoal, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.editingGoal = goal;
+    this.showGoalModal = true;
+  }
+
+  closeGoalModal(): void {
+    this.showGoalModal = false;
+    this.editingGoal = null;
+  }
+
+  async deleteGoal(id: string, event: Event): Promise<void> {
+    event.preventDefault();
+    event.stopPropagation();
+    await this.savingsGoals.deleteGoal(id);
+  }
+
+  onGoalCreated(result: SavingsGoalResult): void {
+    this.showGoalModal = false;
+    this.editingGoal = null;
+  }
+
+  onGoalUpdated(result: SavingsGoalResult): void {
+    this.showGoalModal = false;
+    this.editingGoal = null;
+  }
+
   // Expense methods
+  toggleAddExpenseForm(): void {
+    this.isAddingExpense = !this.isAddingExpense;
+    if (!this.isAddingExpense) {
+      this.resetExpenseForm();
+    }
+  }
+
+  cancelAddExpense(): void {
+    this.isAddingExpense = false;
+    this.resetExpenseForm();
+  }
+
+  resetExpenseForm(): void {
+    this.newExpense = {
+      name: '',
+      amount: 0,
+      type: 'fixed',
+      category: 'rent'
+    };
+  }
+
   async addExpense(): Promise<void> {
     if (!this.newExpense.name || !this.newExpense.amount) return;
 
@@ -391,12 +511,8 @@ export class DashboardPage implements OnInit {
       category: this.newExpense.category
     });
 
-    this.newExpense = {
-      name: '',
-      amount: 0,
-      type: 'fixed',
-      category: 'rent'
-    };
+    this.isAddingExpense = false;
+    this.resetExpenseForm();
     this.syncEmergencyFromServices();
   }
 
@@ -405,12 +521,56 @@ export class DashboardPage implements OnInit {
     this.syncEmergencyFromServices();
   }
 
+  startEditExpense(expense: { id: string; name: string; amount: number; type: 'fixed' | 'variable'; category: ExpenseCategory }): void {
+    this.editingExpenseId = expense.id;
+    this.editExpense = {
+      name: expense.name,
+      amount: expense.amount,
+      type: expense.type,
+      category: expense.category
+    };
+  }
+
+  async saveExpenseEdit(): Promise<void> {
+    if (!this.editingExpenseId || !this.editExpense.name || !this.editExpense.amount) return;
+
+    await this.expenses.updateExpense(this.editingExpenseId, {
+      name: this.editExpense.name,
+      amount: this.editExpense.amount,
+      type: this.editExpense.type,
+      category: this.editExpense.category
+    });
+
+    this.editingExpenseId = null;
+    this.editExpense = { name: '', amount: 0, type: 'fixed', category: 'rent' };
+    this.syncEmergencyFromServices();
+  }
+
+  cancelExpenseEdit(): void {
+    this.editingExpenseId = null;
+    this.editExpense = { name: '', amount: 0, type: 'fixed', category: 'rent' };
+  }
+
+  getExpensePercentage(amount: number): number {
+    const totalIncome = this.incomeSources.totalIncome();
+    if (totalIncome === 0) return 0;
+    return (amount / totalIncome) * 100;
+  }
+
   getFixedExpenses() {
     return this.expenses.expenses().filter(e => e.type === 'fixed');
   }
 
   getVariableExpenses() {
     return this.expenses.expenses().filter(e => e.type === 'variable');
+  }
+
+  toggleFixedExpenses(): void {
+    this.fixedExpensesExpanded = !this.fixedExpensesExpanded;
+  }
+
+  toggleVariableExpenses(): void {
+    this.variableExpensesExpanded = !this.variableExpensesExpanded;
   }
 
   getCategoryColor(category: string): string {
@@ -430,11 +590,20 @@ export class DashboardPage implements OnInit {
 
   // Chart carousel methods
   prevChart(): void {
+    this.triggerChartAnimation();
     this.currentChart = (this.currentChart - 1 + 3) % 3;
   }
 
   nextChart(): void {
+    this.triggerChartAnimation();
     this.currentChart = (this.currentChart + 1) % 3;
+  }
+
+  private triggerChartAnimation(): void {
+    this.chartAnimating = true;
+    setTimeout(() => {
+      this.chartAnimating = false;
+    }, 50);
   }
 
   hasChartData(): boolean {
@@ -452,23 +621,23 @@ export class DashboardPage implements OnInit {
     const segments: ChartSegment[] = [];
 
     if (this.currentChart === 0) {
-      // Income distribution
+      // Income distribution - green-based colors to match income card
       const sources = this.incomeSources.incomeSources();
       const total = this.incomeSources.totalIncome();
       if (total === 0) return segments;
 
-      const colors = ['#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6'];
+      const colors = ['#10b981', '#14b8a6', '#22c55e', '#059669', '#84cc16'];
       let offset = 0;
 
       sources.forEach((source, i) => {
         const ratio = source.amount / total;
-        const segmentLength = ratio * circumference;
+        const segmentLength = this.chartAnimating ? 0 : ratio * circumference;
         segments.push({
           color: colors[i % colors.length],
           dashArray: `${segmentLength} ${circumference}`,
-          offset: -offset
+          offset: this.chartAnimating ? 0 : -offset
         });
-        offset += segmentLength;
+        offset += ratio * circumference;
       });
     } else if (this.currentChart === 1) {
       // Expenses by category
@@ -482,15 +651,17 @@ export class DashboardPage implements OnInit {
       });
 
       let offset = 0;
-      Object.entries(byCategory).forEach(([cat, amount]) => {
+      const entries = Object.entries(byCategory);
+
+      entries.forEach(([cat, amount]) => {
         const ratio = amount / total;
-        const segmentLength = ratio * circumference;
+        const segmentLength = this.chartAnimating ? 0 : ratio * circumference;
         segments.push({
           color: this.getCategoryColor(cat),
           dashArray: `${segmentLength} ${circumference}`,
-          offset: -offset
+          offset: this.chartAnimating ? 0 : -offset
         });
-        offset += segmentLength;
+        offset += ratio * circumference;
       });
     } else {
       // Budget overview
@@ -504,21 +675,21 @@ export class DashboardPage implements OnInit {
       const savingsRatio = savings / totalIncome;
 
       if (totalExpenses > 0) {
-        const segLen = expenseRatio * circumference;
+        const segmentLength = this.chartAnimating ? 0 : expenseRatio * circumference;
         segments.push({
-          color: '#ef4444',
-          dashArray: `${segLen} ${circumference}`,
-          offset: -offset
+          color: '#3b82f6', // Blue to match expense card
+          dashArray: `${segmentLength} ${circumference}`,
+          offset: this.chartAnimating ? 0 : -offset
         });
-        offset += segLen;
+        offset += expenseRatio * circumference;
       }
 
       if (savings > 0) {
-        const segLen = savingsRatio * circumference;
+        const segmentLength = this.chartAnimating ? 0 : savingsRatio * circumference;
         segments.push({
           color: '#10b981',
-          dashArray: `${segLen} ${circumference}`,
-          offset: -offset
+          dashArray: `${segmentLength} ${circumference}`,
+          offset: this.chartAnimating ? 0 : -offset
         });
       }
     }
@@ -526,11 +697,96 @@ export class DashboardPage implements OnInit {
     return segments;
   }
 
+  // Get positions for white separator lines between chart segments
+  getChartSeparators(): { x1: number; y1: number; x2: number; y2: number }[] {
+    if (this.chartAnimating) return [];
+
+    const angles: number[] = [];
+
+    if (this.currentChart === 0) {
+      const sources = this.incomeSources.incomeSources();
+      const total = this.incomeSources.totalIncome();
+      if (total === 0 || sources.length <= 1) return [];
+
+      // Add separator at 0 degrees (where last segment meets first)
+      angles.push(0);
+
+      let cumulativeRatio = 0;
+      // Add separator after each segment except the last
+      for (let i = 0; i < sources.length - 1; i++) {
+        cumulativeRatio += sources[i].amount / total;
+        angles.push(cumulativeRatio * 360); // Convert to degrees
+      }
+    } else if (this.currentChart === 1) {
+      const expensesList = this.expenses.expenses();
+      const total = this.expenses.totalExpenses();
+      if (total === 0) return [];
+
+      const byCategory: Record<string, number> = {};
+      expensesList.forEach(e => {
+        byCategory[e.category] = (byCategory[e.category] || 0) + e.amount;
+      });
+
+      const entries = Object.entries(byCategory);
+      if (entries.length <= 1) return [];
+
+      // Add separator at 0 degrees (where last segment meets first)
+      angles.push(0);
+
+      let cumulativeRatio = 0;
+      for (let i = 0; i < entries.length - 1; i++) {
+        cumulativeRatio += entries[i][1] / total;
+        angles.push(cumulativeRatio * 360);
+      }
+    } else {
+      const totalIncome = this.incomeSources.totalIncome();
+      const totalExpenses = this.expenses.totalExpenses();
+      const savings = Math.max(0, totalIncome - totalExpenses);
+
+      // Only add separators if we have both expenses and savings
+      if (totalIncome > 0 && totalExpenses > 0 && savings > 0) {
+        // Add separator at 0 degrees (where savings meets expenses)
+        angles.push(0);
+
+        const expenseRatio = totalExpenses / totalIncome;
+        angles.push(expenseRatio * 360);
+      }
+    }
+
+    // Convert angles to x1, y1, x2, y2 coordinates for the separator lines
+    // Lines go from inner edge to outer edge of the donut (with slight extension)
+    const innerRadius = 56; // Slightly inside inner edge (70 - 12 - 2)
+    const outerRadius = 84; // Slightly outside outer edge (70 + 12 + 2)
+    return angles.map(angle => {
+      const radians = (angle - 90) * Math.PI / 180; // -90 to start from top
+      return {
+        x1: 100 + innerRadius * Math.cos(radians),
+        y1: 100 + innerRadius * Math.sin(radians),
+        x2: 100 + outerRadius * Math.cos(radians),
+        y2: 100 + outerRadius * Math.sin(radians)
+      };
+    });
+  }
+
+  getChartPercentage(value: number): number {
+    if (this.currentChart === 0) {
+      const total = this.incomeSources.totalIncome();
+      return total > 0 ? (value / total) * 100 : 0;
+    } else if (this.currentChart === 1) {
+      const total = this.expenses.totalExpenses();
+      return total > 0 ? (value / total) * 100 : 0;
+    } else {
+      const total = this.incomeSources.totalIncome();
+      return total > 0 ? (value / total) * 100 : 0;
+    }
+  }
+
   getChartLegend(): LegendItem[] {
     const items: LegendItem[] = [];
 
     if (this.currentChart === 0) {
-      const colors = ['#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6'];
+      // Green-based colors to match income card
+      const colors = ['#10b981', '#14b8a6', '#22c55e', '#059669', '#84cc16'];
       this.incomeSources.incomeSources().forEach((source, i) => {
         items.push({
           color: colors[i % colors.length],
@@ -553,7 +809,7 @@ export class DashboardPage implements OnInit {
     } else {
       const totalExpenses = this.expenses.totalExpenses();
       const savings = this.availableForSavings();
-      items.push({ color: '#ef4444', label: 'Gastos', value: totalExpenses });
+      items.push({ color: '#3b82f6', label: 'Gastos', value: totalExpenses }); // Blue to match expense card
       items.push({ color: '#10b981', label: 'Ahorro', value: Math.max(0, savings) });
     }
 

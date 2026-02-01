@@ -26,7 +26,7 @@ src/app/
 │   ├── savings/         # Savings goals and deposits
 │   └── settings/        # User settings
 ├── shared/
-│   ├── components/      # Reusable components (ProgressRing)
+│   ├── components/      # Reusable components (ProgressRing, SavingsGoalModal, SalaryCalculatorModal)
 │   └── pipes/           # Currency and percentage pipes
 ├── models/              # TypeScript interfaces
 └── data/                # Static data (tax tables)
@@ -148,6 +148,8 @@ Modern UI features:
 - Animated progress bars
 - Responsive grid layouts
 - Staggered animations on load
+- Donut charts with segment separators (white lines at boundaries)
+- Aligned chart legends (fixed-width percentages and values)
 
 Supports automatic dark mode.
 
@@ -168,8 +170,8 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Authentication (login, register with birthdate, logout)
 - [x] Tax calculation service (ISR 2024, IMSS)
 - [x] Salary setup page with breakdown
-- [x] Expense management (CRUD)
-- [x] Savings goals with deposits
+- [x] Expense management (CRUD) with inline editing
+- [x] Savings goals with deposits (mobile-first bottom sheet modal, edit support)
 - [x] Dashboard with 5 tabs (Presupuesto, Emergencia, Largo Plazo, Retiro, Inversiones)
 - [x] Emergency fund calculator (1-24 months)
 - [x] Long-term savings with 5 financial levels
@@ -181,6 +183,13 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Supabase connection working (auth + database)
 - [x] Persist investments to Supabase (InvestmentService)
 - [x] Persist user settings to Supabase (UserSettingsService)
+- [x] Edit income sources inline
+- [x] Edit expenses inline with percentage display
+- [x] Animated donut charts with fill effect
+- [x] Percentages shown in chart legends
+- [x] Donut chart separator lines (white lines at segment boundaries)
+- [x] Chart legend alignment (percentages and values aligned)
+- [x] Delete savings goals (immediate deletion, no confirmation)
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality

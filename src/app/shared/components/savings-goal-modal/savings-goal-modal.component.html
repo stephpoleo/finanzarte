@@ -1,0 +1,111 @@
+<div class="modal-backdrop" (click)="close()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">{{ modalTitle }}</h2>
+      <button class="modal-close" (click)="close()">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Goal Name -->
+      <div class="form-group">
+        <label class="form-label">Nombre de la meta</label>
+        <input
+          type="text"
+          class="form-input"
+          [(ngModel)]="name"
+          placeholder="Ej: Vacaciones, Auto nuevo"
+        />
+      </div>
+
+      <!-- Target Amount -->
+      <div class="form-group">
+        <label class="form-label">¿Cuánto quieres ahorrar?</label>
+        <div class="input-with-prefix">
+          <span class="input-prefix">$</span>
+          <input
+            type="number"
+            class="form-input has-prefix"
+            [(ngModel)]="targetAmount"
+            placeholder="0"
+            inputmode="numeric"
+          />
+        </div>
+      </div>
+
+      <!-- Optional Settings -->
+      <div class="options-section">
+        <!-- Deadline Option -->
+        <div class="option-row" (click)="hasDeadline = !hasDeadline">
+          <div class="option-left">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <span>Fecha límite</span>
+          </div>
+          <label class="toggle" (click)="$event.stopPropagation()">
+            <input type="checkbox" [(ngModel)]="hasDeadline">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        @if (hasDeadline) {
+          <div class="sub-option">
+            <input
+              type="date"
+              class="form-input"
+              [(ngModel)]="deadline"
+              [min]="minDate"
+            />
+          </div>
+        }
+
+        <!-- Monthly Target Option -->
+        <div class="option-row" (click)="hasMonthlyTarget = !hasMonthlyTarget">
+          <div class="option-left">
+            <ion-icon name="wallet-outline"></ion-icon>
+            <span>Ahorro mensual fijo</span>
+          </div>
+          <label class="toggle" (click)="$event.stopPropagation()">
+            <input type="checkbox" [(ngModel)]="hasMonthlyTarget">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        @if (hasMonthlyTarget) {
+          <div class="sub-option">
+            <div class="input-with-prefix">
+              <span class="input-prefix">$</span>
+              <input
+                type="number"
+                class="form-input has-prefix"
+                [(ngModel)]="monthlyTarget"
+                placeholder="0"
+                inputmode="numeric"
+              />
+            </div>
+            <span class="sub-hint">por mes</span>
+          </div>
+        }
+      </div>
+
+      @if (errorMessage) {
+        <div class="error-message">
+          {{ errorMessage }}
+        </div>
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="close()">
+        Cancelar
+      </button>
+      <button class="btn-save" (click)="save()" [disabled]="isSaving() || !isValid()">
+        @if (isSaving()) {
+          <span class="spinner"></span>
+        } @else {
+          {{ saveButtonText }}
+        }
+      </button>
+    </div>
+  </div>
+</div>
