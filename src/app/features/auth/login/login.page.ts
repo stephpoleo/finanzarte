@@ -9,9 +9,6 @@ import {
 import { RouterLink } from '@angular/router';
 import {
   IonContent,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
   IonButton,
   IonItem,
   IonInput,
@@ -21,7 +18,12 @@ import {
   IonIcon,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { mailOutline, lockClosedOutline } from 'ionicons/icons';
+import {
+  mailOutline,
+  lockClosedOutline,
+  arrowForward,
+  walletOutline,
+} from 'ionicons/icons';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -41,59 +43,76 @@ import { AuthService } from '../../../core/services/auth.service';
     IonIcon,
   ],
   template: `
-    <ion-content class="ion-padding">
-      <div class="login-container">
-        <div class="logo-section">
-          <h1 class="app-title">Finanzarte</h1>
-          <p class="app-subtitle">Tu asistente de finanzas personales</p>
-        </div>
+    <ion-content [fullscreen]="true" [scrollY]="false">
+      <div class="login-page">
+        <div class="login-container">
+          <!-- Logo Section -->
+          <div class="logo-section">
+            <div class="logo-box">
+              <ion-icon name="wallet-outline"></ion-icon>
+            </div>
+            <h1 class="app-title">Finanzarte</h1>
+            <p class="app-subtitle">El arte de las finanzas</p>
+          </div>
 
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-          <ion-item lines="none" class="input-item">
-            <ion-icon name="mail-outline" slot="start"></ion-icon>
-            <ion-input
-              type="email"
-              formControlName="email"
-              placeholder="Correo electrónico"
-              autocomplete="email"
-            ></ion-input>
-          </ion-item>
+          <!-- Login Card -->
+          <div class="login-card">
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+              <ion-item lines="none" class="input-item">
+                <ion-icon name="mail-outline" slot="start"></ion-icon>
+                <ion-input
+                  type="email"
+                  formControlName="email"
+                  placeholder="Email"
+                  autocomplete="email"
+                ></ion-input>
+              </ion-item>
 
-          <ion-item lines="none" class="input-item">
-            <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
-            <ion-input
-              type="password"
-              formControlName="password"
-              placeholder="Contraseña"
-              autocomplete="current-password"
-            >
-              <ion-input-password-toggle slot="end"></ion-input-password-toggle>
-            </ion-input>
-          </ion-item>
+              <ion-item lines="none" class="input-item">
+                <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
+                <ion-input
+                  type="password"
+                  formControlName="password"
+                  placeholder="Contraseña"
+                  autocomplete="current-password"
+                >
+                  <ion-input-password-toggle
+                    slot="end"
+                  ></ion-input-password-toggle>
+                </ion-input>
+              </ion-item>
 
-          @if (errorMessage()) {
-            <ion-text color="danger" class="error-text">
-              <p>{{ errorMessage() }}</p>
-            </ion-text>
-          }
+              @if (errorMessage()) {
+                <ion-text color="danger" class="error-text">
+                  <p>{{ errorMessage() }}</p>
+                </ion-text>
+              }
 
-          <ion-button
-            type="submit"
-            expand="block"
-            [disabled]="!loginForm.valid || isLoading()"
-            class="submit-button"
-          >
-            @if (isLoading()) {
-              <ion-spinner name="crescent"></ion-spinner>
-            } @else {
-              Iniciar Sesión
-            }
-          </ion-button>
-        </form>
+              <ion-button
+                type="submit"
+                expand="block"
+                [disabled]="!loginForm.valid || isLoading()"
+                class="submit-button"
+              >
+                @if (isLoading()) {
+                  <ion-spinner name="crescent"></ion-spinner>
+                } @else {
+                  <span>Entrar</span>
+                  <ion-icon name="arrow-forward" slot="end"></ion-icon>
+                }
+              </ion-button>
+            </form>
 
-        <div class="register-link">
-          <p>
-            ¿No tienes cuenta? <a routerLink="/auth/register">Regístrate</a>
+            <div class="register-link">
+              <p>
+                ¿No tienes cuenta? <a routerLink="/auth/register">Regístrate</a>
+              </p>
+            </div>
+          </div>
+
+          <!-- Terms -->
+          <p class="terms-text">
+            Al continuar, aceptas los términos y condiciones
           </p>
         </div>
       </div>
@@ -101,46 +120,103 @@ import { AuthService } from '../../../core/services/auth.service';
   `,
   styles: [
     `
+      .login-page {
+        min-height: 100%;
+        background: linear-gradient(
+          135deg,
+          #4f6df5 0%,
+          #8b5cf6 50%,
+          #a855f7 100%
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
       .login-container {
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        min-height: 100%;
+        align-items: center;
+        width: 100%;
         max-width: 400px;
-        margin: 0 auto;
       }
 
+      /* Logo Section */
       .logo-section {
         text-align: center;
-        margin-bottom: 48px;
+        margin-bottom: 32px;
+      }
+
+      .logo-box {
+        width: 80px;
+        height: 80px;
+        background: white;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+
+      .logo-box ion-icon {
+        font-size: 40px;
+        color: #4f6df5;
       }
 
       .app-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        color: var(--ion-color-primary);
+        font-size: 2rem;
+        font-weight: 600;
+        color: white;
         margin: 0;
+        letter-spacing: -0.5px;
       }
 
       .app-subtitle {
-        color: var(--ion-color-medium);
-        margin-top: 8px;
+        color: rgba(255, 255, 255, 0.9);
+        margin-top: 4px;
+        font-size: 1rem;
+      }
+
+      /* Login Card */
+      .login-card {
+        background: white;
+        border-radius: 24px;
+        padding: 32px 24px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
       }
 
       .input-item {
-        --background: var(--ion-color-light);
+        --background: #f5f5f7;
         --border-radius: 12px;
-        --color: #1a1a1a;
+        --padding-start: 16px;
+        --padding-end: 16px;
+        --min-height: 56px;
         margin-bottom: 16px;
       }
 
-      .input-item ion-icon {
-        color: var(--ion-color-medium);
+      .input-item ion-icon[slot='start'] {
+        color: #9ca3af;
+        margin-right: 12px;
+        font-size: 20px;
       }
 
       .input-item ion-input {
-        --color: #1a1a1a;
-        --placeholder-color: #888;
+        --color: #1f2937;
+        --placeholder-color: #9ca3af;
+        --placeholder-opacity: 1;
+        font-size: 1rem;
+      }
+
+      ion-input-password-toggle {
+        --show-password-icon-color: #4f6df5;
+        --hide-password-icon-color: #4f6df5;
+      }
+
+      ion-input-password-toggle::part(icon) {
+        color: #4f6df5;
       }
 
       .error-text {
@@ -155,10 +231,24 @@ import { AuthService } from '../../../core/services/auth.service';
       }
 
       .submit-button {
-        margin-top: 24px;
+        --background: linear-gradient(135deg, #4f6df5 0%, #a855f7 100%);
+        --background-hover: linear-gradient(135deg, #4361ee 0%, #9333ea 100%);
         --border-radius: 12px;
-        height: 50px;
+        --box-shadow: 0 4px 16px rgba(79, 109, 245, 0.4);
+        height: 56px;
         font-weight: 600;
+        font-size: 1rem;
+        margin-top: 8px;
+        text-transform: none;
+        letter-spacing: 0;
+      }
+
+      .submit-button span {
+        margin-right: 8px;
+      }
+
+      .submit-button ion-icon {
+        font-size: 20px;
       }
 
       .register-link {
@@ -167,13 +257,82 @@ import { AuthService } from '../../../core/services/auth.service';
       }
 
       .register-link p {
-        color: var(--ion-color-medium);
+        color: #6b7280;
+        margin: 0;
+        font-size: 0.9375rem;
       }
 
       .register-link a {
-        color: var(--ion-color-primary);
+        color: #4f6df5;
         text-decoration: none;
         font-weight: 600;
+      }
+
+      /* Terms */
+      .terms-text {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.8125rem;
+        text-align: center;
+        margin-top: 24px;
+      }
+
+      /* Responsive adjustments for smaller phones */
+      @media (max-height: 700px) {
+        .login-page {
+          padding: 16px;
+        }
+
+        .logo-section {
+          margin-bottom: 24px;
+        }
+
+        .logo-box {
+          width: 64px;
+          height: 64px;
+          border-radius: 16px;
+        }
+
+        .logo-box ion-icon {
+          font-size: 32px;
+        }
+
+        .app-title {
+          font-size: 1.75rem;
+        }
+
+        .login-card {
+          padding: 24px 20px;
+        }
+
+        .input-item {
+          --min-height: 50px;
+          margin-bottom: 12px;
+        }
+
+        .submit-button {
+          height: 50px;
+        }
+      }
+
+      /* Small phones (iPhone SE) */
+      @media (max-width: 374px) {
+        .login-card {
+          padding: 20px 16px;
+          border-radius: 20px;
+        }
+
+        .logo-box {
+          width: 60px;
+          height: 60px;
+        }
+
+        .logo-box ion-icon {
+          font-size: 28px;
+        }
+
+        .app-title {
+          font-size: 1.5rem;
+        }
       }
     `,
   ],
@@ -187,7 +346,7 @@ export class LoginPage {
     private fb: FormBuilder,
     private auth: AuthService,
   ) {
-    addIcons({ mailOutline, lockClosedOutline });
+    addIcons({ mailOutline, lockClosedOutline, arrowForward, walletOutline });
 
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],

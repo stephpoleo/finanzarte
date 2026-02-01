@@ -624,3 +624,47 @@ a.hero-card,
 .stagger-children > *:nth-child(3) { animation-delay: 100ms; }
 .stagger-children > *:nth-child(4) { animation-delay: 150ms; }
 .stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+
+/* =====================================================
+   AUTH PAGES - Password Toggle Color
+   ===================================================== */
+app-login ion-input-password-toggle,
+app-register ion-input-password-toggle {
+  --ion-color-primary: #4f6df5;
+  --ion-color-primary-rgb: 79, 109, 245;
+}
+
+/* =====================================================
+   AUTH PAGES - DateTime Picker Styling
+   ===================================================== */
+/* Override Ionic color for datetime in auth pages */
+app-register ion-modal {
+  --ion-color-primary: #4f6df5;
+  --ion-color-primary-rgb: 79, 109, 245;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #4361ee;
+  --ion-color-primary-tint: #6b82f6;
+}
+
+ion-datetime#birthdate {
+  --ion-color-primary: #4f6df5;
+  --ion-color-primary-rgb: 79, 109, 245;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #4361ee;
+  --ion-color-primary-tint: #6b82f6;
+
+  /* Wheel colors */
+  --wheel-highlight-background: rgba(79, 109, 245, 0.08);
+  --wheel-fade-background-rgb: 255, 255, 255;
+}
+
+/* Style the datetime button in the register form */
+app-register ion-datetime-button::part(native) {
+  background: #4f6df5;
+  color: white;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 0.875rem;
+}
