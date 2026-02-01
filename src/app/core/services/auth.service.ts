@@ -3,16 +3,7 @@ import { Router } from '@angular/router';
 import { User, AuthError, Session } from '@supabase/supabase-js';
 import { SupabaseService } from './supabase.service';
 import { environment } from '../../../environments/environment';
-
-// Mock user for development mode
-const MOCK_USER: User = {
-  id: 'dev-user-123',
-  email: 'dev@finanzarte.com',
-  app_metadata: {},
-  user_metadata: { full_name: 'Usuario de Prueba' },
-  aud: 'authenticated',
-  created_at: new Date().toISOString()
-};
+import { MOCK_USER } from '../../data/mock-data';
 
 @Injectable({
   providedIn: 'root'

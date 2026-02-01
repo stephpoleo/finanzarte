@@ -3,31 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { UserSettings, DEFAULT_USER_SETTINGS, FINANCIAL_LEVELS, EMERGENCY_MILESTONES } from '../../models';
 import { environment } from '../../../environments/environment';
-
-// Mock settings for dev mode
-const mockNow = new Date().toISOString();
-const MOCK_SETTINGS: UserSettings = {
-  id: '1',
-  user_id: 'dev-user-123',
-  // Emergency Fund
-  emergency_monthly_income: 25000,
-  emergency_monthly_expenses: 15000,
-  emergency_current_savings: 45000,
-  emergency_target_months: 6,
-  // Long-Term
-  longterm_monthly_expenses: 15000,
-  longterm_current_savings: 100000,
-  longterm_monthly_savings: 5000,
-  longterm_annual_return: 8,
-  // Retirement
-  retirement_current_age: 30,
-  retirement_target_age: 65,
-  retirement_monthly_contribution: 3000,
-  retirement_current_savings: 50000,
-  retirement_expected_return: 7,
-  created_at: mockNow,
-  updated_at: mockNow
-};
+import { MOCK_SETTINGS } from '../../data/mock-data';
 
 @Injectable({
   providedIn: 'root'

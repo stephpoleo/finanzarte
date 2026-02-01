@@ -3,21 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { SavingsGoal, SavingsDeposit } from '../../models';
 import { environment } from '../../../environments/environment';
-
-// Mock data for dev mode
-const now = new Date().toISOString();
-const today = now.split('T')[0];
-const MOCK_GOALS: SavingsGoal[] = [
-  { id: '1', user_id: 'dev-user-123', name: 'Fondo de Emergencia', target_amount: 50000, current_amount: 15000, deadline: '2024-12-31', monthly_target: 3000, color: '#22c55e', icon: 'shield-checkmark-outline', created_at: now, updated_at: now },
-  { id: '2', user_id: 'dev-user-123', name: 'Vacaciones', target_amount: 20000, current_amount: 8500, deadline: '2024-06-30', monthly_target: null, color: '#3b82f6', icon: 'airplane-outline', created_at: now, updated_at: now },
-];
-
-const MOCK_DEPOSITS: SavingsDeposit[] = [
-  { id: '1', goal_id: '1', user_id: 'dev-user-123', amount: 5000, note: 'Depósito inicial', deposit_date: '2024-11-01', created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '2', goal_id: '1', user_id: 'dev-user-123', amount: 5000, note: 'Segundo depósito', deposit_date: '2024-11-15', created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: '3', goal_id: '1', user_id: 'dev-user-123', amount: 5000, note: null, deposit_date: today, created_at: now },
-  { id: '4', goal_id: '2', user_id: 'dev-user-123', amount: 8500, note: 'Ahorro vacaciones', deposit_date: today, created_at: now },
-];
+import { MOCK_GOALS, MOCK_DEPOSITS, MOCK_USER_ID } from '../../data/mock-data';
 
 @Injectable({
   providedIn: 'root'
@@ -113,7 +99,7 @@ export class SavingsGoalService {
     if ((environment as any).devMode) {
       const newGoal: SavingsGoal = {
         id: Date.now().toString(),
-        user_id: 'dev-user-123',
+        user_id: MOCK_USER_ID,
         name: goal.name,
         target_amount: goal.target_amount,
         current_amount: 0,
@@ -255,7 +241,7 @@ export class SavingsGoalService {
       const newDeposit: SavingsDeposit = {
         id: Date.now().toString(),
         goal_id: deposit.goal_id,
-        user_id: 'dev-user-123',
+        user_id: MOCK_USER_ID,
         amount: deposit.amount,
         note: deposit.note || null,
         deposit_date: deposit.deposit_date || today,

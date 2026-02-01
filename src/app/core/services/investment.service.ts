@@ -3,47 +3,7 @@ import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
 import { Investment, InvestmentType, INVESTMENT_TYPES, HIGH_RISK_TYPES, LOW_RISK_TYPES } from '../../models';
 import { environment } from '../../../environments/environment';
-
-// Mock investments for dev mode
-const mockNow = new Date().toISOString();
-const MOCK_INVESTMENTS: Investment[] = [
-  {
-    id: '1',
-    user_id: 'dev-user-123',
-    name: 'VOO - S&P 500 ETF',
-    type: 'etf',
-    amount: 50000,
-    expected_return: 10,
-    purchase_date: '2024-01-15',
-    notes: 'Inversión principal en índice americano',
-    created_at: mockNow,
-    updated_at: mockNow
-  },
-  {
-    id: '2',
-    user_id: 'dev-user-123',
-    name: 'CETES 28 días',
-    type: 'cetes',
-    amount: 30000,
-    expected_return: 11,
-    purchase_date: '2024-06-01',
-    notes: 'Inversión de bajo riesgo',
-    created_at: mockNow,
-    updated_at: mockNow
-  },
-  {
-    id: '3',
-    user_id: 'dev-user-123',
-    name: 'AFORE XXI Banorte',
-    type: 'afore',
-    amount: 25000,
-    expected_return: 8,
-    purchase_date: null,
-    notes: 'Ahorro para el retiro',
-    created_at: mockNow,
-    updated_at: mockNow
-  }
-];
+import { MOCK_INVESTMENTS, MOCK_USER_ID } from '../../data/mock-data';
 
 @Injectable({
   providedIn: 'root'
@@ -140,7 +100,7 @@ export class InvestmentService {
     if ((environment as any).devMode) {
       const newInvestment: Investment = {
         id: Date.now().toString(),
-        user_id: 'dev-user-123',
+        user_id: MOCK_USER_ID,
         name: investment.name,
         type: investment.type,
         amount: investment.amount,

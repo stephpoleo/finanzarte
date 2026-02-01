@@ -4,17 +4,7 @@ import { AuthService } from './auth.service';
 import { TaxCalculationService } from './tax-calculation.service';
 import { UserProfile } from '../../models';
 import { environment } from '../../../environments/environment';
-
-// Mock profile for dev mode (30 years old)
-const MOCK_PROFILE: UserProfile = {
-  id: 'dev-user-123',
-  full_name: 'Usuario de Prueba',
-  birth_date: new Date(new Date().getFullYear() - 30, 0, 15).toISOString().split('T')[0],
-  gross_salary: 25000,
-  net_salary: 21500,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString()
-};
+import { MOCK_PROFILE } from '../../data/mock-data';
 
 @Injectable({
   providedIn: 'root'

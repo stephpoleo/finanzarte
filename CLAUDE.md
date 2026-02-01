@@ -29,7 +29,7 @@ src/app/
 │   ├── components/      # Reusable components (ProgressRing, SavingsGoalModal, SalaryCalculatorModal)
 │   └── pipes/           # Currency and percentage pipes
 ├── models/              # TypeScript interfaces
-└── data/                # Static data (tax tables)
+└── data/                # Static data (tax tables, mock data)
 ```
 
 ## Key Features
@@ -190,6 +190,7 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Donut chart separator lines (white lines at segment boundaries)
 - [x] Chart legend alignment (percentages and values aligned)
 - [x] Delete savings goals (immediate deletion, no confirmation)
+- [x] Centralized mock data (src/app/data/mock-data.ts)
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality
@@ -208,7 +209,18 @@ When `devMode: true` in environment.ts:
 - Mock profile with $25,000 gross salary
 - Sample expenses (Renta, Luz, Internet, Netflix, Comida, Transporte)
 - Sample savings goals (Fondo de Emergencia, Vacaciones)
+- Sample investments (VOO ETF, CETES, AFORE)
 - All CRUD operations work locally (data resets on refresh)
+
+**Centralized Mock Data:** All mock data is defined in `src/app/data/mock-data.ts` for easy maintenance. This includes:
+- `MOCK_USER` - Mock authenticated user
+- `MOCK_PROFILE` - User profile (30 years old, $25k salary)
+- `MOCK_EXPENSES` - Sample expenses
+- `MOCK_INCOME_SOURCES` - Income sources
+- `MOCK_GOALS` / `MOCK_DEPOSITS` - Savings goals and deposits
+- `MOCK_INVESTMENTS` - Investment portfolio
+- `MOCK_SETTINGS` - User financial settings
+- `MOCK_USER_ID` - Constant for the mock user ID
 
 To use real authentication, set `devMode: false` and configure Supabase credentials.
 
