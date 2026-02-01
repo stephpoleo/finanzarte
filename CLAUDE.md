@@ -151,6 +151,15 @@ Modern UI features:
 - Donut charts with segment separators (white lines at boundaries)
 - Aligned chart legends (fixed-width percentages and values)
 
+### Login Page Design
+- Full-screen gradient background (blue #4f6df5 to purple #a855f7)
+- Centered white logo box with wallet icon
+- "finanzarte" branding in white lowercase
+- White card with rounded corners (24px radius)
+- Input fields with light gray background and icons
+- Gradient "Entrar" button with arrow icon
+- Responsive for small phones (adjusts sizes for screens < 700px height)
+
 Supports automatic dark mode.
 
 ## Responsive Breakpoints
@@ -191,6 +200,7 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Chart legend alignment (percentages and values aligned)
 - [x] Delete savings goals (immediate deletion, no confirmation)
 - [x] Centralized mock data (src/app/data/mock-data.ts)
+- [x] Login page redesign (gradient background, white card, modern styling)
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality
