@@ -259,14 +259,45 @@ export class DashboardPage implements OnInit {
   get ltMonthlyExpenses(): number { return this.userSettings.longtermMonthlyExpenses(); }
   set ltMonthlyExpenses(value: number) { this.userSettings.updateLongtermSettings({ longterm_monthly_expenses: value }); }
 
-  get ltCurrentSavings(): number { return this.userSettings.longtermCurrentSavings(); }
-  set ltCurrentSavings(value: number) { this.userSettings.updateLongtermSettings({ longterm_current_savings: value }); }
+  // Auto-calculated from Inversiones tab
+  get ltCurrentSavings(): number { return this.investmentSvc.totalInvested(); }
 
   get ltMonthlySavings(): number { return this.userSettings.longtermMonthlySavings(); }
   set ltMonthlySavings(value: number) { this.userSettings.updateLongtermSettings({ longterm_monthly_savings: value }); }
 
-  get ltAnnualReturn(): number { return this.userSettings.longtermAnnualReturn(); }
-  set ltAnnualReturn(value: number) { this.userSettings.updateLongtermSettings({ longterm_annual_return: value }); }
+  // Use weighted return from investments if available, otherwise fall back to stored value
+  get ltAnnualReturn(): number {
+    const weightedReturn = this.investmentSvc.weightedReturn();
+    return weightedReturn > 0 ? weightedReturn : this.userSettings.longtermAnnualReturn();
+  }
+
+  // Withdrawal rate for passive income calculation (default 4%)
+  ltWithdrawalRate = 4;
+
+  // Multiplier for capital needed (100 / withdrawal rate)
+  get ltWithdrawalMultiplier(): number {
+    return this.ltWithdrawalRate > 0 ? 100 / this.ltWithdrawalRate : 25;
+  }
+
+  // Capital needed for financial freedom
+  get ltCapitalNeeded(): number {
+    return this.ltAnnualExpenses * this.ltWithdrawalMultiplier;
+  }
+
+  // Toggle for showing config help tips
+  showLtConfigHelp = false;
+
+  // Toggle for withdrawal rule tips
+  ltRuleTipsExpanded = false;
+  toggleLtRuleTips() { this.ltRuleTipsExpanded = !this.ltRuleTipsExpanded; }
+
+  // Auto-calculated values from Presupuesto and Inversiones
+  get ltAutoMonthlyExpenses(): number { return this.expenses.totalExpenses(); }
+  get ltAutoMonthlySavings(): number { return this.emergencyAvailableSavings; }
+  get ltAutoAnnualReturn(): number { return this.investmentSvc.weightedReturn(); }
+
+  // Total savings (emergency + long-term)
+  get totalSavings(): number { return this.emergencyCurrentSavings + this.ltCurrentSavings; }
 
   // Retirement state - synced with UserSettingsService
   get retCurrentAge(): number { return this.userSettings.retirementCurrentAge(); }
@@ -1079,13 +1110,13 @@ export class DashboardPage implements OnInit {
 
   // Long Term Savings methods
   get ltAnnualExpenses(): number {
-    return this.ltMonthlyExpenses * 12;
+    return this.ltAutoMonthlyExpenses * 12;
   }
 
   get ltCurrentLevelIndex(): number {
     for (let i = this.financialLevels.length - 1; i >= 0; i--) {
       const levelTarget = this.ltAnnualExpenses * this.financialLevels[i].multiplier;
-      if (this.ltCurrentSavings >= levelTarget) return i;
+      if (this.totalSavings >= levelTarget) return i;
     }
     return -1;
   }
@@ -1101,11 +1132,11 @@ export class DashboardPage implements OnInit {
   }
 
   get ltMonthlyPassiveIncome(): number {
-    return (this.ltCurrentSavings * 0.04) / 12;
+    return (this.ltCurrentSavings * (this.ltWithdrawalRate / 100)) / 12;
   }
 
   get ltCoveragePercentage(): number {
-    return this.ltMonthlyExpenses > 0 ? (this.ltMonthlyPassiveIncome / this.ltMonthlyExpenses) * 100 : 0;
+    return this.ltAutoMonthlyExpenses > 0 ? (this.ltMonthlyPassiveIncome / this.ltAutoMonthlyExpenses) * 100 : 0;
   }
 
   getLevelTarget(level: FinancialLevel): number {
@@ -1114,20 +1145,20 @@ export class DashboardPage implements OnInit {
 
   getLevelProgress(level: FinancialLevel): number {
     const target = this.getLevelTarget(level);
-    return target > 0 ? Math.min(100, (this.ltCurrentSavings / target) * 100) : 0;
+    return target > 0 ? Math.min(100, (this.totalSavings / target) * 100) : 0;
   }
 
   isLevelCompleted(level: FinancialLevel): boolean {
-    return this.ltCurrentSavings >= this.getLevelTarget(level);
+    return this.totalSavings >= this.getLevelTarget(level);
   }
 
   getYearsToLevel(level: FinancialLevel): number {
     const target = this.getLevelTarget(level);
-    if (this.ltCurrentSavings >= target) return 0;
+    if (this.totalSavings >= target) return 0;
     if (this.ltMonthlySavings <= 0) return -1;
 
     const monthlyRate = (this.ltAnnualReturn / 100) / 12;
-    const remaining = target - this.ltCurrentSavings;
+    const remaining = target - this.totalSavings;
 
     if (monthlyRate === 0) return remaining / this.ltMonthlySavings / 12;
 
@@ -1137,15 +1168,6 @@ export class DashboardPage implements OnInit {
 
   isYearsValid(years: number): boolean {
     return years > 0 && years < 999;
-  }
-
-  getProjectedSavings(years: number): number {
-    const rate = this.ltAnnualReturn / 100;
-    const monthlyRate = rate / 12;
-    const months = years * 12;
-    const fvContributions = this.ltMonthlySavings * ((Math.pow(1 + monthlyRate, months) - 1) / monthlyRate);
-    const fvCurrent = this.ltCurrentSavings * Math.pow(1 + rate, years);
-    return fvContributions + fvCurrent;
   }
 
   // Retirement methods

@@ -44,8 +44,10 @@ src/app/
 1. **Presupuesto** (Green) - Income sources, expenses, available savings
 2. **Emergencia** (Cyan) - Emergency fund calculator with milestone roadmap
 3. **Largo Plazo** (Amber) - 5 financial levels (Security → Abundance)
-4. **Retiro** (Purple) - Retirement planning with compound interest projections
-5. **Inversiones** (Indigo) - Investment portfolio with Rule of 120 risk allocation
+4. **Inversiones** (Indigo) - Investment portfolio with Rule of 120 risk allocation
+5. **Retiro** (Purple) - Retirement planning with compound interest projections
+
+**Tab order rationale:** Budget → Emergency fund → Long-term freedom → Investments (feeds into long-term) → Retirement (final goal)
 
 ### Emergency Fund Tab Features
 - **Milestone roadmap**: Base ($10k) → 1 month → 3 months → 6 months → 12 months → 24 months
@@ -57,6 +59,18 @@ src/app/
 - **SOFIPOs carousel**: Horizontal scroll with popular SOFIPOs and their annual rates
 - **CETES info**: Government bonds section with CetesDirecto link
 - **Collapsible tips**: Educational tips collapsed by default to save space
+
+### Long Term Tab Features
+- **Total savings display**: Shows combined emergency + invested savings in hero card
+- **Financial levels roadmap**: 5 levels from Security to Abundance based on annual expenses
+- **Simulator**: Clean list-style config showing auto-calculated values
+  - Gastos mensuales: Auto from Presupuesto
+  - Invertido: Auto from Inversiones tab (clickable link)
+  - Retorno anual: Auto weighted average from investments
+  - Tasa de retiro: Only editable field (default 4%)
+- **4% Rule explanation**: Collapsible card explaining withdrawal rate concept
+- **Next level card**: Shows target, remaining amount, and time estimate
+- **Integration with Inversiones**: ltCurrentSavings pulls from InvestmentService.totalInvested()
 
 ### Savings Goals Lock
 - Savings goals are **locked** until user has at least 1 month of emergency fund
@@ -245,6 +259,12 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Cancellable expense categories and priorities (immediate, wait 1 month, etc.)
 - [x] Plan B impact calculator (extended coverage months)
 - [x] Renewal timeline for cancellable expenses
+- [x] Long-term tab redesign with simplified simulator
+- [x] Total savings display (emergency + invested) in Largo Plazo hero
+- [x] Largo Plazo integrated with Inversiones (auto-pulls investment totals)
+- [x] Auto-calculated weighted return from investments
+- [x] Configurable withdrawal rate (4% rule) with explanation
+- [x] Tab order reorganized: Presupuesto → Emergencia → Largo Plazo → Inversiones → Retiro
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality
