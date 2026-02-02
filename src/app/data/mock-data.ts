@@ -11,7 +11,8 @@ import {
   SavingsGoal,
   SavingsDeposit,
   Investment,
-  UserSettings
+  UserSettings,
+  CancellableExpense
 } from '../models';
 
 // Common constants
@@ -142,3 +143,82 @@ export const MOCK_SETTINGS: UserSettings = {
   created_at: mockNow,
   updated_at: mockNow
 };
+
+// ==================== Cancellable Expenses (Plan B) ====================
+export const MOCK_CANCELLABLE_EXPENSES: CancellableExpense[] = [
+  {
+    id: '1',
+    user_id: MOCK_USER_ID,
+    name: 'Netflix',
+    monthly_cost: 200,
+    category: 'subscription',
+    priority: 'immediate',
+    cancellation_instructions: 'Entrar a la app > Cuenta > Cancelar membresía',
+    contact_info: 'https://netflix.com/cancelar',
+    notes: 'Se puede reactivar cuando mejore la situación',
+    renewal_date: undefined,
+    renewal_frequency: 'monthly',
+    created_at: mockNow,
+    updated_at: mockNow
+  },
+  {
+    id: '2',
+    user_id: MOCK_USER_ID,
+    name: 'Spotify Premium',
+    monthly_cost: 115,
+    category: 'subscription',
+    priority: 'immediate',
+    cancellation_instructions: 'Spotify.com > Cuenta > Cancelar plan',
+    contact_info: 'https://spotify.com/account',
+    notes: 'Existe versión gratuita con anuncios',
+    renewal_date: undefined,
+    renewal_frequency: 'monthly',
+    created_at: mockNow,
+    updated_at: mockNow
+  },
+  {
+    id: '3',
+    user_id: MOCK_USER_ID,
+    name: 'Gimnasio',
+    monthly_cost: 700,
+    category: 'membership',
+    priority: 'wait_1_month',
+    cancellation_instructions: 'Ir presencialmente a cancelar con 30 días de anticipación',
+    contact_info: '800-123-4567',
+    notes: 'Requiere 30 días de anticipación, cuidado con renovación automática',
+    renewal_date: '2026-03-15',
+    renewal_frequency: 'monthly',
+    created_at: mockNow,
+    updated_at: mockNow
+  },
+  {
+    id: '4',
+    user_id: MOCK_USER_ID,
+    name: 'Amazon Prime',
+    monthly_cost: 99,
+    category: 'subscription',
+    priority: 'wait_1_month',
+    cancellation_instructions: 'Amazon > Cuenta > Prime > Cancelar',
+    contact_info: 'https://amazon.com.mx/prime',
+    notes: 'Incluye envíos gratis y Prime Video',
+    renewal_date: undefined,
+    renewal_frequency: 'annual',
+    created_at: mockNow,
+    updated_at: mockNow
+  },
+  {
+    id: '5',
+    user_id: MOCK_USER_ID,
+    name: 'Seguro de Auto',
+    monthly_cost: 800,
+    category: 'insurance',
+    priority: 'last_resort',
+    cancellation_instructions: 'Llamar a la aseguradora para cancelar',
+    contact_info: '800-555-1234',
+    notes: 'Solo cancelar si el auto no se usa, considerar cobertura mínima',
+    renewal_date: '2026-06-01',
+    renewal_frequency: 'annual',
+    created_at: mockNow,
+    updated_at: mockNow
+  }
+];

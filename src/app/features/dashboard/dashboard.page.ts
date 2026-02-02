@@ -60,7 +60,10 @@ import {
   lockClosedOutline,
   lockOpenOutline,
   shieldCheckmarkOutline,
-  openOutline
+  openOutline,
+  documentTextOutline,
+  syncOutline,
+  peopleOutline
 } from 'ionicons/icons';
 import { ProfileService } from '../../core/services/profile.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -70,11 +73,17 @@ import { IncomeSourceService } from '../../core/services/income-source.service';
 import { InvestmentService } from '../../core/services/investment.service';
 import { UserSettingsService } from '../../core/services/user-settings.service';
 import { CurrencyMxnPipe } from '../../shared/pipes/currency-mxn.pipe';
-import { ExpenseCategory, EXPENSE_CATEGORIES, Investment, InvestmentType, InvestmentTypeInfo, INVESTMENT_TYPES, FINANCIAL_LEVELS, FinancialLevel, EMERGENCY_MILESTONES, EmergencyMilestone, SavingsGoal } from '../../models';
+import {
+  ExpenseCategory, EXPENSE_CATEGORIES, Investment, InvestmentType, InvestmentTypeInfo,
+  INVESTMENT_TYPES, FINANCIAL_LEVELS, FinancialLevel, EMERGENCY_MILESTONES, EmergencyMilestone, SavingsGoal,
+  CancellableExpense, CancellableCategory, CancellationPriority, RenewalFrequency,
+  CANCELLABLE_CATEGORIES, CANCELLATION_PRIORITIES, RENEWAL_FREQUENCIES
+} from '../../models';
 import { ProgressRingComponent } from '../../shared/components/progress-ring/progress-ring.component';
 import { SalaryCalculatorModalComponent, SalaryCalculatorResult } from '../../shared/components/salary-calculator-modal/salary-calculator-modal.component';
 import { SavingsGoalModalComponent, SavingsGoalResult } from '../../shared/components/savings-goal-modal/savings-goal-modal.component';
 import { SOFIPOS, CETES_INFO, TAX_EXEMPT_LIMIT, calculateAllocationStrategy, SavingsInstrument, AllocationStrategy } from '../../data/savings-instruments';
+import { CancellableExpenseService } from '../../core/services/cancellable-expense.service';
 
 type TabType = 'presupuesto' | 'emergencia' | 'largo-plazo' | 'retiro' | 'inversiones';
 
@@ -164,6 +173,40 @@ export class DashboardPage implements OnInit {
   // Tips sections collapsed state (collapsed by default)
   emergencyTipsExpanded = false;
   strategyTipsExpanded = false;
+
+  // Emergency sub-tab state
+  emergencySubTab: 'ahorros' | 'planb' = 'ahorros';
+
+  // Plan B - Cancellable expenses form state
+  showCancellableExpenseForm = false;
+  showFullPlanModal = false;
+  editingCancellableExpense: CancellableExpense | null = null;
+  newCancellableExpense: {
+    name: string;
+    monthly_cost: number;
+    category: CancellableCategory;
+    priority: CancellationPriority;
+    cancellation_instructions: string;
+    contact_info: string;
+    notes: string;
+    renewal_date: string;
+    renewal_frequency: RenewalFrequency;
+  } = {
+    name: '',
+    monthly_cost: 0,
+    category: 'subscription',
+    priority: 'immediate',
+    cancellation_instructions: '',
+    contact_info: '',
+    notes: '',
+    renewal_date: '',
+    renewal_frequency: 'monthly'
+  };
+
+  // Plan B reference data
+  cancellableCategories = CANCELLABLE_CATEGORIES;
+  cancellationPriorities = CANCELLATION_PRIORITIES;
+  renewalFrequencies = RENEWAL_FREQUENCIES;
 
   // Charts carousel state
   currentChart = 0;
@@ -260,6 +303,7 @@ export class DashboardPage implements OnInit {
     public incomeSources: IncomeSourceService,
     public investmentSvc: InvestmentService,
     public userSettings: UserSettingsService,
+    public cancellableExpenses: CancellableExpenseService,
     private auth: AuthService
   ) {
     addIcons({
@@ -313,7 +357,10 @@ export class DashboardPage implements OnInit {
       lockClosedOutline,
       lockOpenOutline,
       shieldCheckmarkOutline,
-      openOutline
+      openOutline,
+      documentTextOutline,
+      syncOutline,
+      peopleOutline
     });
   }
 
@@ -331,7 +378,8 @@ export class DashboardPage implements OnInit {
       this.savingsGoals.loadGoals(),
       this.incomeSources.loadIncomeSources(),
       this.investmentSvc.loadInvestments(),
-      this.userSettings.loadSettings()
+      this.userSettings.loadSettings(),
+      this.cancellableExpenses.loadExpenses()
     ]);
     this.syncEmergencyFromServices();
     this.syncAgeFromProfile();
@@ -1270,5 +1318,140 @@ export class DashboardPage implements OnInit {
 
   getDonutOffset(previousRatio: number): number {
     return -previousRatio * this.circumference;
+  }
+
+  // ============================================
+  // PLAN B - CANCELLABLE EXPENSES METHODS
+  // ============================================
+
+  toggleCancellableExpenseForm(): void {
+    this.showCancellableExpenseForm = !this.showCancellableExpenseForm;
+    if (!this.showCancellableExpenseForm) {
+      this.resetCancellableExpenseForm();
+    }
+  }
+
+  resetCancellableExpenseForm(): void {
+    this.editingCancellableExpense = null;
+    this.newCancellableExpense = {
+      name: '',
+      monthly_cost: 0,
+      category: 'subscription',
+      priority: 'immediate',
+      cancellation_instructions: '',
+      contact_info: '',
+      notes: '',
+      renewal_date: '',
+      renewal_frequency: 'monthly'
+    };
+  }
+
+  cancelCancellableExpenseForm(): void {
+    this.showCancellableExpenseForm = false;
+    this.resetCancellableExpenseForm();
+  }
+
+  async saveCancellableExpense(): Promise<void> {
+    if (!this.newCancellableExpense.name || !this.newCancellableExpense.monthly_cost) return;
+
+    const expenseData = {
+      name: this.newCancellableExpense.name,
+      monthly_cost: this.newCancellableExpense.monthly_cost,
+      category: this.newCancellableExpense.category,
+      priority: this.newCancellableExpense.priority,
+      cancellation_instructions: this.newCancellableExpense.cancellation_instructions || undefined,
+      contact_info: this.newCancellableExpense.contact_info || undefined,
+      notes: this.newCancellableExpense.notes || undefined,
+      renewal_date: this.newCancellableExpense.renewal_date || undefined,
+      renewal_frequency: this.newCancellableExpense.renewal_frequency
+    };
+
+    if (this.editingCancellableExpense) {
+      await this.cancellableExpenses.updateExpense(this.editingCancellableExpense.id, expenseData);
+    } else {
+      await this.cancellableExpenses.addExpense(expenseData);
+    }
+
+    this.showCancellableExpenseForm = false;
+    this.resetCancellableExpenseForm();
+  }
+
+  async deleteCancellableExpense(id: string): Promise<void> {
+    await this.cancellableExpenses.deleteExpense(id);
+  }
+
+  startEditCancellableExpense(expense: CancellableExpense): void {
+    this.editingCancellableExpense = expense;
+    this.newCancellableExpense = {
+      name: expense.name,
+      monthly_cost: expense.monthly_cost,
+      category: expense.category,
+      priority: expense.priority,
+      cancellation_instructions: expense.cancellation_instructions || '',
+      contact_info: expense.contact_info || '',
+      notes: expense.notes || '',
+      renewal_date: expense.renewal_date || '',
+      renewal_frequency: expense.renewal_frequency || 'monthly'
+    };
+    this.showCancellableExpenseForm = true;
+  }
+
+  // Plan B - Helper methods for labels
+  getCancellableCategoryLabel(category: CancellableCategory): string {
+    return this.cancellableCategories.find(c => c.value === category)?.label || category;
+  }
+
+  getCancellablePriorityLabel(priority: CancellationPriority): string {
+    return this.cancellationPriorities.find(p => p.value === priority)?.label || priority;
+  }
+
+  getCancellablePriorityColor(priority: CancellationPriority): string {
+    return this.cancellationPriorities.find(p => p.value === priority)?.color || '#6b7280';
+  }
+
+  getRenewalFrequencyLabel(frequency: RenewalFrequency | undefined): string {
+    if (!frequency) return '';
+    return this.renewalFrequencies.find(f => f.value === frequency)?.label || frequency;
+  }
+
+  getRenewalFrequencyShort(frequency: RenewalFrequency | undefined): string {
+    if (!frequency) return 'mes';
+    const shorts: Record<RenewalFrequency, string> = {
+      monthly: 'mes',
+      quarterly: 'trim',
+      biannual: 'sem',
+      annual: 'año'
+    };
+    return shorts[frequency] || 'mes';
+  }
+
+  // Plan B - Date formatting for timeline
+  formatRenewalMonth(dateStr: string): string {
+    const date = new Date(dateStr);
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    return months[date.getMonth()];
+  }
+
+  formatRenewalDay(dateStr: string): string {
+    const date = new Date(dateStr);
+    return date.getDate().toString();
+  }
+
+  // Plan B - Impact calculations
+  getReducedExpenses(): number {
+    // Monthly expenses minus all immediate and wait_1_month cancellable expenses
+    const immediateSavings = this.cancellableExpenses.immediateSavings();
+    const wait1MonthSavings = this.cancellableExpenses.wait1MonthSavings();
+    return Math.max(0, this.emergencyMonthlyExpenses - immediateSavings - wait1MonthSavings);
+  }
+
+  getExtendedMonthsCoverage(): number {
+    const reducedExpenses = this.getReducedExpenses();
+    if (reducedExpenses <= 0) return 0;
+    return this.emergencyCurrentSavings / reducedExpenses;
+  }
+
+  getAdditionalMonthsCoverage(): number {
+    return Math.max(0, this.getExtendedMonthsCoverage() - this.emergencyMonthsCovered);
   }
 }

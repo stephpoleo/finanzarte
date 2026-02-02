@@ -461,6 +461,26 @@
     <!-- Emergency Tab -->
     @if (activeTab === 'emergencia') {
       <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+          <h2 class="page-title">Ahorro de Emergencia</h2>
+          <p class="page-subtitle">Construye tu red de seguridad</p>
+        </div>
+
+        <!-- Sub-tabs Toggle -->
+        <div class="emergency-subtabs">
+          <button class="subtab" [class.active]="emergencySubTab === 'ahorros'" (click)="emergencySubTab = 'ahorros'">
+            <ion-icon name="shield-outline"></ion-icon>
+            <span>Ahorros</span>
+          </button>
+          <button class="subtab" [class.active]="emergencySubTab === 'planb'" (click)="emergencySubTab = 'planb'">
+            <ion-icon name="warning-outline"></ion-icon>
+            <span>Plan B</span>
+          </button>
+        </div>
+
+        <!-- Ahorros Sub-tab -->
+        @if (emergencySubTab === 'ahorros') {
         <div class="emergency-card">
           <div class="emergency-header"><div class="emergency-icon"><ion-icon name="shield-outline"></ion-icon></div><div><h3>Fondo de Emergencia</h3><p>Tu red de seguridad financiera</p></div></div>
           <div class="emergency-stats">
@@ -616,6 +636,211 @@
             </ul>
           }
         </div>
+        }
+
+        <!-- Plan B Sub-tab -->
+        @if (emergencySubTab === 'planb') {
+        <!-- Plan B Hero -->
+        <div class="planb-hero">
+          <div class="planb-hero-icon">
+            <ion-icon name="shield-checkmark-outline"></ion-icon>
+          </div>
+          <div class="planb-hero-content">
+            <h3>Plan de Emergencia</h3>
+            <p>Prepárate para lo inesperado</p>
+          </div>
+        </div>
+
+        <!-- Why have a plan -->
+        <div class="card planb-why">
+          <div class="planb-why-icon">
+            <ion-icon name="document-text-outline"></ion-icon>
+          </div>
+          <div class="planb-why-content">
+            <h4>¿Por qué tener un plan?</h4>
+            <p>En caso de emergencia (pérdida de empleo, enfermedad), el estrés dificulta pensar con claridad. Este plan te dice exactamente qué cancelar y cómo hacerlo.</p>
+          </div>
+        </div>
+
+        <!-- Impact Card -->
+        @if (cancellableExpenses.expenses().length > 0) {
+        <div class="card planb-impact">
+          <h3 class="card-title">Impacto del Plan</h3>
+          <div class="impact-comparison">
+            <div class="impact-box current">
+              <span class="impact-label">Gastos Actuales</span>
+              <span class="impact-value red">{{ emergencyMonthlyExpenses | currencyMxn }}</span>
+              <span class="impact-months">{{ emergencyMonthsCovered | number:'1.1-1' }} meses</span>
+            </div>
+            <div class="impact-box reduced">
+              <span class="impact-label">Con Cancelaciones</span>
+              <span class="impact-value green">{{ getReducedExpenses() | currencyMxn }}</span>
+              <span class="impact-months">{{ getExtendedMonthsCoverage() | number:'1.1-1' }} meses</span>
+            </div>
+          </div>
+          <div class="impact-gain">
+            Ganas <strong class="green">+{{ getAdditionalMonthsCoverage() | number:'1.1-1' }} meses</strong> adicionales de colchón financiero
+          </div>
+        </div>
+        }
+
+        <!-- Add Button -->
+        <button class="planb-add-btn" (click)="toggleCancellableExpenseForm()">
+          <ion-icon name="add-outline"></ion-icon>
+          <span>Agregar Gasto Cancelable</span>
+        </button>
+
+        <!-- View Full Plan Button -->
+        @if (cancellableExpenses.expenses().length > 0) {
+        <button class="planb-view-btn" (click)="showFullPlanModal = true">
+          <ion-icon name="warning-outline"></ion-icon>
+          <span>Ver Plan de Acción Completo</span>
+        </button>
+        }
+
+        <!-- Add/Edit Form -->
+        @if (showCancellableExpenseForm) {
+        <div class="card planb-form-card">
+          <h3 class="card-title">{{ editingCancellableExpense ? 'Editar' : 'Nuevo' }} Gasto Cancelable</h3>
+
+          <div class="form-field">
+            <label>Nombre del servicio/suscripción</label>
+            <input type="text" [(ngModel)]="newCancellableExpense.name" placeholder="ej. Netflix, Gimnasio, Spotify" />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label>Costo Mensual</label>
+              <input type="number" [(ngModel)]="newCancellableExpense.monthly_cost" placeholder="0.00" />
+            </div>
+            <div class="form-field">
+              <label>Categoría</label>
+              <select [(ngModel)]="newCancellableExpense.category">
+                @for (cat of cancellableCategories; track cat.value) {
+                  <option [value]="cat.value">{{ cat.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-field">
+            <label>Prioridad de cancelación</label>
+            <select [(ngModel)]="newCancellableExpense.priority">
+              @for (pri of cancellationPriorities; track pri.value) {
+                <option [value]="pri.value">{{ pri.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label>¿Cómo cancelar? (Instrucciones)</label>
+            <input type="text" [(ngModel)]="newCancellableExpense.cancellation_instructions" placeholder="ej. Entrar a la app > Configuración > Cancelar suscripción" />
+          </div>
+
+          <div class="form-field">
+            <label>Teléfono / Link / Email de contacto</label>
+            <input type="text" [(ngModel)]="newCancellableExpense.contact_info" placeholder="ej. 800-123-4567 o www.servicio.com/cancelar" />
+          </div>
+
+          <div class="form-field">
+            <label>Notas adicionales (opcional)</label>
+            <input type="text" [(ngModel)]="newCancellableExpense.notes" placeholder="ej. Requiere 30 días de anticipación" />
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label>Fecha de renovación (opcional)</label>
+              <input type="date" [(ngModel)]="newCancellableExpense.renewal_date" />
+            </div>
+            <div class="form-field">
+              <label>Frecuencia de renovación</label>
+              <select [(ngModel)]="newCancellableExpense.renewal_frequency">
+                @for (freq of renewalFrequencies; track freq.value) {
+                  <option [value]="freq.value">{{ freq.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="form-btns">
+            <button class="btn-primary" (click)="saveCancellableExpense()">{{ editingCancellableExpense ? 'Guardar' : 'Agregar' }}</button>
+            <button class="btn-secondary" (click)="cancelCancellableExpenseForm()">Cancelar</button>
+          </div>
+        </div>
+        }
+
+        <!-- Renewal Timeline -->
+        <div class="card">
+          <div class="card-header-row">
+            <ion-icon name="calendar-outline" class="icon-purple"></ion-icon>
+            <h3 class="card-title">Timeline de Renovaciones</h3>
+          </div>
+          @if (cancellableExpenses.expensesWithRenewal().length > 0) {
+            <div class="renewal-timeline">
+              @for (exp of cancellableExpenses.expensesWithRenewal(); track exp.id) {
+                <div class="timeline-item">
+                  <div class="timeline-date">
+                    <span class="timeline-month">{{ formatRenewalMonth(exp.renewal_date!) }}</span>
+                    <span class="timeline-day">{{ formatRenewalDay(exp.renewal_date!) }}</span>
+                  </div>
+                  <div class="timeline-content">
+                    <span class="timeline-name">{{ exp.name }}</span>
+                    <span class="timeline-cost">{{ exp.monthly_cost | currencyMxn }}/{{ getRenewalFrequencyShort(exp.renewal_frequency) }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="empty-msg">Agrega fechas de renovación para ver el timeline</p>
+          }
+        </div>
+
+        <!-- Cancellable Expenses List -->
+        <div class="card">
+          <h3 class="card-title">Tus Gastos Cancelables</h3>
+          @if (cancellableExpenses.expenses().length > 0) {
+            <div class="cancellable-list">
+              @for (exp of cancellableExpenses.expenses(); track exp.id) {
+                <div class="cancellable-item" [class]="'priority-' + exp.priority">
+                  <div class="cancellable-main">
+                    <div class="cancellable-info">
+                      <span class="cancellable-name">{{ exp.name }}</span>
+                      <span class="cancellable-meta">
+                        {{ getCancellableCategoryLabel(exp.category) }} • {{ getCancellablePriorityLabel(exp.priority) }}
+                      </span>
+                      @if (exp.renewal_frequency) {
+                        <span class="cancellable-renewal">
+                          <ion-icon name="sync-outline"></ion-icon> {{ getRenewalFrequencyLabel(exp.renewal_frequency) }}
+                        </span>
+                      }
+                    </div>
+                    <div class="cancellable-cost">
+                      <span class="cost-value">{{ exp.monthly_cost | currencyMxn }}</span>
+                      <span class="cost-period">por mes</span>
+                    </div>
+                    <button class="cancellable-delete" (click)="deleteCancellableExpense(exp.id)">
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                  </div>
+                  @if (exp.cancellation_instructions) {
+                    <div class="cancellable-instructions">
+                      <span class="instructions-label">Cómo cancelar:</span> {{ exp.cancellation_instructions }}
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-planb">
+              <div class="empty-icon">
+                <ion-icon name="shield-outline"></ion-icon>
+              </div>
+              <h4>Sin plan de emergencia aún</h4>
+              <p>Agrega suscripciones y servicios que podrías cancelar en caso de emergencia</p>
+            </div>
+          }
+        </div>
+        }
       </main>
     }
 
