@@ -76,6 +76,7 @@ Located in `src/app/models/`:
 | `SavingsDeposit` | Deposit history for goals |
 | `Investment` | Investment portfolio (stocks, bonds, ETF, crypto, CETES, AFORE) |
 | `UserSettings` | Financial planning settings (emergency, long-term, retirement) |
+| `CancellableExpense` | Plan B expenses with priority, category, renewal info |
 
 ## Services
 
@@ -90,6 +91,7 @@ Located in `src/app/core/services/`:
 | `SavingsGoalService` | Savings goals and deposits CRUD |
 | `InvestmentService` | Investment portfolio CRUD with risk allocation |
 | `UserSettingsService` | Financial settings (emergency, long-term, retirement) |
+| `CancellableExpenseService` | Plan B cancellable expenses CRUD with impact calculations |
 | `TaxCalculationService` | Mexican tax calculations (ISR, IMSS) |
 | `SupabaseService` | Supabase client wrapper |
 
@@ -239,6 +241,10 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Emergency fund automatic allocation based on milestone (100%→75%→50%→25%→0%)
 - [x] Personal goals with suggested monthly contribution and completion date
 - [x] Savings rate shown inline with available savings
+- [x] Plan B emergency action plan (cancellable expenses list)
+- [x] Cancellable expense categories and priorities (immediate, wait 1 month, etc.)
+- [x] Plan B impact calculator (extended coverage months)
+- [x] Renewal timeline for cancellable expenses
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality
