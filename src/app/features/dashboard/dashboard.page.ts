@@ -179,7 +179,6 @@ export class DashboardPage implements OnInit {
 
   // Plan B - Cancellable expenses form state
   showCancellableExpenseForm = false;
-  showFullPlanModal = false;
   editingCancellableExpense: CancellableExpense | null = null;
   newCancellableExpense: {
     name: string;

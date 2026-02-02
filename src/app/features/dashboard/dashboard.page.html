@@ -690,14 +690,6 @@
           <span>Agregar Gasto Cancelable</span>
         </button>
 
-        <!-- View Full Plan Button -->
-        @if (cancellableExpenses.expenses().length > 0) {
-        <button class="planb-view-btn" (click)="showFullPlanModal = true">
-          <ion-icon name="warning-outline"></ion-icon>
-          <span>Ver Plan de Acción Completo</span>
-        </button>
-        }
-
         <!-- Add/Edit Form -->
         @if (showCancellableExpenseForm) {
         <div class="card planb-form-card">
