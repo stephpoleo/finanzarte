@@ -3,27 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonContent,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonButtons,
-  IonBackButton,
-  IonButton,
   IonIcon,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardContent,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonProgressBar,
-  IonText,
-  IonFab,
-  IonFabButton,
-  IonItemSliding,
-  IonItemOptions,
-  IonItemOption,
   AlertController,
   ToastController
 } from '@ionic/angular/standalone';
@@ -34,12 +14,13 @@ import {
   createOutline,
   calendarOutline,
   trendingUpOutline,
-  walletOutline
+  walletOutline,
+  arrowBackOutline,
+  checkmarkCircleOutline
 } from 'ionicons/icons';
 import { SavingsGoalService } from '../../../core/services/savings-goal.service';
 import { SavingsGoal, SavingsDeposit } from '../../../models';
 import { CurrencyMxnPipe } from '../../../shared/pipes/currency-mxn.pipe';
-import { PercentagePipe } from '../../../shared/pipes/percentage.pipe';
 import { ProgressRingComponent } from '../../../shared/components/progress-ring/progress-ring.component';
 
 @Component({
@@ -48,258 +29,425 @@ import { ProgressRingComponent } from '../../../shared/components/progress-ring/
   imports: [
     CommonModule,
     IonContent,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonButtons,
-    IonBackButton,
-    IonButton,
     IonIcon,
-    IonCard,
-    IonCardHeader,
-    IonCardTitle,
-    IonCardContent,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonProgressBar,
-    IonText,
-    IonFab,
-    IonFabButton,
-    IonItemSliding,
-    IonItemOptions,
-    IonItemOption,
     CurrencyMxnPipe,
-    PercentagePipe,
     ProgressRingComponent
   ],
   template: `
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-back-button defaultHref="/savings"></ion-back-button>
-        </ion-buttons>
-        <ion-title>{{ goal()?.name || 'Meta' }}</ion-title>
-        <ion-buttons slot="end">
-          <ion-button (click)="editGoal()">
-            <ion-icon name="create-outline"></ion-icon>
-          </ion-button>
-          <ion-button (click)="deleteGoal()">
-            <ion-icon name="trash-outline" color="danger"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-
     <ion-content>
-      @if (goal(); as g) {
-        <!-- Progress Card -->
-        <ion-card class="progress-card">
-          <ion-card-content>
-            <div class="progress-content">
+      <div class="page-container">
+        <!-- Custom Header -->
+        <header class="page-header">
+          <button class="back-btn" (click)="goBack()">
+            <ion-icon name="arrow-back-outline"></ion-icon>
+          </button>
+          <h1 class="page-title">{{ goal()?.name || 'Meta' }}</h1>
+          <div class="header-actions">
+            <button class="action-btn" (click)="editGoal()">
+              <ion-icon name="create-outline"></ion-icon>
+            </button>
+            <button class="action-btn danger" (click)="deleteGoal()">
+              <ion-icon name="trash-outline"></ion-icon>
+            </button>
+          </div>
+        </header>
+
+        @if (goal(); as g) {
+          <!-- Progress Card -->
+          <div class="card progress-card">
+            <div class="progress-section">
               <app-progress-ring
                 [progress]="getProgress(g)"
                 [size]="140"
-                color="#10b981"
+                [color]="g.color || '#10b981'"
               >
-                <span class="progress-value">{{ getProgress(g) | percentage:0 }}</span>
+                <span class="progress-value">{{ getProgress(g) | number:'1.0-0' }}%</span>
                 <span class="progress-label">completado</span>
               </app-progress-ring>
+            </div>
 
-              <div class="amounts-info">
-                <div class="amount-row">
-                  <span class="amount-label">Ahorrado</span>
-                  <span class="amount-value success">{{ g.current_amount | currencyMxn }}</span>
-                </div>
-                <div class="amount-row">
-                  <span class="amount-label">Meta</span>
-                  <span class="amount-value">{{ g.target_amount | currencyMxn }}</span>
-                </div>
-                <div class="amount-row">
-                  <span class="amount-label">Restante</span>
-                  <span class="amount-value warning">{{ getRemaining(g) | currencyMxn }}</span>
-                </div>
+            <div class="stats-section">
+              <div class="stat-row">
+                <span class="stat-label">Ahorrado</span>
+                <span class="stat-value success">{{ g.current_amount | currencyMxn }}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Meta</span>
+                <span class="stat-value">{{ g.target_amount | currencyMxn }}</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Restante</span>
+                <span class="stat-value warning">{{ getRemaining(g) | currencyMxn }}</span>
               </div>
             </div>
 
             @if (g.deadline) {
-              <div class="deadline-info">
+              <div class="info-row">
                 <ion-icon name="calendar-outline"></ion-icon>
                 <span>Fecha límite: {{ formatDeadline(g.deadline) }}</span>
               </div>
             }
 
             @if (g.monthly_target) {
-              <div class="monthly-info">
+              <div class="info-row">
                 <ion-icon name="trending-up-outline"></ion-icon>
                 <span>Meta mensual: {{ g.monthly_target | currencyMxn }}</span>
               </div>
             }
-          </ion-card-content>
-        </ion-card>
+          </div>
 
-        <!-- Deposits History -->
-        <ion-card class="deposits-card">
-          <ion-card-header>
-            <ion-card-title>
+          <!-- Deposits Card -->
+          <div class="card deposits-card">
+            <div class="card-header">
               <ion-icon name="wallet-outline"></ion-icon>
-              Historial de Depósitos
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
+              <h2>Historial de Depósitos</h2>
+            </div>
+
             @if (deposits().length === 0) {
-              <div class="empty-deposits">
+              <div class="empty-state">
+                <ion-icon name="wallet-outline"></ion-icon>
                 <p>No hay depósitos registrados</p>
+                <span>Toca el botón + para agregar uno</span>
               </div>
             } @else {
-              <ion-list lines="none">
+              <div class="deposits-list">
                 @for (deposit of deposits(); track deposit.id) {
-                  <ion-item-sliding>
-                    <ion-item>
-                      <ion-label>
-                        <h3>{{ deposit.amount | currencyMxn }}</h3>
-                        <p>{{ formatDate(deposit.created_at) }}</p>
-                        @if (deposit.note) {
-                          <p class="note">{{ deposit.note }}</p>
-                        }
-                      </ion-label>
-                    </ion-item>
-                    <ion-item-options side="end">
-                      <ion-item-option color="danger" (click)="deleteDeposit(deposit)">
-                        <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-                      </ion-item-option>
-                    </ion-item-options>
-                  </ion-item-sliding>
+                  <div class="deposit-item">
+                    <div class="deposit-info">
+                      <span class="deposit-amount">{{ deposit.amount | currencyMxn }}</span>
+                      <span class="deposit-date">{{ formatDate(deposit.created_at) }}</span>
+                      @if (deposit.note) {
+                        <span class="deposit-note">{{ deposit.note }}</span>
+                      }
+                    </div>
+                    <button class="delete-btn" (click)="deleteDeposit(deposit)">
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                  </div>
                 }
-              </ion-list>
+              </div>
             }
-          </ion-card-content>
-        </ion-card>
-      }
+          </div>
+        }
 
-      <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-        <ion-fab-button (click)="addDeposit()">
+        <!-- FAB Button -->
+        <button class="fab-btn" (click)="addDeposit()">
           <ion-icon name="add-outline"></ion-icon>
-        </ion-fab-button>
-      </ion-fab>
+        </button>
+      </div>
     </ion-content>
   `,
   styles: [`
-    .progress-card {
-      margin: 16px;
+    .page-container {
+      min-height: 100%;
+      background: #f3f4f6;
+      padding-bottom: 100px;
     }
 
-    .progress-content {
+    /* Header */
+    .page-header {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: 24px;
+      gap: 12px;
+      padding: 16px;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: none;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      ion-icon {
+        font-size: 20px;
+        color: #374151;
+      }
+
+      &:hover {
+        background: #e5e7eb;
+      }
+    }
+
+    .page-title {
+      flex: 1;
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: none;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      ion-icon {
+        font-size: 20px;
+        color: #374151;
+      }
+
+      &:hover {
+        background: #e5e7eb;
+      }
+
+      &.danger {
+        ion-icon {
+          color: #ef4444;
+        }
+
+        &:hover {
+          background: #fef2f2;
+        }
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: white;
+      border-radius: 16px;
+      margin: 16px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Progress Card */
+    .progress-card {
+      text-align: center;
+    }
+
+    .progress-section {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 24px;
     }
 
     .progress-value {
       font-size: 1.75rem;
       font-weight: 700;
-      color: var(--ion-color-success);
+      color: #10b981;
+      display: block;
     }
 
     .progress-label {
       font-size: 0.75rem;
-      color: var(--ion-color-medium);
+      color: #6b7280;
+      display: block;
     }
 
-    .amounts-info {
-      width: 100%;
+    .stats-section {
+      border-top: 1px solid #f3f4f6;
+      padding-top: 16px;
     }
 
-    .amount-row {
+    .stat-row {
       display: flex;
       justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--ion-color-light);
-    }
-
-    .amount-row:last-child {
-      border-bottom: none;
-    }
-
-    .amount-label {
-      color: var(--ion-color-medium);
-    }
-
-    .amount-value {
-      font-weight: 600;
-    }
-
-    .amount-value.success {
-      color: var(--ion-color-success);
-    }
-
-    .amount-value.warning {
-      color: var(--ion-color-warning-shade);
-    }
-
-    .deadline-info, .monthly-info {
-      display: flex;
       align-items: center;
-      gap: 8px;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--ion-color-light);
-      font-size: 0.875rem;
-      color: var(--ion-color-medium);
+      padding: 12px 0;
+      border-bottom: 1px solid #f3f4f6;
+
+      &:last-child {
+        border-bottom: none;
+      }
     }
 
-    .deadline-info ion-icon, .monthly-info ion-icon {
-      font-size: 18px;
-      color: var(--ion-color-primary);
+    .stat-label {
+      font-size: 0.9rem;
+      color: #6b7280;
     }
 
-    .deposits-card {
-      margin: 16px;
-    }
-
-    .deposits-card ion-card-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .stat-value {
       font-size: 1rem;
-    }
-
-    .deposits-card ion-card-title ion-icon {
-      color: var(--ion-color-primary);
-    }
-
-    .empty-deposits {
-      text-align: center;
-      padding: 24px 0;
-    }
-
-    .empty-deposits p {
-      color: var(--ion-color-medium);
-      margin: 0;
-    }
-
-    ion-list {
-      padding: 0;
-    }
-
-    ion-item h3 {
       font-weight: 600;
-      color: var(--ion-color-success);
+      color: #1f2937;
+
+      &.success {
+        color: #10b981;
+      }
+
+      &.warning {
+        color: #f59e0b;
+      }
     }
 
-    ion-item p {
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+      margin-top: 8px;
+      border-top: 1px solid #f3f4f6;
       font-size: 0.875rem;
+      color: #6b7280;
+
+      ion-icon {
+        font-size: 18px;
+        color: #10b981;
+      }
     }
 
-    ion-item p.note {
-      font-style: italic;
-      color: var(--ion-color-medium);
-    }
-
-    ion-fab {
+    /* Deposits Card */
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 16px;
-      margin-right: 8px;
+
+      ion-icon {
+        font-size: 22px;
+        color: #10b981;
+      }
+
+      h2 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+      }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+
+      ion-icon {
+        font-size: 48px;
+        color: #d1d5db;
+        margin-bottom: 12px;
+      }
+
+      p {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #6b7280;
+        margin: 0 0 4px;
+      }
+
+      span {
+        font-size: 0.8rem;
+        color: #9ca3af;
+      }
+    }
+
+    .deposits-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .deposit-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px;
+      background: #f9fafb;
+      border-radius: 12px;
+      border-left: 3px solid #10b981;
+    }
+
+    .deposit-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .deposit-amount {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #10b981;
+    }
+
+    .deposit-date {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .deposit-note {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      font-style: italic;
+    }
+
+    .delete-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      ion-icon {
+        font-size: 18px;
+        color: #9ca3af;
+      }
+
+      &:hover {
+        background: #fef2f2;
+
+        ion-icon {
+          color: #ef4444;
+        }
+      }
+    }
+
+    /* FAB Button */
+    .fab-btn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+      transition: all 0.2s ease;
+      z-index: 100;
+
+      ion-icon {
+        font-size: 28px;
+      }
+
+      &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
     }
   `]
 })
@@ -321,7 +469,9 @@ export class GoalDetailPage implements OnInit {
       createOutline,
       calendarOutline,
       trendingUpOutline,
-      walletOutline
+      walletOutline,
+      arrowBackOutline,
+      checkmarkCircleOutline
     });
   }
 
@@ -343,6 +493,10 @@ export class GoalDetailPage implements OnInit {
     if (!this.goalId) return;
     const deposits = await this.savingsGoals.loadDeposits(this.goalId);
     this.deposits.set(deposits);
+  }
+
+  goBack(): void {
+    this.router.navigate(['/dashboard']);
   }
 
   getProgress(goal: SavingsGoal): number {
@@ -481,7 +635,7 @@ export class GoalDetailPage implements OnInit {
               });
               await toast.present();
 
-              this.router.navigate(['/savings']);
+              this.router.navigate(['/dashboard']);
             }
           }
         }
