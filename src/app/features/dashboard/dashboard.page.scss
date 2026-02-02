@@ -1930,10 +1930,26 @@
   transition: width 0.3s ease;
 }
 
-/* Tips Card */
+/* Tips Card - Collapsible */
 .card.tips {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   border: 1px solid #fcd34d;
+
+  &.collapsible {
+    cursor: pointer;
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  &.expanded {
+    cursor: default;
+
+    h3 {
+      margin: 0 0 12px;
+    }
+  }
 
   h3 {
     font-size: 1rem;
@@ -1960,6 +1976,332 @@
         color: #92400e;
       }
     }
+  }
+}
+
+.tips-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+
+  .chevron {
+    color: #92400e;
+    font-size: 18px;
+    transition: transform 0.2s ease;
+  }
+}
+
+.card.tips.expanded .tips-header .chevron {
+  transform: rotate(180deg);
+}
+
+/* Emergency Fund Allocation - Compact Design */
+.icon-cyan {
+  color: #06b6d4;
+  font-size: 24px;
+}
+
+.allocation-card {
+  .card-header-row {
+    margin-bottom: 16px;
+  }
+}
+
+.alloc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  border-left: 3px solid #10b981;
+
+  &.cetes {
+    border-left-color: #3b82f6;
+  }
+}
+
+.alloc-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alloc-icon {
+  font-size: 1.25rem;
+}
+
+.alloc-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.alloc-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.alloc-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.alloc-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.alloc-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alloc-bar {
+  width: 80px;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.alloc-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  max-width: 100%;
+
+  &.sofipo {
+    background: linear-gradient(90deg, #10b981, #34d399);
+  }
+
+  &.cetes {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  }
+}
+
+.alloc-pct {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #10b981;
+  min-width: 36px;
+  text-align: right;
+}
+
+.alloc-limit {
+  font-size: 0.65rem;
+  color: #9ca3af;
+}
+
+.alloc-note {
+  font-size: 0.75rem;
+  color: #3b82f6;
+  font-weight: 500;
+}
+
+.alloc-hint {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-radius: 8px;
+  line-height: 1.4;
+}
+
+/* SOFIPOs Carousel */
+.sofipos-card {
+  overflow: hidden;
+}
+
+.sofipos-carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 4px;
+  margin: 0 -4px;
+
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.sofipo-card {
+  flex: 0 0 140px;
+  min-width: 140px;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &.best {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border-color: #10b981;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.best-badge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.sofipo-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.sofipo-rate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.rate-number {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #10b981;
+  line-height: 1;
+}
+
+.rate-period {
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.sofipo-term {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.instrument-footer {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.ipab-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 6px 12px;
+  border-radius: 20px;
+
+  ion-icon {
+    font-size: 14px;
+  }
+}
+
+/* CETES Info */
+.cetes-info {
+  margin-top: 12px;
+}
+
+.cetes-rate {
+  text-align: center;
+  padding: 16px;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-radius: 12px;
+  margin-bottom: 12px;
+
+  .rate-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1d4ed8;
+  }
+
+  .rate-label {
+    font-size: 0.8rem;
+    color: #3b82f6;
+  }
+}
+
+.cetes-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: #374151;
+
+  ion-icon {
+    color: #3b82f6;
+    font-size: 18px;
+  }
+}
+
+.cetes-footer {
+  margin-top: 16px;
+}
+
+.cetes-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  ion-icon {
+    font-size: 16px;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
   }
 }
 

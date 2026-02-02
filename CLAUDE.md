@@ -53,6 +53,10 @@ src/app/
 - **Recommendation**: Shows % of available savings to dedicate (not income)
 - **Inline editable savings**: Edit emergency fund amount directly in the hero card
 - **Auto-sync**: Income and expenses sync automatically from Presupuesto tab
+- **Where to save**: Allocation strategy showing SOFIPOs vs CETES based on tax-exempt limit (5 UMAs)
+- **SOFIPOs carousel**: Horizontal scroll with popular SOFIPOs and their annual rates
+- **CETES info**: Government bonds section with CetesDirecto link
+- **Collapsible tips**: Educational tips collapsed by default to save space
 
 ### Savings Goals Lock
 - Savings goals are **locked** until user has at least 1 month of emergency fund
@@ -226,6 +230,10 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Emergency recommendation based on available savings (income - expenses)
 - [x] Inline editable emergency savings in hero card
 - [x] Savings goals lock until 1 month emergency fund (with bypass option)
+- [x] SOFIPO/CETES allocation strategy for emergency fund (tax-exempt limit: 5 UMAs)
+- [x] SOFIPOs carousel with annual rates (Fondeadora, UltraTasas, Kubo, etc.)
+- [x] CETES info card with CetesDirecto link
+- [x] Collapsible tips sections (collapsed by default)
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality

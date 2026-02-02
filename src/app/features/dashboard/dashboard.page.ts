@@ -59,7 +59,9 @@ import {
   medicalOutline,
   schoolOutline,
   lockClosedOutline,
-  lockOpenOutline
+  lockOpenOutline,
+  shieldCheckmarkOutline,
+  openOutline
 } from 'ionicons/icons';
 import { ProfileService } from '../../core/services/profile.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -73,6 +75,7 @@ import { ExpenseCategory, EXPENSE_CATEGORIES, Investment, InvestmentType, Invest
 import { ProgressRingComponent } from '../../shared/components/progress-ring/progress-ring.component';
 import { SalaryCalculatorModalComponent, SalaryCalculatorResult } from '../../shared/components/salary-calculator-modal/salary-calculator-modal.component';
 import { SavingsGoalModalComponent, SavingsGoalResult } from '../../shared/components/savings-goal-modal/savings-goal-modal.component';
+import { SOFIPOS, CETES_INFO, TAX_EXEMPT_LIMIT, calculateAllocationStrategy, SavingsInstrument, AllocationStrategy } from '../../data/savings-instruments';
 
 type TabType = 'presupuesto' | 'emergencia' | 'largo-plazo' | 'retiro' | 'inversiones';
 
@@ -165,6 +168,10 @@ export class DashboardPage implements OnInit {
   // Expense sections collapsed state
   fixedExpensesExpanded = false;
   variableExpensesExpanded = false;
+
+  // Tips sections collapsed state (collapsed by default)
+  emergencyTipsExpanded = false;
+  strategyTipsExpanded = false;
 
   // Charts carousel state
   currentChart = 0;
@@ -312,7 +319,9 @@ export class DashboardPage implements OnInit {
       medicalOutline,
       schoolOutline,
       lockClosedOutline,
-      lockOpenOutline
+      lockOpenOutline,
+      shieldCheckmarkOutline,
+      openOutline
     });
   }
 
@@ -587,6 +596,14 @@ export class DashboardPage implements OnInit {
 
   toggleVariableExpenses(): void {
     this.variableExpensesExpanded = !this.variableExpensesExpanded;
+  }
+
+  toggleEmergencyTips(): void {
+    this.emergencyTipsExpanded = !this.emergencyTipsExpanded;
+  }
+
+  toggleStrategyTips(): void {
+    this.strategyTipsExpanded = !this.strategyTipsExpanded;
   }
 
   getCategoryColor(category: string): string {
@@ -955,6 +972,19 @@ export class DashboardPage implements OnInit {
     const range = months - prevMonths;
     const progress = covered - prevMonths;
     return Math.min(100, Math.max(0, (progress / range) * 100));
+  }
+
+  // Emergency Fund Allocation - Where to put your money
+  sofipos = SOFIPOS;
+  cetesInfo = CETES_INFO;
+  taxExemptLimit = TAX_EXEMPT_LIMIT;
+
+  get emergencyAllocation(): AllocationStrategy {
+    return calculateAllocationStrategy(this.emergencyCurrentSavings);
+  }
+
+  get topSofipos(): SavingsInstrument[] {
+    return this.sofipos.slice(0, 3); // Top 3 by rate (already sorted)
   }
 
   // Long Term Savings methods
