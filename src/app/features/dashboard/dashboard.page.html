@@ -35,13 +35,13 @@
           <ion-icon name="leaf-outline"></ion-icon>
           <span>Largo Plazo</span>
         </button>
-        <button class="nav-tab" [class.active-purple]="activeTab === 'retiro'" (click)="activeTab = 'retiro'">
-          <ion-icon name="flag-outline"></ion-icon>
-          <span>Retiro</span>
-        </button>
         <button class="nav-tab" [class.active-indigo]="activeTab === 'inversiones'" (click)="activeTab = 'inversiones'">
           <ion-icon name="trending-up-outline"></ion-icon>
           <span>Inversiones</span>
+        </button>
+        <button class="nav-tab" [class.active-purple]="activeTab === 'retiro'" (click)="activeTab = 'retiro'">
+          <ion-icon name="flag-outline"></ion-icon>
+          <span>Retiro</span>
         </button>
       </div>
     </nav>
@@ -836,23 +836,91 @@
         <div class="hero-card amber">
           <div class="hero-header"><div class="hero-icon"><ion-icon name="leaf-outline"></ion-icon></div><div><h3>Ahorro a Largo Plazo</h3><p>Tu camino a la libertad financiera</p></div></div>
           <div class="hero-stat">
-            <span class="stat-label">Ahorros Invertidos Actuales</span>
-            <span class="stat-value">{{ ltCurrentSavings | currencyMxn }}</span>
+            <span class="stat-label">Total de Ahorros</span>
+            <span class="stat-value">{{ totalSavings | currencyMxn }}</span>
+            <div class="savings-breakdown">
+              <div class="breakdown-item"><span class="breakdown-icon">🛡️</span><span class="breakdown-label">Emergencia</span><span class="breakdown-value">{{ emergencyCurrentSavings | currencyMxn }}</span></div>
+              <div class="breakdown-item"><span class="breakdown-icon">📈</span><span class="breakdown-label">Invertido</span><span class="breakdown-value">{{ ltCurrentSavings | currencyMxn }}</span></div>
+            </div>
             <span class="stat-hint">@if (ltCurrentLevel) {<ion-icon name="checkmark-circle-outline"></ion-icon> Nivel: {{ ltCurrentLevel.name }}} @else {Comienza tu camino a la libertad}</span>
           </div>
           <div class="hero-grid">
-            <div class="hero-box"><span class="box-label">Ingreso Pasivo Mensual</span><span class="box-value">{{ ltMonthlyPassiveIncome | currencyMxn }}</span><span class="box-hint">Regla del 4% anual</span></div>
+            <div class="hero-box"><span class="box-label">Ingreso Pasivo Mensual</span><span class="box-value">{{ ltMonthlyPassiveIncome | currencyMxn }}</span><span class="box-hint">Solo invertido ({{ ltWithdrawalRate }}%)</span></div>
             <div class="hero-box"><span class="box-label">Cobertura de Gastos</span><span class="box-value">{{ ltCoveragePercentage | number:'1.0-0' }}%</span><span class="box-hint">@if (ltCoveragePercentage >= 100) {¡Libertad alcanzada!} @else {de tus gastos}</span></div>
           </div>
         </div>
 
-        <div class="alert-warning"><ion-icon name="warning-outline"></ion-icon><p><strong>¡Importante!</strong> Este dinero DEBE estar invertido. Sin rendimientos, la inflación destruye tu poder adquisitivo (~4-6% anual). Considera ETFs indexados, CETES, fondos de inversión o bonos.</p></div>
+        <!-- Withdrawal Rule Tips (Collapsible) -->
+        <div class="card tips collapsible lt-rule-tips" [class.expanded]="ltRuleTipsExpanded">
+          <div class="tips-header" (click)="toggleLtRuleTips()">
+            <h3>💡 La Regla del {{ ltWithdrawalRate }}%</h3>
+            <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+          </div>
+          @if (ltRuleTipsExpanded) {
+            <div class="tips-content">
+              <p>Si retiras el <strong>{{ ltWithdrawalRate }}%</strong> anualmente de tu capital invertido, este debería durar indefinidamente.</p>
+              <div class="rule-example">
+                <span class="example-label">Ejemplo:</span>
+                <span class="example-text">$1,000,000 invertidos → ${{ (10000 * ltWithdrawalRate) | number:'1.0-0' }}/año de ingreso pasivo</span>
+              </div>
+              <div class="rule-formula">
+                <span class="formula-label">Fórmula:</span>
+                <code>Gastos mensuales × 12 × {{ ltWithdrawalMultiplier | number:'1.0-0' }} = Capital necesario</code>
+              </div>
+              <div class="rule-result">
+                <span>Con tus gastos de <strong>{{ ltAutoMonthlyExpenses | currencyMxn }}/mes</strong>, necesitas:</span>
+                <span class="result-amount">{{ ltCapitalNeeded | currencyMxn }}</span>
+              </div>
+            </div>
+          }
+        </div>
 
-        <div class="card"><h3 class="card-title">Configuración</h3>
-          <div class="form-field"><label>Gastos Mensuales Totales</label><input type="number" [(ngModel)]="ltMonthlyExpenses" placeholder="0.00"/><span class="hint">Todos tus gastos mensuales</span></div>
-          <div class="form-field"><label>Ahorros Actuales para Largo Plazo</label><input type="number" [(ngModel)]="ltCurrentSavings" placeholder="0.00"/><span class="hint">Solo cuenta dinero invertido</span></div>
-          <div class="form-field"><label>Ahorro Mensual</label><input type="number" [(ngModel)]="ltMonthlySavings" placeholder="0.00"/><span class="hint">¿Cuánto puedes invertir cada mes?</span></div>
-          <div class="form-field"><label>Retorno Anual Esperado (%)</label><input type="number" [(ngModel)]="ltAnnualReturn" placeholder="8"/><span class="hint">Conservador: 5-7% | Moderado: 8-10% | Agresivo: 12%+</span></div>
+        <!-- Simulador Config -->
+        <div class="card lt-config-card">
+          <div class="lt-config-header">
+            <h3 class="card-title">Simulador</h3>
+            <button class="help-toggle" (click)="showLtConfigHelp = !showLtConfigHelp">?</button>
+          </div>
+
+          @if (showLtConfigHelp) {
+            <div class="lt-config-help">
+              <div class="help-item">
+                <strong>💰 Invertido</strong>
+                <span>Suma de tus inversiones (ETFs, fondos, CETES). Toca para ir a Inversiones.</span>
+              </div>
+              <div class="help-item">
+                <strong>📈 Retorno</strong>
+                <span>Promedio ponderado de tus inversiones. Si no tienes, usa 8% (conservador).</span>
+              </div>
+              <div class="help-item">
+                <strong>🎯 Tasa de retiro</strong>
+                <span>% que puedes retirar anualmente sin agotar el capital. 4% es el estándar.</span>
+              </div>
+            </div>
+          }
+
+          <!-- Valores del simulador -->
+          <div class="lt-sim-values">
+            <div class="sim-row">
+              <span class="sim-label">Gastos mensuales</span>
+              <span class="sim-value">{{ ltAutoMonthlyExpenses | currencyMxn }}</span>
+            </div>
+            <div class="sim-row clickable" (click)="activeTab = 'inversiones'">
+              <span class="sim-label">Invertido <ion-icon name="open-outline"></ion-icon></span>
+              <span class="sim-value">{{ ltCurrentSavings | currencyMxn }}</span>
+            </div>
+            <div class="sim-row">
+              <span class="sim-label">Retorno anual</span>
+              <span class="sim-value">{{ ltAnnualReturn | number:'1.1-1' }}%</span>
+            </div>
+            <div class="sim-row editable">
+              <span class="sim-label">Tasa de retiro</span>
+              <div class="sim-input-wrap">
+                <input type="number" [(ngModel)]="ltWithdrawalRate" min="1" max="10"/>
+                <span>%</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="card"><h3 class="card-title">Niveles de Libertad Financiera</h3><p class="card-subtitle">Cada nivel representa un hito en tu independencia económica</p>
@@ -881,70 +949,14 @@
           <div class="card next-level">
             <h3 class="card-title">Siguiente Nivel: {{ ltNextLevel.name }}</h3>
             <div class="next-info"><span>Meta</span><span class="next-amount">{{ getLevelTarget(ltNextLevel) | currencyMxn }}</span></div>
-            <div class="next-info"><span>Falta por ahorrar</span><span class="next-amount">{{ getLevelTarget(ltNextLevel) - ltCurrentSavings | currencyMxn }}</span></div>
+            <div class="next-info"><span>Falta por ahorrar</span><span class="next-amount">{{ getLevelTarget(ltNextLevel) - totalSavings | currencyMxn }}</span></div>
             @if (isYearsValid(getYearsToLevel(ltNextLevel))) {
-              <div class="next-time"><span class="time-label">Tiempo estimado</span><span class="time-value">{{ getYearsToLevel(ltNextLevel) | number:'1.1-1' }} años</span><span class="time-hint">Ahorrando {{ ltMonthlySavings | currencyMxn }}/mes con {{ ltAnnualReturn }}% retorno</span></div>
+              <div class="next-time"><span class="time-label">Tiempo estimado</span><span class="time-value">{{ getYearsToLevel(ltNextLevel) | number:'1.1-1' }} años</span><span class="time-hint">Ahorrando {{ ltMonthlySavings | currencyMxn }}/mes con {{ ltAnnualReturn | number:'1.0-2' }}% retorno</span></div>
             }
           </div>
         }
 
-        <div class="card compound-card">
-          <h3 class="card-title"><ion-icon name="trending-up-outline"></ion-icon> El Poder del Interés Compuesto</h3>
-          <div class="projection-grid">
-            <div class="projection-item"><span class="proj-label">5 años</span><span class="proj-value">{{ getProjectedSavings(5) | currencyMxn }}</span></div>
-            <div class="projection-item"><span class="proj-label">10 años</span><span class="proj-value">{{ getProjectedSavings(10) | currencyMxn }}</span></div>
-            <div class="projection-item"><span class="proj-label">20 años</span><span class="proj-value">{{ getProjectedSavings(20) | currencyMxn }}</span></div>
-          </div>
-          <p class="proj-note">* Proyecciones asumiendo {{ ltAnnualReturn }}% de retorno anual</p>
-        </div>
-
-        <div class="card tips">
-          <h3>💡 La Regla del 4%</h3>
-          <p>Si retiras el 4% anualmente de tu capital invertido, este debería durar indefinidamente. Es decir: $1,000,000 te da $40,000/año ($3,333/mes) de forma perpetua.</p>
-          <div class="formula">Gastos mensuales × 12 × 25 = Capital necesario</div>
-          <div class="result">Con gastos de {{ ltMonthlyExpenses | currencyMxn }}/mes, necesitas <strong>{{ ltAnnualExpenses * 25 | currencyMxn }}</strong> invertidos</div>
-        </div>
-      </main>
-    }
-
-    <!-- Retirement Tab -->
-    @if (activeTab === 'retiro') {
-      <main class="main-content">
-        <div class="hero-card purple">
-          <div class="hero-header"><div class="hero-icon"><ion-icon name="flag-outline"></ion-icon></div><div><h3>Plan de Retiro</h3><p>Planifica tu futuro financiero</p></div></div>
-          <div class="hero-stat">
-            <span class="stat-label">Proyección al Retiro</span>
-            <span class="stat-value">{{ retTotalFund | currencyMxn }}</span>
-            <span class="stat-hint">En {{ retYearsToRetirement }} años ({{ retRetirementAge }} años)</span>
-          </div>
-          <div class="hero-grid">
-            <div class="hero-box"><ion-icon name="calendar-outline"></ion-icon><span class="box-label">Años hasta retiro</span><span class="box-value">{{ retYearsToRetirement }}</span></div>
-            <div class="hero-box"><ion-icon name="trending-up-outline"></ion-icon><span class="box-label">Retorno anual</span><span class="box-value">{{ retExpectedReturn }}%</span></div>
-          </div>
-        </div>
-
-        <div class="card"><h3 class="card-title">Parámetros de Planificación</h3>
-          <div class="form-grid-2">
-            <div class="form-field"><label>Edad Actual</label><input type="number" [(ngModel)]="retCurrentAge" placeholder="30"/></div>
-            <div class="form-field"><label>Edad de Retiro</label><input type="number" [(ngModel)]="retRetirementAge" placeholder="65"/></div>
-          </div>
-          <div class="form-field"><label>Ahorros Actuales para Retiro</label><input type="number" [(ngModel)]="retCurrentSavings" placeholder="0.00"/></div>
-          <div class="form-field"><label>Contribución Mensual</label><input type="number" [(ngModel)]="retMonthlyContribution" placeholder="0.00"/></div>
-          <div class="form-field"><label>Retorno Anual Esperado (%)</label><input type="number" [(ngModel)]="retExpectedReturn" placeholder="7"/></div>
-        </div>
-
-        <div class="card"><h3 class="card-title">Análisis de Suficiencia</h3>
-          <div class="analysis-row"><span>Fondo Proyectado</span><span class="analysis-value">{{ retTotalFund | currencyMxn }}</span></div>
-          <div class="analysis-row"><span>Fondo Recomendado</span><span class="analysis-value">{{ retRecommendedFund | currencyMxn }}</span></div>
-          <div class="progress-bar"><div class="progress-fill" [style.width.%]="retFundProgress"></div></div>
-          <p class="analysis-hint">@if (retTotalFund >= retRecommendedFund) {✓ Tu plan está en camino a cumplir las recomendaciones} @else {Considera aumentar tu contribución mensual}</p>
-          <div class="ret-income-box">
-            <span class="income-label">Ingreso Mensual Estimado</span>
-            <span class="income-value">{{ retMonthlyIncome | currencyMxn }}</span>
-            <span class="income-hint">Usando la regla del 4% de retiro anual</span>
-          </div>
-        </div>
-      </main>
+        </main>
     }
 
     <!-- Investments Tab -->
@@ -1080,6 +1092,46 @@
             <p class="proj-note">* Proyecciones basadas en tu retorno promedio de {{ weightedReturn | number:'1.1-1' }}%</p>
           </div>
         }
+      </main>
+    }
+
+    <!-- Retirement Tab -->
+    @if (activeTab === 'retiro') {
+      <main class="main-content">
+        <div class="hero-card purple">
+          <div class="hero-header"><div class="hero-icon"><ion-icon name="flag-outline"></ion-icon></div><div><h3>Plan de Retiro</h3><p>Planifica tu futuro financiero</p></div></div>
+          <div class="hero-stat">
+            <span class="stat-label">Proyección al Retiro</span>
+            <span class="stat-value">{{ retTotalFund | currencyMxn }}</span>
+            <span class="stat-hint">En {{ retYearsToRetirement }} años ({{ retRetirementAge }} años)</span>
+          </div>
+          <div class="hero-grid">
+            <div class="hero-box"><ion-icon name="calendar-outline"></ion-icon><span class="box-label">Años hasta retiro</span><span class="box-value">{{ retYearsToRetirement }}</span></div>
+            <div class="hero-box"><ion-icon name="trending-up-outline"></ion-icon><span class="box-label">Retorno anual</span><span class="box-value">{{ retExpectedReturn }}%</span></div>
+          </div>
+        </div>
+
+        <div class="card"><h3 class="card-title">Parámetros de Planificación</h3>
+          <div class="form-grid-2">
+            <div class="form-field"><label>Edad Actual</label><input type="number" [(ngModel)]="retCurrentAge" placeholder="30"/></div>
+            <div class="form-field"><label>Edad de Retiro</label><input type="number" [(ngModel)]="retRetirementAge" placeholder="65"/></div>
+          </div>
+          <div class="form-field"><label>Ahorros Actuales para Retiro</label><input type="number" [(ngModel)]="retCurrentSavings" placeholder="0.00"/></div>
+          <div class="form-field"><label>Contribución Mensual</label><input type="number" [(ngModel)]="retMonthlyContribution" placeholder="0.00"/></div>
+          <div class="form-field"><label>Retorno Anual Esperado (%)</label><input type="number" [(ngModel)]="retExpectedReturn" placeholder="7"/></div>
+        </div>
+
+        <div class="card"><h3 class="card-title">Análisis de Suficiencia</h3>
+          <div class="analysis-row"><span>Fondo Proyectado</span><span class="analysis-value">{{ retTotalFund | currencyMxn }}</span></div>
+          <div class="analysis-row"><span>Fondo Recomendado</span><span class="analysis-value">{{ retRecommendedFund | currencyMxn }}</span></div>
+          <div class="progress-bar"><div class="progress-fill" [style.width.%]="retFundProgress"></div></div>
+          <p class="analysis-hint">@if (retTotalFund >= retRecommendedFund) {✓ Tu plan está en camino a cumplir las recomendaciones} @else {Considera aumentar tu contribución mensual}</p>
+          <div class="ret-income-box">
+            <span class="income-label">Ingreso Mensual Estimado</span>
+            <span class="income-value">{{ retMonthlyIncome | currencyMxn }}</span>
+            <span class="income-hint">Usando la regla del 4% de retiro anual</span>
+          </div>
+        </div>
       </main>
     }
   </div>
