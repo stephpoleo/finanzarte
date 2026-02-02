@@ -235,6 +235,10 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] CETES info card with CetesDirecto link
 - [x] Collapsible tips sections (collapsed by default)
 - [x] Goal detail page redesign (light theme, custom header, styled deposits list)
+- [x] Savings allocation section (replaces old "Metas de Ahorro" and "Análisis Rápido")
+- [x] Emergency fund automatic allocation based on milestone (100%→75%→50%→25%→0%)
+- [x] Personal goals with suggested monthly contribution and completion date
+- [x] Savings rate shown inline with available savings
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality

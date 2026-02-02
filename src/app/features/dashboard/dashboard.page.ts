@@ -1,7 +1,6 @@
 import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import {
   IonContent,
   IonIcon,
@@ -91,19 +90,12 @@ interface LegendItem {
   value: number;
 }
 
-interface Insight {
-  type: 'success' | 'warning' | 'info' | 'danger';
-  icon: string;
-  message: string;
-}
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     IonContent,
     IonIcon,
     IonRefresher,
@@ -849,59 +841,6 @@ export class DashboardPage implements OnInit {
     return items;
   }
 
-  // Insights
-  getInsights(): Insight[] {
-    const insights: Insight[] = [];
-    const totalIncome = this.incomeSources.totalIncome();
-    const totalExpenses = this.expenses.totalExpenses();
-    const rate = this.savingsRate();
-    const fixedRatio = totalIncome > 0 ? (this.expenses.totalFixedExpenses() / totalIncome) * 100 : 0;
-
-    if (rate >= 20) {
-      insights.push({
-        type: 'success',
-        icon: 'checkmark-circle-outline',
-        message: `¡Excelente! Estás ahorrando el ${rate}% de tus ingresos.`
-      });
-    } else if (rate >= 10) {
-      insights.push({
-        type: 'info',
-        icon: 'bulb-outline',
-        message: `Buen ritmo. Ahorras el ${rate}%, intenta llegar al 20%.`
-      });
-    } else if (rate > 0) {
-      insights.push({
-        type: 'warning',
-        icon: 'alert-circle-outline',
-        message: `Tu tasa de ahorro es del ${rate}%. Considera reducir gastos.`
-      });
-    } else if (totalExpenses > totalIncome) {
-      insights.push({
-        type: 'danger',
-        icon: 'trending-down-outline',
-        message: 'Tus gastos superan tus ingresos. Revisa tu presupuesto.'
-      });
-    }
-
-    if (fixedRatio > 50) {
-      insights.push({
-        type: 'warning',
-        icon: 'alert-circle-outline',
-        message: `Los gastos fijos representan el ${fixedRatio.toFixed(0)}% de tus ingresos.`
-      });
-    }
-
-    if (this.savingsGoals.goals().length === 0 && totalIncome > 0) {
-      insights.push({
-        type: 'info',
-        icon: 'flag-outline',
-        message: 'Crea una meta de ahorro para motivarte a ahorrar más.'
-      });
-    }
-
-    return insights;
-  }
-
   // Emergency tab computed values
   get emergencyMonthsCovered(): number {
     const base = this.emergencyCalcBaseAmount;
@@ -915,7 +854,8 @@ export class DashboardPage implements OnInit {
     if (months < 3) return 100;
     if (months < 6) return 75;
     if (months < 12) return 50;
-    return 25;
+    if (months < 24) return 25;
+    return 0; // ¡Meta completa! Todo el ahorro libre para metas personales
   }
 
   get emergencyAvailableSavings(): number {
@@ -985,6 +925,109 @@ export class DashboardPage implements OnInit {
 
   get topSofipos(): SavingsInstrument[] {
     return this.sofipos.slice(0, 3); // Top 3 by rate (already sorted)
+  }
+
+  // ============================================
+  // SAVINGS ALLOCATION SYSTEM
+  // Flow: Available Savings → Emergency (%) → Free for Goals
+  // ============================================
+
+  // Amount to contribute to emergency fund based on recommended percentage
+  get emergencyContributionAmount(): number {
+    return (this.emergencyAvailableSavings * this.emergencyRecommendedPercentage) / 100;
+  }
+
+  // Amount free for personal goals (after emergency allocation)
+  get freeForPersonalGoals(): number {
+    return this.emergencyAvailableSavings - this.emergencyContributionAmount;
+  }
+
+  // Filter out emergency-type goals from the list (those are shown separately)
+  get personalGoals(): SavingsGoal[] {
+    const emergencyKeywords = ['emergencia', 'emergency', 'fondo de emergencia'];
+    return this.savingsGoals.goals().filter(goal => {
+      const nameLower = goal.name.toLowerCase();
+      return !emergencyKeywords.some(keyword => nameLower.includes(keyword));
+    });
+  }
+
+  // Suggested monthly contribution per goal (split evenly among personal goals)
+  getSuggestedMonthlyForGoal(goal: SavingsGoal): number {
+    const goalsCount = this.personalGoals.length;
+    if (goalsCount === 0) return 0;
+    return this.freeForPersonalGoals / goalsCount;
+  }
+
+  // Calculate months remaining to complete a goal
+  getMonthsToCompleteGoal(goal: SavingsGoal): number {
+    const remaining = goal.target_amount - goal.current_amount;
+    if (remaining <= 0) return 0;
+
+    const monthlyContribution = this.getSuggestedMonthlyForGoal(goal);
+    if (monthlyContribution <= 0) return -1; // Cannot complete
+
+    return Math.ceil(remaining / monthlyContribution);
+  }
+
+  // Get estimated completion date for a goal
+  getGoalCompletionDate(goal: SavingsGoal): Date | null {
+    const months = this.getMonthsToCompleteGoal(goal);
+    if (months <= 0) return null;
+    if (months === -1) return null;
+
+    const date = new Date();
+    date.setMonth(date.getMonth() + months);
+    return date;
+  }
+
+  // Format completion date as a readable string
+  formatCompletionDate(goal: SavingsGoal): string {
+    const date = this.getGoalCompletionDate(goal);
+    if (!date) {
+      if (goal.current_amount >= goal.target_amount) return '¡Completada!';
+      return 'Sin fecha estimada';
+    }
+
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    return `${months[date.getMonth()]} ${date.getFullYear()}`;
+  }
+
+  // Get goal progress percentage
+  getGoalProgress(goal: SavingsGoal): number {
+    if (goal.target_amount === 0) return 0;
+    return Math.min(100, (goal.current_amount / goal.target_amount) * 100);
+  }
+
+  // Get amount remaining for unassigned savings (free amount not assigned to any personal goal)
+  get unassignedSavings(): number {
+    // If there are no personal goals, all free savings are unassigned
+    if (this.personalGoals.length === 0) {
+      return this.freeForPersonalGoals;
+    }
+    // Otherwise, nothing is unassigned (evenly distributed)
+    return 0;
+  }
+
+  // Get the emergency fund progress bar width
+  get emergencyProgressBarWidth(): number {
+    const months = this.emergencyMonthsCovered;
+    // Calculate progress towards current milestone
+    if (months < 1) return (months / 1) * 100;
+    if (months < 3) return ((months - 1) / 2) * 100;
+    if (months < 6) return ((months - 3) / 3) * 100;
+    if (months < 12) return ((months - 6) / 6) * 100;
+    if (months < 24) return ((months - 12) / 12) * 100;
+    return 100;
+  }
+
+  // Get current milestone target for display
+  get currentMilestoneTarget(): number {
+    const months = this.emergencyMonthsCovered;
+    if (months < 1) return 1;
+    if (months < 3) return 3;
+    if (months < 6) return 6;
+    if (months < 12) return 12;
+    return 24;
   }
 
   // Long Term Savings methods

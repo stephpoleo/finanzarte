@@ -937,64 +937,6 @@
   color: #6b7280;
 }
 
-/* Insights */
-.insights {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.insight {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px;
-  border-radius: 10px;
-  font-size: 0.875rem;
-
-  ion-icon {
-    flex-shrink: 0;
-    font-size: 18px;
-    margin-top: 1px;
-  }
-
-  &.success {
-    background: #ecfdf5;
-    color: #065f46;
-
-    ion-icon {
-      color: #10b981;
-    }
-  }
-
-  &.warning {
-    background: #fffbeb;
-    color: #92400e;
-
-    ion-icon {
-      color: #f59e0b;
-    }
-  }
-
-  &.info {
-    background: #eff6ff;
-    color: #1e40af;
-
-    ion-icon {
-      color: #3b82f6;
-    }
-  }
-
-  &.danger {
-    background: #fef2f2;
-    color: #991b1b;
-
-    ion-icon {
-      color: #ef4444;
-    }
-  }
-}
-
 /* Expense Form */
 .expense-form {
   background: #f9fafb;
@@ -1526,92 +1468,6 @@
   color: #9ca3af !important;
   margin-top: 12px !important;
   margin-bottom: 0 !important;
-}
-
-/* Goals List */
-.goals-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.goal-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 0;
-  border-bottom: 1px solid #f3f4f6;
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.goal-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-  text-decoration: none;
-}
-
-.goal-edit,
-.goal-del {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  color: #9ca3af;
-  cursor: pointer;
-  flex-shrink: 0;
-
-  ion-icon {
-    font-size: 18px;
-  }
-}
-
-.goal-edit:hover {
-  background: #f3e8ff;
-  color: #8b5cf6;
-}
-
-.goal-del:hover {
-  background: #fee2e2;
-  color: #ef4444;
-}
-
-.goal-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.goal-name {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.goal-amounts {
-  display: block;
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-.goal-current {
-  color: #10b981;
-  font-weight: 600;
-}
-
-.goal-pct {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #8b5cf6;
 }
 
 /* Emergency Tab */
@@ -3209,6 +3065,438 @@
     font-size: 0.75rem;
     color: #6b7280;
   }
+}
+
+/* Savings Allocation Section */
+.savings-allocation-card {
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.alloc-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.alloc-total-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alloc-total-label {
+  font-size: 0.85rem;
+  color: #166534;
+  font-weight: 500;
+}
+
+.alloc-total-pct {
+  font-size: 0.75rem;
+  color: #15803d;
+  font-weight: 500;
+}
+
+.alloc-total-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #166534;
+}
+
+.alloc-section-box {
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.emergency {
+    background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+    border: 1px solid #a5f3fc;
+  }
+}
+
+.alloc-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.alloc-section-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.alloc-section-icon {
+  font-size: 1.25rem;
+}
+
+.alloc-section-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alloc-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0e7490;
+}
+
+.alloc-section-subtitle {
+  font-size: 0.75rem;
+  color: #0891b2;
+}
+
+.alloc-section-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.alloc-section-amount {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0e7490;
+}
+
+.alloc-section-pct {
+  font-size: 0.7rem;
+  color: #0891b2;
+  font-weight: 500;
+}
+
+.alloc-section-bar {
+  height: 6px;
+  background: rgba(14, 116, 144, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.alloc-section-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #06b6d4, #0891b2);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.alloc-section-link {
+  font-size: 0.75rem;
+  color: #0891b2;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.alloc-free {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.alloc-free-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alloc-free-icon {
+  font-size: 1rem;
+}
+
+.alloc-free-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #7c3aed;
+}
+
+.alloc-free-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #7c3aed;
+}
+
+/* Personal Goals Section */
+.personal-goals-section {
+  margin-top: 4px;
+}
+
+.personal-goals-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.personal-goals-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.add-btn-small {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  background: #f3f4f6;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  ion-icon {
+    font-size: 16px;
+  }
+
+  &:active {
+    background: #e5e7eb;
+  }
+}
+
+.personal-goals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.personal-goal-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.personal-goal-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.personal-goal-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.personal-goal-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.personal-goal-amounts {
+  font-size: 0.75rem;
+  color: #6b7280;
+
+  .current {
+    color: #10b981;
+    font-weight: 600;
+  }
+}
+
+.personal-goal-pct {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #8b5cf6;
+}
+
+.personal-goal-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.personal-goal-suggestion,
+.personal-goal-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #4b5563;
+
+  ion-icon {
+    font-size: 14px;
+    color: #9ca3af;
+  }
+
+  strong {
+    color: #1f2937;
+  }
+}
+
+.personal-goal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.goal-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: #e5e7eb;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  ion-icon {
+    font-size: 16px;
+  }
+
+  &:active {
+    background: #d1d5db;
+  }
+
+  &.danger {
+    background: #fee2e2;
+    color: #dc2626;
+
+    &:active {
+      background: #fecaca;
+    }
+  }
+}
+
+/* Locked state mini */
+.goals-locked-mini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: #f3f4f6;
+  border-radius: 12px;
+  text-align: center;
+
+  ion-icon {
+    font-size: 24px;
+    color: #9ca3af;
+  }
+
+  span {
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.4;
+  }
+}
+
+.unlock-btn-mini {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #8b5cf6;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:active {
+    background: #7c3aed;
+  }
+}
+
+/* No goals hint */
+.no-goals-hint {
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  text-align: center;
+
+  p {
+    margin: 0 0 4px;
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  span {
+    font-size: 0.75rem;
+    color: #9ca3af;
+  }
+}
+
+/* Unassigned savings hint */
+.unassigned-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+  margin-top: 12px;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  > ion-icon:first-child {
+    font-size: 24px;
+    color: #d97706;
+  }
+}
+
+.unassigned-hint-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hint-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.hint-desc {
+  font-size: 0.75rem;
+  color: #b45309;
+}
+
+.hint-arrow {
+  font-size: 18px;
+  color: #d97706;
 }
 
 /* Desktop styles */

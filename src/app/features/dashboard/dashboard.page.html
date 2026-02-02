@@ -341,73 +341,118 @@
           }
         </div>
 
-        <!-- Quick Insights -->
-        @if (incomeSources.totalIncome() > 0) {
-          <div class="card">
-            <div class="card-header-row">
-              <ion-icon name="bulb-outline" class="icon-amber"></ion-icon>
-              <h3 class="card-title">Análisis Rápido</h3>
+        <!-- Savings Allocation -->
+        <div class="card savings-allocation-card">
+          <div class="card-header-row">
+            <div class="card-header-left">
+              <ion-icon name="pie-chart-outline" class="icon-green"></ion-icon>
+              <h3 class="card-title">Distribución de tu Ahorro</h3>
             </div>
-            <div class="insights">
-              @for (insight of getInsights(); track $index) {
-                <div class="insight" [class]="insight.type">
-                  <ion-icon [name]="insight.icon"></ion-icon>
-                  <span>{{ insight.message }}</span>
+          </div>
+
+          <!-- Total Available -->
+          <div class="alloc-total">
+            <div class="alloc-total-left">
+              <span class="alloc-total-label">Ahorro mensual disponible</span>
+              <span class="alloc-total-pct">{{ savingsRate() }}% de tus ingresos</span>
+            </div>
+            <span class="alloc-total-value">{{ emergencyAvailableSavings | currencyMxn }}</span>
+          </div>
+
+          <!-- Emergency Fund Allocation -->
+          <div class="alloc-section-box emergency" (click)="activeTab = 'emergencia'">
+            <div class="alloc-section-header">
+              <div class="alloc-section-left">
+                <span class="alloc-section-icon">🚨</span>
+                <div class="alloc-section-info">
+                  <span class="alloc-section-title">Fondo de Emergencia</span>
+                  <span class="alloc-section-subtitle">{{ emergencyMonthsCovered | number:'1.1-1' }} de {{ currentMilestoneTarget }} meses</span>
+                </div>
+              </div>
+              <div class="alloc-section-right">
+                <span class="alloc-section-amount">-{{ emergencyContributionAmount | currencyMxn }}</span>
+                <span class="alloc-section-pct">({{ emergencyRecommendedPercentage }}%)</span>
+              </div>
+            </div>
+            <div class="alloc-section-bar">
+              <div class="alloc-section-fill" [style.width.%]="emergencyProgressBarWidth"></div>
+            </div>
+            <span class="alloc-section-link">Ver detalle en Emergencia →</span>
+          </div>
+
+          <!-- Free for Personal Goals -->
+          <div class="alloc-free">
+            <div class="alloc-free-header">
+              <span class="alloc-free-icon">✨</span>
+              <span class="alloc-free-label">Libre para metas personales</span>
+            </div>
+            <span class="alloc-free-value">{{ freeForPersonalGoals | currencyMxn }}</span>
+          </div>
+
+          <!-- Personal Goals Section -->
+          @if (savingsGoalsLocked && !savingsGoalsUnlocked) {
+            <div class="goals-locked-mini">
+              <ion-icon name="lock-closed-outline"></ion-icon>
+              <span>Desbloquea metas personales alcanzando 1 mes de fondo de emergencia</span>
+              <button class="unlock-btn-mini" (click)="unlockSavingsGoals()">Desbloquear</button>
+            </div>
+          } @else {
+            <div class="personal-goals-section">
+              <div class="personal-goals-header">
+                <span class="personal-goals-title">Tus metas</span>
+                <button class="add-btn-small" (click)="openGoalModal()"><ion-icon name="add-outline"></ion-icon></button>
+              </div>
+
+              @if (personalGoals.length > 0) {
+                <div class="personal-goals-list">
+                  @for (goal of personalGoals; track goal.id) {
+                    <div class="personal-goal-card">
+                      <div class="personal-goal-main">
+                        <app-progress-ring [progress]="getGoalProgress(goal)" [size]="44" [strokeWidth]="4" [color]="goal.color || '#8b5cf6'"></app-progress-ring>
+                        <div class="personal-goal-info">
+                          <span class="personal-goal-name">{{ goal.name }}</span>
+                          <span class="personal-goal-amounts">
+                            <span class="current">{{ goal.current_amount | currencyMxn }}</span> / {{ goal.target_amount | currencyMxn }}
+                          </span>
+                        </div>
+                        <span class="personal-goal-pct">{{ getGoalProgress(goal) | number:'1.0-0' }}%</span>
+                      </div>
+                      <div class="personal-goal-details">
+                        <div class="personal-goal-suggestion">
+                          <ion-icon name="cash-outline"></ion-icon>
+                          <span>Aporte sugerido: <strong>{{ getSuggestedMonthlyForGoal(goal) | currencyMxn }}/mes</strong></span>
+                        </div>
+                        <div class="personal-goal-date">
+                          <ion-icon name="calendar-outline"></ion-icon>
+                          <span>Completar: <strong>{{ formatCompletionDate(goal) }}</strong></span>
+                        </div>
+                      </div>
+                      <div class="personal-goal-actions">
+                        <button class="goal-action-btn" (click)="openEditGoalModal(goal, $event)"><ion-icon name="create-outline"></ion-icon></button>
+                        <button class="goal-action-btn danger" (click)="deleteGoal(goal.id, $event)"><ion-icon name="trash-outline"></ion-icon></button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="no-goals-hint">
+                  <p>No tienes metas personales aún</p>
+                  <span>Ejemplos: Vacaciones, Carro, Gadget, Enganche de casa</span>
+                </div>
+              }
+
+              <!-- Unassigned Savings Hint -->
+              @if (freeForPersonalGoals > 0 && personalGoals.length === 0) {
+                <div class="unassigned-hint" (click)="activeTab = 'largo-plazo'">
+                  <ion-icon name="leaf-outline"></ion-icon>
+                  <div class="unassigned-hint-text">
+                    <span class="hint-title">Sin metas? Considera Largo Plazo</span>
+                    <span class="hint-desc">Invierte {{ freeForPersonalGoals | currencyMxn }}/mes para tu libertad financiera</span>
+                  </div>
+                  <ion-icon name="chevron-forward-outline" class="hint-arrow"></ion-icon>
                 </div>
               }
             </div>
-          </div>
-        }
-
-        <!-- Savings Goals -->
-        <div class="card" [class.locked]="savingsGoalsLocked">
-          <div class="card-header-row">
-            <div class="card-header-left">
-              <ion-icon [name]="savingsGoalsLocked ? 'lock-closed-outline' : 'flag-outline'" [class.icon-purple]="!savingsGoalsLocked" [class.icon-locked]="savingsGoalsLocked"></ion-icon>
-              <h3 class="card-title">Metas de Ahorro</h3>
-            </div>
-            @if (!savingsGoalsLocked) {
-              <button class="add-btn" (click)="openGoalModal()"><ion-icon name="add-outline"></ion-icon></button>
-            }
-          </div>
-
-          @if (savingsGoalsLocked) {
-            <div class="goals-locked">
-              <div class="locked-icon"><ion-icon name="shield-outline"></ion-icon></div>
-              <h4>Primero asegura tu fondo de emergencia</h4>
-              <p>Antes de plantearte metas de ahorro, es importante tener al menos <strong>1 mes</strong> de tus {{ emergencyCalcBase === 'income' ? 'ingresos' : 'gastos' }} ahorrado como colchón de seguridad.</p>
-              <div class="locked-progress">
-                <span>Progreso actual: {{ emergencyMonthsCovered | number:'1.1-1' }} meses</span>
-                <div class="progress-bar"><div class="progress-fill" [style.width.%]="(emergencyMonthsCovered / 1) * 100"></div></div>
-              </div>
-              <button class="unlock-btn" (click)="unlockSavingsGoals()">
-                <ion-icon name="lock-open-outline"></ion-icon>
-                Desbloquear de todas formas
-              </button>
-              <p class="unlock-warning">No recomendado: sin un fondo de emergencia, cualquier imprevisto puede obligarte a usar tus ahorros.</p>
-            </div>
-          } @else {
-            <div class="savings-banner">
-              <div class="banner-row"><ion-icon name="trending-up-outline"></ion-icon><span>Ahorro Disponible</span></div>
-              <span class="banner-amount">{{ availableForSavings() | currencyMxn }}</span>
-            </div>
-            @if (savingsGoals.goals().length > 0) {
-              <div class="goals-list">
-                @for (goal of savingsGoals.goals().slice(0, 3); track goal.id) {
-                  <div class="goal-row">
-                    <a class="goal-link" [routerLink]="['/savings', goal.id]">
-                      <app-progress-ring [progress]="(goal.current_amount / goal.target_amount) * 100" [size]="48" [strokeWidth]="4" color="#8b5cf6"></app-progress-ring>
-                      <div class="goal-info"><span class="goal-name">{{ goal.name }}</span><span class="goal-amounts"><span class="goal-current">{{ goal.current_amount | currencyMxn }}</span> de {{ goal.target_amount | currencyMxn }}</span></div>
-                      <span class="goal-pct">{{ ((goal.current_amount / goal.target_amount) * 100) | number:'1.0-0' }}%</span>
-                    </a>
-                    <button class="goal-edit" (click)="openEditGoalModal(goal, $event)"><ion-icon name="create-outline"></ion-icon></button>
-                    <button class="goal-del" (click)="deleteGoal(goal.id, $event)"><ion-icon name="trash-outline"></ion-icon></button>
-                  </div>
-                }
-              </div>
-            } @else {
-              <p class="empty-msg">No hay metas de ahorro</p>
-            }
           }
         </div>
       </main>
