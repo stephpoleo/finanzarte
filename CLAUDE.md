@@ -234,6 +234,7 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] SOFIPOs carousel with annual rates (Fondeadora, UltraTasas, Kubo, etc.)
 - [x] CETES info card with CetesDirecto link
 - [x] Collapsible tips sections (collapsed by default)
+- [x] Goal detail page redesign (light theme, custom header, styled deposits list)
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality
