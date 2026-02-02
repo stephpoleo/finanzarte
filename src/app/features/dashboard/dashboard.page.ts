@@ -1,7 +1,6 @@
 import { Component, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import {
   IonContent,
   IonIcon,
@@ -57,7 +56,14 @@ import {
   logOutOutline,
   cardOutline,
   medicalOutline,
-  schoolOutline
+  schoolOutline,
+  lockClosedOutline,
+  lockOpenOutline,
+  shieldCheckmarkOutline,
+  openOutline,
+  documentTextOutline,
+  syncOutline,
+  peopleOutline
 } from 'ionicons/icons';
 import { ProfileService } from '../../core/services/profile.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -67,10 +73,17 @@ import { IncomeSourceService } from '../../core/services/income-source.service';
 import { InvestmentService } from '../../core/services/investment.service';
 import { UserSettingsService } from '../../core/services/user-settings.service';
 import { CurrencyMxnPipe } from '../../shared/pipes/currency-mxn.pipe';
-import { ExpenseCategory, EXPENSE_CATEGORIES, Investment, InvestmentType, InvestmentTypeInfo, INVESTMENT_TYPES, FINANCIAL_LEVELS, FinancialLevel, EMERGENCY_MILESTONES, SavingsGoal } from '../../models';
+import {
+  ExpenseCategory, EXPENSE_CATEGORIES, Investment, InvestmentType, InvestmentTypeInfo,
+  INVESTMENT_TYPES, FINANCIAL_LEVELS, FinancialLevel, EMERGENCY_MILESTONES, EmergencyMilestone, SavingsGoal,
+  CancellableExpense, CancellableCategory, CancellationPriority, RenewalFrequency,
+  CANCELLABLE_CATEGORIES, CANCELLATION_PRIORITIES, RENEWAL_FREQUENCIES
+} from '../../models';
 import { ProgressRingComponent } from '../../shared/components/progress-ring/progress-ring.component';
 import { SalaryCalculatorModalComponent, SalaryCalculatorResult } from '../../shared/components/salary-calculator-modal/salary-calculator-modal.component';
 import { SavingsGoalModalComponent, SavingsGoalResult } from '../../shared/components/savings-goal-modal/savings-goal-modal.component';
+import { SOFIPOS, CETES_INFO, TAX_EXEMPT_LIMIT, calculateAllocationStrategy, SavingsInstrument, AllocationStrategy } from '../../data/savings-instruments';
+import { CancellableExpenseService } from '../../core/services/cancellable-expense.service';
 
 type TabType = 'presupuesto' | 'emergencia' | 'largo-plazo' | 'retiro' | 'inversiones';
 
@@ -86,19 +99,12 @@ interface LegendItem {
   value: number;
 }
 
-interface Insight {
-  type: 'success' | 'warning' | 'info' | 'danger';
-  icon: string;
-  message: string;
-}
-
 @Component({
   selector: 'app-dashboard',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     IonContent,
     IonIcon,
     IonRefresher,
@@ -130,6 +136,7 @@ export class DashboardPage implements OnInit {
   // Savings goal modal state
   showGoalModal = false;
   editingGoal: SavingsGoal | null = null;
+  savingsGoalsUnlocked = false; // Bypass lock even without 1 month emergency fund
 
   // Expense form state
   isAddingExpense = false;
@@ -163,6 +170,43 @@ export class DashboardPage implements OnInit {
   fixedExpensesExpanded = false;
   variableExpensesExpanded = false;
 
+  // Tips sections collapsed state (collapsed by default)
+  emergencyTipsExpanded = false;
+  strategyTipsExpanded = false;
+
+  // Emergency sub-tab state
+  emergencySubTab: 'ahorros' | 'planb' = 'ahorros';
+
+  // Plan B - Cancellable expenses form state
+  showCancellableExpenseForm = false;
+  editingCancellableExpense: CancellableExpense | null = null;
+  newCancellableExpense: {
+    name: string;
+    monthly_cost: number;
+    category: CancellableCategory;
+    priority: CancellationPriority;
+    cancellation_instructions: string;
+    contact_info: string;
+    notes: string;
+    renewal_date: string;
+    renewal_frequency: RenewalFrequency;
+  } = {
+    name: '',
+    monthly_cost: 0,
+    category: 'subscription',
+    priority: 'immediate',
+    cancellation_instructions: '',
+    contact_info: '',
+    notes: '',
+    renewal_date: '',
+    renewal_frequency: 'monthly'
+  };
+
+  // Plan B reference data
+  cancellableCategories = CANCELLABLE_CATEGORIES;
+  cancellationPriorities = CANCELLATION_PRIORITIES;
+  renewalFrequencies = RENEWAL_FREQUENCIES;
+
   // Charts carousel state
   currentChart = 0;
   chartAnimating = false;
@@ -193,6 +237,7 @@ export class DashboardPage implements OnInit {
 
   // Emergency tab state - synced with UserSettingsService
   emergencyMilestones = EMERGENCY_MILESTONES;
+  emergencyCalcBase: 'expenses' | 'income' = 'expenses';
 
   // Use getters/setters to sync with service
   get emergencyCurrentSavings(): number { return this.userSettings.emergencyCurrentSavings(); }
@@ -257,6 +302,7 @@ export class DashboardPage implements OnInit {
     public incomeSources: IncomeSourceService,
     public investmentSvc: InvestmentService,
     public userSettings: UserSettingsService,
+    public cancellableExpenses: CancellableExpenseService,
     private auth: AuthService
   ) {
     addIcons({
@@ -306,7 +352,14 @@ export class DashboardPage implements OnInit {
       logOutOutline,
       cardOutline,
       medicalOutline,
-      schoolOutline
+      schoolOutline,
+      lockClosedOutline,
+      lockOpenOutline,
+      shieldCheckmarkOutline,
+      openOutline,
+      documentTextOutline,
+      syncOutline,
+      peopleOutline
     });
   }
 
@@ -324,7 +377,8 @@ export class DashboardPage implements OnInit {
       this.savingsGoals.loadGoals(),
       this.incomeSources.loadIncomeSources(),
       this.investmentSvc.loadInvestments(),
-      this.userSettings.loadSettings()
+      this.userSettings.loadSettings(),
+      this.cancellableExpenses.loadExpenses()
     ]);
     this.syncEmergencyFromServices();
     this.syncAgeFromProfile();
@@ -479,6 +533,16 @@ export class DashboardPage implements OnInit {
     this.editingGoal = null;
   }
 
+  // Savings goals lock - require at least 1 month emergency fund
+  get savingsGoalsLocked(): boolean {
+    if (this.savingsGoalsUnlocked) return false;
+    return this.emergencyMonthsCovered < 1;
+  }
+
+  unlockSavingsGoals(): void {
+    this.savingsGoalsUnlocked = true;
+  }
+
   // Expense methods
   toggleAddExpenseForm(): void {
     this.isAddingExpense = !this.isAddingExpense;
@@ -571,6 +635,14 @@ export class DashboardPage implements OnInit {
 
   toggleVariableExpenses(): void {
     this.variableExpensesExpanded = !this.variableExpensesExpanded;
+  }
+
+  toggleEmergencyTips(): void {
+    this.emergencyTipsExpanded = !this.emergencyTipsExpanded;
+  }
+
+  toggleStrategyTips(): void {
+    this.strategyTipsExpanded = !this.strategyTipsExpanded;
   }
 
   getCategoryColor(category: string): string {
@@ -816,63 +888,11 @@ export class DashboardPage implements OnInit {
     return items;
   }
 
-  // Insights
-  getInsights(): Insight[] {
-    const insights: Insight[] = [];
-    const totalIncome = this.incomeSources.totalIncome();
-    const totalExpenses = this.expenses.totalExpenses();
-    const rate = this.savingsRate();
-    const fixedRatio = totalIncome > 0 ? (this.expenses.totalFixedExpenses() / totalIncome) * 100 : 0;
-
-    if (rate >= 20) {
-      insights.push({
-        type: 'success',
-        icon: 'checkmark-circle-outline',
-        message: `¡Excelente! Estás ahorrando el ${rate}% de tus ingresos.`
-      });
-    } else if (rate >= 10) {
-      insights.push({
-        type: 'info',
-        icon: 'bulb-outline',
-        message: `Buen ritmo. Ahorras el ${rate}%, intenta llegar al 20%.`
-      });
-    } else if (rate > 0) {
-      insights.push({
-        type: 'warning',
-        icon: 'alert-circle-outline',
-        message: `Tu tasa de ahorro es del ${rate}%. Considera reducir gastos.`
-      });
-    } else if (totalExpenses > totalIncome) {
-      insights.push({
-        type: 'danger',
-        icon: 'trending-down-outline',
-        message: 'Tus gastos superan tus ingresos. Revisa tu presupuesto.'
-      });
-    }
-
-    if (fixedRatio > 50) {
-      insights.push({
-        type: 'warning',
-        icon: 'alert-circle-outline',
-        message: `Los gastos fijos representan el ${fixedRatio.toFixed(0)}% de tus ingresos.`
-      });
-    }
-
-    if (this.savingsGoals.goals().length === 0 && totalIncome > 0) {
-      insights.push({
-        type: 'info',
-        icon: 'flag-outline',
-        message: 'Crea una meta de ahorro para motivarte a ahorrar más.'
-      });
-    }
-
-    return insights;
-  }
-
   // Emergency tab computed values
   get emergencyMonthsCovered(): number {
-    if (this.emergencyMonthlyExpenses <= 0) return 0;
-    return this.emergencyCurrentSavings / this.emergencyMonthlyExpenses;
+    const base = this.emergencyCalcBaseAmount;
+    if (base <= 0) return 0;
+    return this.emergencyCurrentSavings / base;
   }
 
   get emergencyRecommendedPercentage(): number {
@@ -881,28 +901,180 @@ export class DashboardPage implements OnInit {
     if (months < 3) return 100;
     if (months < 6) return 75;
     if (months < 12) return 50;
-    return 25;
+    if (months < 24) return 25;
+    return 0; // ¡Meta completa! Todo el ahorro libre para metas personales
+  }
+
+  get emergencyAvailableSavings(): number {
+    return Math.max(0, this.emergencyMonthlyIncome - this.emergencyMonthlyExpenses);
   }
 
   get emergencyRecommendedAmount(): number {
-    return (this.emergencyMonthlyIncome * this.emergencyRecommendedPercentage) / 100;
+    return (this.emergencyAvailableSavings * this.emergencyRecommendedPercentage) / 100;
   }
 
   isCurrentMilestone(months: number): boolean {
-    const covered = this.emergencyMonthsCovered;
-    if (months === 1) return covered < 1;
-    if (months === 3) return covered >= 1 && covered < 3;
-    if (months === 6) return covered >= 3 && covered < 6;
-    if (months === 12) return covered >= 6 && covered < 12;
-    return covered >= 12 && covered < 24;
+    const savings = this.emergencyCurrentSavings;
+    const baseTarget = 10000;
+
+    if (months === 0) return savings < baseTarget;
+    if (months === 1) return savings >= baseTarget && this.emergencyMonthsCovered < 1;
+    if (months === 3) return this.emergencyMonthsCovered >= 1 && this.emergencyMonthsCovered < 3;
+    if (months === 6) return this.emergencyMonthsCovered >= 3 && this.emergencyMonthsCovered < 6;
+    if (months === 12) return this.emergencyMonthsCovered >= 6 && this.emergencyMonthsCovered < 12;
+    return this.emergencyMonthsCovered >= 12 && this.emergencyMonthsCovered < 24;
+  }
+
+  isMilestoneDone(months: number): boolean {
+    const savings = this.emergencyCurrentSavings;
+    const baseTarget = 10000;
+
+    if (months === 0) return savings >= baseTarget;
+    return this.emergencyMonthsCovered >= months;
+  }
+
+  get emergencyCalcBaseAmount(): number {
+    return this.emergencyCalcBase === 'income'
+      ? this.emergencyMonthlyIncome
+      : this.emergencyMonthlyExpenses;
+  }
+
+  getMilestoneTarget(milestone: EmergencyMilestone): number {
+    if (milestone.fixedTarget !== undefined) {
+      return milestone.fixedTarget;
+    }
+    return this.emergencyCalcBaseAmount * milestone.months;
   }
 
   getMilestoneProgress(months: number): number {
+    const savings = this.emergencyCurrentSavings;
+    const baseTarget = 10000;
+
+    if (months === 0) {
+      return Math.min(100, Math.max(0, (savings / baseTarget) * 100));
+    }
+
     const covered = this.emergencyMonthsCovered;
     const prevMonths = months === 1 ? 0 : months === 3 ? 1 : months === 6 ? 3 : months === 12 ? 6 : 12;
     const range = months - prevMonths;
     const progress = covered - prevMonths;
     return Math.min(100, Math.max(0, (progress / range) * 100));
+  }
+
+  // Emergency Fund Allocation - Where to put your money
+  sofipos = SOFIPOS;
+  cetesInfo = CETES_INFO;
+  taxExemptLimit = TAX_EXEMPT_LIMIT;
+
+  get emergencyAllocation(): AllocationStrategy {
+    return calculateAllocationStrategy(this.emergencyCurrentSavings);
+  }
+
+  get topSofipos(): SavingsInstrument[] {
+    return this.sofipos.slice(0, 3); // Top 3 by rate (already sorted)
+  }
+
+  // ============================================
+  // SAVINGS ALLOCATION SYSTEM
+  // Flow: Available Savings → Emergency (%) → Free for Goals
+  // ============================================
+
+  // Amount to contribute to emergency fund based on recommended percentage
+  get emergencyContributionAmount(): number {
+    return (this.emergencyAvailableSavings * this.emergencyRecommendedPercentage) / 100;
+  }
+
+  // Amount free for personal goals (after emergency allocation)
+  get freeForPersonalGoals(): number {
+    return this.emergencyAvailableSavings - this.emergencyContributionAmount;
+  }
+
+  // Filter out emergency-type goals from the list (those are shown separately)
+  get personalGoals(): SavingsGoal[] {
+    const emergencyKeywords = ['emergencia', 'emergency', 'fondo de emergencia'];
+    return this.savingsGoals.goals().filter(goal => {
+      const nameLower = goal.name.toLowerCase();
+      return !emergencyKeywords.some(keyword => nameLower.includes(keyword));
+    });
+  }
+
+  // Suggested monthly contribution per goal (split evenly among personal goals)
+  getSuggestedMonthlyForGoal(goal: SavingsGoal): number {
+    const goalsCount = this.personalGoals.length;
+    if (goalsCount === 0) return 0;
+    return this.freeForPersonalGoals / goalsCount;
+  }
+
+  // Calculate months remaining to complete a goal
+  getMonthsToCompleteGoal(goal: SavingsGoal): number {
+    const remaining = goal.target_amount - goal.current_amount;
+    if (remaining <= 0) return 0;
+
+    const monthlyContribution = this.getSuggestedMonthlyForGoal(goal);
+    if (monthlyContribution <= 0) return -1; // Cannot complete
+
+    return Math.ceil(remaining / monthlyContribution);
+  }
+
+  // Get estimated completion date for a goal
+  getGoalCompletionDate(goal: SavingsGoal): Date | null {
+    const months = this.getMonthsToCompleteGoal(goal);
+    if (months <= 0) return null;
+    if (months === -1) return null;
+
+    const date = new Date();
+    date.setMonth(date.getMonth() + months);
+    return date;
+  }
+
+  // Format completion date as a readable string
+  formatCompletionDate(goal: SavingsGoal): string {
+    const date = this.getGoalCompletionDate(goal);
+    if (!date) {
+      if (goal.current_amount >= goal.target_amount) return '¡Completada!';
+      return 'Sin fecha estimada';
+    }
+
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    return `${months[date.getMonth()]} ${date.getFullYear()}`;
+  }
+
+  // Get goal progress percentage
+  getGoalProgress(goal: SavingsGoal): number {
+    if (goal.target_amount === 0) return 0;
+    return Math.min(100, (goal.current_amount / goal.target_amount) * 100);
+  }
+
+  // Get amount remaining for unassigned savings (free amount not assigned to any personal goal)
+  get unassignedSavings(): number {
+    // If there are no personal goals, all free savings are unassigned
+    if (this.personalGoals.length === 0) {
+      return this.freeForPersonalGoals;
+    }
+    // Otherwise, nothing is unassigned (evenly distributed)
+    return 0;
+  }
+
+  // Get the emergency fund progress bar width
+  get emergencyProgressBarWidth(): number {
+    const months = this.emergencyMonthsCovered;
+    // Calculate progress towards current milestone
+    if (months < 1) return (months / 1) * 100;
+    if (months < 3) return ((months - 1) / 2) * 100;
+    if (months < 6) return ((months - 3) / 3) * 100;
+    if (months < 12) return ((months - 6) / 6) * 100;
+    if (months < 24) return ((months - 12) / 12) * 100;
+    return 100;
+  }
+
+  // Get current milestone target for display
+  get currentMilestoneTarget(): number {
+    const months = this.emergencyMonthsCovered;
+    if (months < 1) return 1;
+    if (months < 3) return 3;
+    if (months < 6) return 6;
+    if (months < 12) return 12;
+    return 24;
   }
 
   // Long Term Savings methods
@@ -1145,5 +1317,140 @@ export class DashboardPage implements OnInit {
 
   getDonutOffset(previousRatio: number): number {
     return -previousRatio * this.circumference;
+  }
+
+  // ============================================
+  // PLAN B - CANCELLABLE EXPENSES METHODS
+  // ============================================
+
+  toggleCancellableExpenseForm(): void {
+    this.showCancellableExpenseForm = !this.showCancellableExpenseForm;
+    if (!this.showCancellableExpenseForm) {
+      this.resetCancellableExpenseForm();
+    }
+  }
+
+  resetCancellableExpenseForm(): void {
+    this.editingCancellableExpense = null;
+    this.newCancellableExpense = {
+      name: '',
+      monthly_cost: 0,
+      category: 'subscription',
+      priority: 'immediate',
+      cancellation_instructions: '',
+      contact_info: '',
+      notes: '',
+      renewal_date: '',
+      renewal_frequency: 'monthly'
+    };
+  }
+
+  cancelCancellableExpenseForm(): void {
+    this.showCancellableExpenseForm = false;
+    this.resetCancellableExpenseForm();
+  }
+
+  async saveCancellableExpense(): Promise<void> {
+    if (!this.newCancellableExpense.name || !this.newCancellableExpense.monthly_cost) return;
+
+    const expenseData = {
+      name: this.newCancellableExpense.name,
+      monthly_cost: this.newCancellableExpense.monthly_cost,
+      category: this.newCancellableExpense.category,
+      priority: this.newCancellableExpense.priority,
+      cancellation_instructions: this.newCancellableExpense.cancellation_instructions || undefined,
+      contact_info: this.newCancellableExpense.contact_info || undefined,
+      notes: this.newCancellableExpense.notes || undefined,
+      renewal_date: this.newCancellableExpense.renewal_date || undefined,
+      renewal_frequency: this.newCancellableExpense.renewal_frequency
+    };
+
+    if (this.editingCancellableExpense) {
+      await this.cancellableExpenses.updateExpense(this.editingCancellableExpense.id, expenseData);
+    } else {
+      await this.cancellableExpenses.addExpense(expenseData);
+    }
+
+    this.showCancellableExpenseForm = false;
+    this.resetCancellableExpenseForm();
+  }
+
+  async deleteCancellableExpense(id: string): Promise<void> {
+    await this.cancellableExpenses.deleteExpense(id);
+  }
+
+  startEditCancellableExpense(expense: CancellableExpense): void {
+    this.editingCancellableExpense = expense;
+    this.newCancellableExpense = {
+      name: expense.name,
+      monthly_cost: expense.monthly_cost,
+      category: expense.category,
+      priority: expense.priority,
+      cancellation_instructions: expense.cancellation_instructions || '',
+      contact_info: expense.contact_info || '',
+      notes: expense.notes || '',
+      renewal_date: expense.renewal_date || '',
+      renewal_frequency: expense.renewal_frequency || 'monthly'
+    };
+    this.showCancellableExpenseForm = true;
+  }
+
+  // Plan B - Helper methods for labels
+  getCancellableCategoryLabel(category: CancellableCategory): string {
+    return this.cancellableCategories.find(c => c.value === category)?.label || category;
+  }
+
+  getCancellablePriorityLabel(priority: CancellationPriority): string {
+    return this.cancellationPriorities.find(p => p.value === priority)?.label || priority;
+  }
+
+  getCancellablePriorityColor(priority: CancellationPriority): string {
+    return this.cancellationPriorities.find(p => p.value === priority)?.color || '#6b7280';
+  }
+
+  getRenewalFrequencyLabel(frequency: RenewalFrequency | undefined): string {
+    if (!frequency) return '';
+    return this.renewalFrequencies.find(f => f.value === frequency)?.label || frequency;
+  }
+
+  getRenewalFrequencyShort(frequency: RenewalFrequency | undefined): string {
+    if (!frequency) return 'mes';
+    const shorts: Record<RenewalFrequency, string> = {
+      monthly: 'mes',
+      quarterly: 'trim',
+      biannual: 'sem',
+      annual: 'año'
+    };
+    return shorts[frequency] || 'mes';
+  }
+
+  // Plan B - Date formatting for timeline
+  formatRenewalMonth(dateStr: string): string {
+    const date = new Date(dateStr);
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    return months[date.getMonth()];
+  }
+
+  formatRenewalDay(dateStr: string): string {
+    const date = new Date(dateStr);
+    return date.getDate().toString();
+  }
+
+  // Plan B - Impact calculations
+  getReducedExpenses(): number {
+    // Monthly expenses minus all immediate and wait_1_month cancellable expenses
+    const immediateSavings = this.cancellableExpenses.immediateSavings();
+    const wait1MonthSavings = this.cancellableExpenses.wait1MonthSavings();
+    return Math.max(0, this.emergencyMonthlyExpenses - immediateSavings - wait1MonthSavings);
+  }
+
+  getExtendedMonthsCoverage(): number {
+    const reducedExpenses = this.getReducedExpenses();
+    if (reducedExpenses <= 0) return 0;
+    return this.emergencyCurrentSavings / reducedExpenses;
+  }
+
+  getAdditionalMonthsCoverage(): number {
+    return Math.max(0, this.getExtendedMonthsCoverage() - this.emergencyMonthsCovered);
   }
 }
