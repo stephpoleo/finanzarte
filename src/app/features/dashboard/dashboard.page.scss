@@ -3291,6 +3291,28 @@
   margin-top: 2px;
 }
 
+.inv-edit {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #6366f1;
+  }
+
+  ion-icon {
+    font-size: 16px;
+  }
+}
+
 .inv-delete {
   width: 32px;
   height: 32px;
@@ -3309,6 +3331,76 @@
 
   ion-icon {
     font-size: 18px;
+  }
+}
+
+.investment-edit-form {
+  background: #eef2ff;
+  border-radius: 10px;
+  padding: 12px;
+
+  .form-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    input, select {
+      flex: 1;
+      height: 38px;
+      padding: 0 10px;
+      border: 1px solid #c7d2fe;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      background: white;
+
+      &:focus {
+        outline: none;
+        border-color: #6366f1;
+      }
+    }
+
+    select {
+      cursor: pointer;
+    }
+  }
+
+  .form-btns-inline {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+
+    .btn-save, .btn-cancel {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+
+      ion-icon {
+        font-size: 18px;
+      }
+    }
+
+    .btn-save {
+      background: #6366f1;
+      color: white;
+
+      &:hover {
+        background: #4f46e5;
+      }
+    }
+
+    .btn-cancel {
+      background: #e5e7eb;
+      color: #6b7280;
+
+      &:hover {
+        background: #d1d5db;
+      }
+    }
   }
 }
 

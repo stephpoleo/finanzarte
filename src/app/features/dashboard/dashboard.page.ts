@@ -332,6 +332,15 @@ export class DashboardPage implements OnInit {
 
   investmentTypes: InvestmentTypeInfo[] = INVESTMENT_TYPES;
 
+  // Investment edit state
+  editingInvestmentId: string | null = null;
+  editInvestment: { name: string; type: InvestmentType; amount: number; expected_return: number } = {
+    name: '',
+    type: 'stocks',
+    amount: 0,
+    expected_return: 8
+  };
+
   // Show CETES warning if emergency fund is below SOFIPO tax-exempt limit
   get showCetesWarning(): boolean {
     return this.newInvestment.type === 'cetes' && this.emergencyCurrentSavings < this.taxExemptLimit;
@@ -1387,6 +1396,34 @@ export class DashboardPage implements OnInit {
 
   async deleteInvestment(id: string): Promise<void> {
     await this.investmentSvc.deleteInvestment(id);
+  }
+
+  startEditInvestment(inv: Investment): void {
+    this.editingInvestmentId = inv.id;
+    this.editInvestment = {
+      name: inv.name,
+      type: inv.type,
+      amount: inv.amount,
+      expected_return: inv.expected_return
+    };
+  }
+
+  async saveInvestmentEdit(): Promise<void> {
+    if (!this.editingInvestmentId || !this.editInvestment.name || !this.editInvestment.amount) return;
+
+    await this.investmentSvc.updateInvestment(this.editingInvestmentId, {
+      name: this.editInvestment.name,
+      type: this.editInvestment.type,
+      amount: this.editInvestment.amount,
+      expected_return: this.editInvestment.expected_return
+    });
+
+    this.cancelInvestmentEdit();
+  }
+
+  cancelInvestmentEdit(): void {
+    this.editingInvestmentId = null;
+    this.editInvestment = { name: '', type: 'stocks', amount: 0, expected_return: 8 };
   }
 
   getInvestmentTypeLabel(type: string): string {
