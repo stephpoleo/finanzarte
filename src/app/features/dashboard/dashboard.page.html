@@ -1059,13 +1059,13 @@
                   <div class="form-row">
                     <div class="form-field-edit">
                       <label>Nombre</label>
-                      <input type="text" [ngModel]="editInvestment.name" (ngModelChange)="editInvestment.name = $event" />
+                      <input type="text" [value]="editInvestment.name || inv.name" (input)="editInvestment.name = $any($event.target).value" />
                     </div>
                   </div>
                   <div class="form-row">
                     <div class="form-field-edit">
                       <label>Tipo</label>
-                      <select [ngModel]="editInvestment.type" (ngModelChange)="editInvestment.type = $event">
+                      <select [value]="editInvestment.type || inv.type" (change)="editInvestment.type = $any($event.target).value">
                         @for (t of investmentTypes; track t.value) {
                           <option [value]="t.value">{{ t.label }}</option>
                         }
@@ -1073,13 +1073,13 @@
                     </div>
                     <div class="form-field-edit">
                       <label>Monto</label>
-                      <input type="number" [ngModel]="editInvestment.amount" (ngModelChange)="editInvestment.amount = $event" />
+                      <input type="number" [value]="editInvestment.amount || inv.amount" (input)="editInvestment.amount = +$any($event.target).value" />
                     </div>
                   </div>
                   <div class="form-row">
                     <div class="form-field-edit">
                       <label>Retorno anual (%)</label>
-                      <input type="number" [ngModel]="editInvestment.expected_return" (ngModelChange)="editInvestment.expected_return = $event" />
+                      <input type="number" [value]="editInvestment.expected_return || inv.expected_return" (input)="editInvestment.expected_return = +$any($event.target).value" />
                     </div>
                   </div>
                   <div class="form-btns-inline">
@@ -1088,7 +1088,7 @@
                   </div>
                 </div>
               } @else {
-                <div class="investment-row" (click)="startEditInvestment(inv)">
+                <div class="investment-row">
                   <div class="inv-icon" [style.background]="getInvestmentTypeColor(inv.type)">
                     <span class="inv-risk-emoji">{{ isHighRisk(inv.type) ? '🔥' : '🛡️' }}</span>
                   </div>
@@ -1097,17 +1097,10 @@
                     <span class="inv-type">{{ getInvestmentTypeLabel(inv.type) }} · {{ inv.expected_return }}%</span>
                   </div>
                   <div class="inv-values">
-                    @if (editingInvestmentAmountId === inv.id) {
-                      <div class="inv-amount-edit">
-                        <input type="number" [(ngModel)]="editInvestmentAmount" (click)="$event.stopPropagation()" (keyup.enter)="saveInvestmentAmountEdit()" (keyup.escape)="cancelInvestmentAmountEdit()" />
-                        <button class="btn-amount-save" (click)="saveInvestmentAmountEdit(); $event.stopPropagation()"><ion-icon name="checkmark-outline"></ion-icon></button>
-                        <button class="btn-amount-cancel" (click)="cancelInvestmentAmountEdit(); $event.stopPropagation()"><ion-icon name="close-outline"></ion-icon></button>
-                      </div>
-                    } @else {
-                      <span class="inv-amount" (click)="startEditInvestmentAmount(inv, $event)">{{ inv.amount | currencyMxn }}</span>
-                    }
+                    <span class="inv-amount">{{ inv.amount | currencyMxn }}</span>
                   </div>
-                  <button class="inv-delete" (click)="deleteInvestment(inv.id); $event.stopPropagation()"><ion-icon name="trash-outline"></ion-icon></button>
+                  <button class="inv-edit" (click)="startEditInvestment(inv)"><ion-icon name="create-outline"></ion-icon></button>
+                  <button class="inv-delete" (click)="deleteInvestment(inv.id)"><ion-icon name="trash-outline"></ion-icon></button>
                 </div>
               }
             }
