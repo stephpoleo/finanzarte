@@ -75,7 +75,7 @@ import { UserSettingsService } from '../../core/services/user-settings.service';
 import { CurrencyMxnPipe } from '../../shared/pipes/currency-mxn.pipe';
 import {
   ExpenseCategory, EXPENSE_CATEGORIES, Investment, InvestmentType, InvestmentTypeInfo,
-  INVESTMENT_TYPES, FINANCIAL_LEVELS, FinancialLevel, EMERGENCY_MILESTONES, EmergencyMilestone, SavingsGoal,
+  INVESTMENT_TYPES, HIGH_RISK_TYPES, FINANCIAL_LEVELS, FinancialLevel, EMERGENCY_MILESTONES, EmergencyMilestone, SavingsGoal,
   CancellableExpense, CancellableCategory, CancellationPriority, RenewalFrequency,
   CANCELLABLE_CATEGORIES, CANCELLATION_PRIORITIES, RENEWAL_FREQUENCIES
 } from '../../models';
@@ -213,6 +213,12 @@ export class DashboardPage implements OnInit {
   chartTitles = ['Distribución de Ingresos', 'Gastos por Categoría', 'Resumen Presupuestal'];
   chartSubtitles = ['Fuentes de ingreso', 'Distribución de gastos', 'Gastos vs Ahorro'];
 
+  // Investment charts carousel state
+  currentInvestmentChart = 0;
+  investmentChartAnimating = false;
+  investmentChartTitles = ['Riesgo vs Conservador', 'Por Tipo de Inversión'];
+  investmentChartSubtitles = ['Distribución por nivel de riesgo', 'Distribución por categoría'];
+
   // Expense categories with colors
   expenseCategories = EXPENSE_CATEGORIES.map(cat => ({
     ...cat,
@@ -325,6 +331,11 @@ export class DashboardPage implements OnInit {
   };
 
   investmentTypes: InvestmentTypeInfo[] = INVESTMENT_TYPES;
+
+  // Show CETES warning if emergency fund is below SOFIPO tax-exempt limit
+  get showCetesWarning(): boolean {
+    return this.newInvestment.type === 'cetes' && this.emergencyCurrentSavings < this.taxExemptLimit;
+  }
 
   constructor(
     public profile: ProfileService,
@@ -707,6 +718,146 @@ export class DashboardPage implements OnInit {
     setTimeout(() => {
       this.chartAnimating = false;
     }, 50);
+  }
+
+  // Investment chart carousel methods
+  prevInvestmentChart(): void {
+    this.triggerInvestmentChartAnimation();
+    this.currentInvestmentChart = (this.currentInvestmentChart - 1 + 2) % 2;
+  }
+
+  nextInvestmentChart(): void {
+    this.triggerInvestmentChartAnimation();
+    this.currentInvestmentChart = (this.currentInvestmentChart + 1) % 2;
+  }
+
+  private triggerInvestmentChartAnimation(): void {
+    this.investmentChartAnimating = true;
+    setTimeout(() => {
+      this.investmentChartAnimating = false;
+    }, 50);
+  }
+
+  getInvestmentChartSegments(): ChartSegment[] {
+    const circumference = 2 * Math.PI * 70;
+    const segments: ChartSegment[] = [];
+    const total = this.totalInvested;
+    if (total === 0) return segments;
+
+    if (this.currentInvestmentChart === 0) {
+      // Risk vs Conservative
+      const riskyAmount = this.currentRiskyAmount;
+      const conservativeAmount = this.currentConservativeAmount;
+      let offset = 0;
+
+      if (riskyAmount > 0) {
+        const ratio = riskyAmount / total;
+        const segmentLength = this.investmentChartAnimating ? 0 : ratio * circumference;
+        segments.push({
+          color: '#ef4444',
+          dashArray: `${segmentLength} ${circumference}`,
+          offset: this.investmentChartAnimating ? 0 : -offset
+        });
+        offset += ratio * circumference;
+      }
+
+      if (conservativeAmount > 0) {
+        const ratio = conservativeAmount / total;
+        const segmentLength = this.investmentChartAnimating ? 0 : ratio * circumference;
+        segments.push({
+          color: '#10b981',
+          dashArray: `${segmentLength} ${circumference}`,
+          offset: this.investmentChartAnimating ? 0 : -offset
+        });
+      }
+    } else {
+      // By investment type
+      const byType = this.getInvestmentsByType();
+      let offset = 0;
+
+      byType.forEach(item => {
+        const ratio = item.total / total;
+        const segmentLength = this.investmentChartAnimating ? 0 : ratio * circumference;
+        segments.push({
+          color: item.type.color,
+          dashArray: `${segmentLength} ${circumference}`,
+          offset: this.investmentChartAnimating ? 0 : -offset
+        });
+        offset += ratio * circumference;
+      });
+    }
+
+    return segments;
+  }
+
+  getInvestmentChartLegend(): { label: string; value: number; color: string; emoji?: string }[] {
+    if (this.currentInvestmentChart === 0) {
+      // Risk vs Conservative
+      return [
+        { label: 'Riesgo', value: this.currentRiskyAmount, color: '#ef4444', emoji: '🔥' },
+        { label: 'Conservador', value: this.currentConservativeAmount, color: '#10b981', emoji: '🛡️' }
+      ].filter(item => item.value > 0);
+    } else {
+      // By investment type
+      return this.getInvestmentsByType().map(item => ({
+        label: item.type.label,
+        value: item.total,
+        color: item.type.color
+      }));
+    }
+  }
+
+  getInvestmentChartSeparators(): { x1: number; y1: number; x2: number; y2: number }[] {
+    if (this.investmentChartAnimating) return [];
+
+    const angles: number[] = [];
+    const total = this.totalInvested;
+    if (total === 0) return [];
+
+    if (this.currentInvestmentChart === 0) {
+      // Risk vs Conservative
+      const riskyAmount = this.currentRiskyAmount;
+      const conservativeAmount = this.currentConservativeAmount;
+
+      if (riskyAmount > 0 && conservativeAmount > 0) {
+        // Add separator at 0 degrees (where last segment meets first)
+        angles.push(0);
+        // Add separator where risky meets conservative
+        const riskyRatio = riskyAmount / total;
+        angles.push(riskyRatio * 360);
+      }
+    } else {
+      // By investment type
+      const byType = this.getInvestmentsByType();
+      if (byType.length <= 1) return [];
+
+      // Add separator at 0 degrees
+      angles.push(0);
+
+      let cumulativeRatio = 0;
+      for (let i = 0; i < byType.length - 1; i++) {
+        cumulativeRatio += byType[i].total / total;
+        angles.push(cumulativeRatio * 360);
+      }
+    }
+
+    // Convert angles to coordinates
+    const innerRadius = 56;
+    const outerRadius = 84;
+    return angles.map(angle => {
+      const radians = (angle - 90) * Math.PI / 180;
+      return {
+        x1: 100 + innerRadius * Math.cos(radians),
+        y1: 100 + innerRadius * Math.sin(radians),
+        x2: 100 + outerRadius * Math.cos(radians),
+        y2: 100 + outerRadius * Math.sin(radians)
+      };
+    });
+  }
+
+  getInvestmentChartPercentage(value: number): number {
+    const total = this.totalInvested;
+    return total > 0 ? (value / total) * 100 : 0;
   }
 
   hasChartData(): boolean {
@@ -1250,17 +1401,21 @@ export class DashboardPage implements OnInit {
     return this.investmentSvc.getInvestmentsByType();
   }
 
+  isHighRisk(type: InvestmentType): boolean {
+    return HIGH_RISK_TYPES.includes(type);
+  }
+
   getInvestmentProjection(years: number): number {
     return this.totalInvested * Math.pow(1 + this.weightedReturn / 100, years);
   }
 
-  // Rule of 120 - Risk allocation methods using service
-  get rule120RecommendedRisk(): number {
-    return this.userSettings.rule120RecommendedRisk();
+  // Rule of 110 - Risk allocation methods using service
+  get rule110RecommendedRisk(): number {
+    return this.userSettings.rule110RecommendedRisk();
   }
 
-  get rule120RecommendedConservative(): number {
-    return this.userSettings.rule120RecommendedConservative();
+  get rule110RecommendedConservative(): number {
+    return this.userSettings.rule110RecommendedConservative();
   }
 
   get currentRiskyAmount(): number {
@@ -1280,7 +1435,7 @@ export class DashboardPage implements OnInit {
   }
 
   get riskAllocationDifference(): number {
-    return this.currentRiskyPercentage - this.rule120RecommendedRisk;
+    return this.currentRiskyPercentage - this.rule110RecommendedRisk;
   }
 
   get riskAllocationStatus(): 'balanced' | 'too-risky' | 'too-conservative' {

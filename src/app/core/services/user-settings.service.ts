@@ -126,13 +126,13 @@ export class UserSettingsService {
     return Math.min(100, (this.retirementTotalFund() / recommended) * 100);
   });
 
-  // Rule of 120 for investment allocation
-  rule120RecommendedRisk = computed(() =>
-    Math.min(100, Math.max(0, 120 - this.retirementCurrentAge()))
+  // Rule of 110 for investment allocation
+  rule110RecommendedRisk = computed(() =>
+    Math.min(100, Math.max(0, 110 - this.retirementCurrentAge()))
   );
 
-  rule120RecommendedConservative = computed(() =>
-    100 - this.rule120RecommendedRisk()
+  rule110RecommendedConservative = computed(() =>
+    100 - this.rule110RecommendedRisk()
   );
 
   constructor(

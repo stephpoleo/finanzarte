@@ -44,7 +44,7 @@ src/app/
 1. **Presupuesto** (Green) - Income sources, expenses, available savings
 2. **Emergencia** (Cyan) - Emergency fund calculator with milestone roadmap
 3. **Largo Plazo** (Amber) - 5 financial levels (Security → Abundance)
-4. **Inversiones** (Indigo) - Investment portfolio with Rule of 120 risk allocation
+4. **Inversiones** (Indigo) - Investment portfolio with Rule of 110 risk allocation
 5. **Retiro** (Purple) - Retirement planning with compound interest projections
 
 **Tab order rationale:** Budget → Emergency fund → Long-term freedom → Investments (feeds into long-term) → Retirement (final goal)
@@ -71,6 +71,16 @@ src/app/
 - **4% Rule explanation**: Collapsible card explaining withdrawal rate concept
 - **Next level card**: Shows target, remaining amount, and time estimate
 - **Integration with Inversiones**: ltCurrentSavings pulls from InvestmentService.totalInvested()
+
+### Inversiones Tab Features
+- **Rule of 110**: Risk allocation recommendation based on age (110 - age = % in risky investments)
+- **Portfolio chart carousel**: Two animated donut charts with swipe navigation
+  - Chart 1: Risk vs Conservative distribution with 🔥/🛡️ indicators
+  - Chart 2: Distribution by investment type (ETFs, CETES, AFORE, etc.)
+- **Investment list**: Each investment shows risk indicator badge (🔥 high risk, 🛡️ conservative)
+- **CETES warning**: When adding CETES, shows fiscal tip if emergency fund < 5 UMAs (SOFIPOs are tax-exempt)
+- **Chart animations**: Same SVG donut style as Presupuesto tab with white separator lines
+- **Future projections**: Shows 1, 5, 10 year projections based on weighted average return
 
 ### Savings Goals Lock
 - Savings goals are **locked** until user has at least 1 month of emergency fund
@@ -141,7 +151,7 @@ Located in `supabase/schema.sql`:
 - **Medium Risk:** mutual-funds, real-estate
 - **Low Risk:** bonds, cetes, afore
 
-Rule of 120: `120 - age = % in risky investments`
+Rule of 110: `110 - age = % in risky investments`
 
 ## Environment Setup
 
@@ -224,7 +234,7 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Emergency fund calculator (1-24 months)
 - [x] Long-term savings with 5 financial levels
 - [x] Retirement planning calculator
-- [x] Investment portfolio with Rule of 120
+- [x] Investment portfolio with Rule of 110
 - [x] Settings page
 - [x] Theme and styling
 - [x] Graceful handling when Supabase not configured
@@ -265,6 +275,10 @@ Bottom navigation hides on tablet/desktop (768px+).
 - [x] Auto-calculated weighted return from investments
 - [x] Configurable withdrawal rate (4% rule) with explanation
 - [x] Tab order reorganized: Presupuesto → Emergencia → Largo Plazo → Inversiones → Retiro
+- [x] Rule of 110 risk allocation (previously Rule of 120)
+- [x] Investment portfolio chart carousel (Risk vs Conservative, By Type)
+- [x] Investment list with risk indicator badges (🔥/🛡️)
+- [x] CETES fiscal warning when emergency fund below SOFIPO tax-exempt limit
 - [ ] Native platform testing (Android/iOS)
 - [ ] Push notifications
 - [ ] Data export functionality

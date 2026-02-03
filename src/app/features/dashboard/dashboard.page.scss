@@ -2987,6 +2987,33 @@
   margin-bottom: 16px;
 }
 
+.cetes-warning {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 10px;
+  border-left: 4px solid #f59e0b;
+  margin-top: 12px;
+
+  ion-icon {
+    font-size: 20px;
+    color: #b45309;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .warning-content {
+    font-size: 0.8rem;
+    color: #92400e;
+    line-height: 1.5;
+
+    strong {
+      color: #78350f;
+    }
+  }
+}
+
 .form-btns {
   display: flex;
   gap: 12px;
@@ -3025,10 +3052,177 @@
   }
 }
 
+/* Investment Chart Carousel */
+.investment-chart-card {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .chart-title-section {
+    .chart-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0;
+    }
+
+    .chart-subtitle {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin: 2px 0 0 0;
+    }
+  }
+
+  .chart-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chart-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    padding: 12px 0;
+  }
+
+  .pie-chart {
+    width: 160px;
+    height: 160px;
+  }
+
+  .chart-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+
+    .chart-total {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .chart-lbl {
+      display: block;
+      font-size: 0.65rem;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+  }
+
+  .chart-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+
+    .legend-emoji {
+      font-size: 0.9rem;
+      width: 20px;
+      text-align: center;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .legend-name {
+      flex: 1;
+      font-size: 0.8rem;
+      color: #374151;
+    }
+
+    .legend-pct {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #1f2937;
+      min-width: 45px;
+      text-align: right;
+    }
+
+    .legend-val {
+      font-size: 0.75rem;
+      color: #6b7280;
+      min-width: 70px;
+      text-align: right;
+    }
+  }
+
+  .nav-arrow {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.7);
+    border: none;
+    border-radius: 6px;
+    color: #6b7280;
+    cursor: pointer;
+
+    &:hover {
+      background: white;
+    }
+
+    ion-icon {
+      font-size: 16px;
+    }
+  }
+
+  .dots {
+    display: flex;
+    gap: 5px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 50%;
+    transition: all 0.2s ease;
+
+    &.active {
+      width: 14px;
+      background: #6366f1;
+      border-radius: 3px;
+    }
+  }
+}
+
 .investments-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.risk-badge {
+  font-size: 1rem;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 .investment-row {
@@ -3152,8 +3346,158 @@
   }
 }
 
-/* Rule of 120 Card */
-.rule120-card {
+/* Portfolio Composition Card */
+.portfolio-composition-card {
+  .composition-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+}
+
+.donut-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  justify-content: center;
+}
+
+.donut-chart {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.donut-hole {
+  width: 70px;
+  height: 70px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  .donut-total {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #1f2937;
+  }
+
+  .donut-label {
+    font-size: 0.6rem;
+    color: #6b7280;
+  }
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .legend-text {
+    font-size: 0.8rem;
+    color: #374151;
+    min-width: 80px;
+  }
+
+  .legend-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  &.risky .legend-dot {
+    background: #ef4444;
+  }
+
+  &.conservative .legend-dot {
+    background: #10b981;
+  }
+}
+
+.investments-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;
+}
+
+.breakdown-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-radius: 10px;
+
+  .risk-indicator {
+    font-size: 1rem;
+    width: 24px;
+    text-align: center;
+  }
+
+  .breakdown-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    .breakdown-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1f2937;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .breakdown-type {
+      font-size: 0.7rem;
+      color: #6b7280;
+    }
+  }
+
+  .breakdown-values {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+
+    .breakdown-amount {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .breakdown-pct {
+      font-size: 0.7rem;
+      color: #6b7280;
+    }
+  }
+}
+
+/* Rule of 110 Card */
+.rule110-card {
   border: 2px solid #e5e7eb;
   transition: border-color 0.3s ease;
 
@@ -3173,14 +3517,14 @@
   }
 }
 
-.rule120-header {
+.rule110-header {
   display: flex;
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
 }
 
-.rule120-icon {
+.rule110-icon {
   width: 44px;
   height: 44px;
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
@@ -3196,7 +3540,7 @@
   }
 }
 
-.rule120-formula {
+.rule110-formula {
   background: white;
   border-radius: 10px;
   padding: 12px 16px;
@@ -3293,7 +3637,7 @@
   }
 }
 
-.rule120-status {
+.rule110-status {
   padding: 12px 16px;
   border-radius: 10px;
   font-size: 0.85rem;
@@ -3318,7 +3662,7 @@
   }
 }
 
-.rule120-types {
+.rule110-types {
   display: flex;
   flex-direction: column;
   gap: 8px;

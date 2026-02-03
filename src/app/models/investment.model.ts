@@ -100,6 +100,6 @@ export const INVESTMENT_TYPES: InvestmentTypeInfo[] = [
   }
 ];
 
-// Helper to get risk types for Rule of 120
+// Helper to get risk types for Rule of 110
 export const HIGH_RISK_TYPES: InvestmentType[] = ['stocks', 'crypto', 'etf'];
 export const LOW_RISK_TYPES: InvestmentType[] = ['bonds', 'real-estate', 'mutual-funds', 'cetes', 'afore'];

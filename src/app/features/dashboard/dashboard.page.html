@@ -984,13 +984,74 @@
                 <div class="form-field"><label>Monto Invertido</label><input type="number" [(ngModel)]="newInvestment.amount" placeholder="0.00"/></div>
               </div>
               <div class="form-field"><label>Retorno Anual Esperado (%)</label><input type="number" [(ngModel)]="newInvestment.expected_return" placeholder="8"/></div>
+              @if (showCetesWarning) {
+                <div class="cetes-warning">
+                  <ion-icon name="bulb-outline"></ion-icon>
+                  <div class="warning-content">
+                    <strong>Tip fiscal:</strong> Las SOFIPOs ofrecen tasas similares a CETES pero están exentas de ISR hasta {{ taxExemptLimit | currencyMxn }} (5 UMAs). Tu fondo de emergencia actual es {{ emergencyCurrentSavings | currencyMxn }}. Considera llenar primero tus SOFIPOs.
+                  </div>
+                </div>
+              }
               <div class="form-btns"><button class="btn-primary" (click)="addInvestment()">Agregar Inversión</button><button class="btn-secondary" (click)="toggleInvestmentForm()">Cancelar</button></div>
+            </div>
+          }
+
+          @if (investmentSvc.investments().length > 0) {
+            <div class="investment-chart-card">
+              <div class="chart-header">
+                <div class="chart-title-section">
+                  <h4 class="chart-title">{{ investmentChartTitles[currentInvestmentChart] }}</h4>
+                  <p class="chart-subtitle">{{ investmentChartSubtitles[currentInvestmentChart] }}</p>
+                </div>
+                <div class="chart-nav">
+                  <button class="nav-arrow" (click)="prevInvestmentChart()"><ion-icon name="chevron-back-outline"></ion-icon></button>
+                  <div class="dots">
+                    @for (i of [0, 1]; track i) {
+                      <span class="dot" [class.active]="currentInvestmentChart === i"></span>
+                    }
+                  </div>
+                  <button class="nav-arrow" (click)="nextInvestmentChart()"><ion-icon name="chevron-forward-outline"></ion-icon></button>
+                </div>
+              </div>
+
+              <div class="chart-wrapper">
+                <svg class="pie-chart" viewBox="0 0 200 200">
+                  <circle cx="100" cy="100" r="70" fill="none" stroke="#f3f4f6" stroke-width="24"/>
+                  @for (seg of getInvestmentChartSegments(); track $index) {
+                    <circle cx="100" cy="100" r="70" fill="none" [attr.stroke]="seg.color" stroke-width="24"
+                      [attr.stroke-dasharray]="seg.dashArray" [attr.stroke-dashoffset]="seg.offset" transform="rotate(-90 100 100)"/>
+                  }
+                  @for (sep of getInvestmentChartSeparators(); track $index) {
+                    <line [attr.x1]="sep.x1" [attr.y1]="sep.y1" [attr.x2]="sep.x2" [attr.y2]="sep.y2"
+                          stroke="white" stroke-width="4"/>
+                  }
+                </svg>
+                <div class="chart-center">
+                  <span class="chart-total">{{ totalInvested | currencyMxn }}</span>
+                  <span class="chart-lbl">Total</span>
+                </div>
+              </div>
+
+              <div class="chart-legend">
+                @for (item of getInvestmentChartLegend(); track item.label) {
+                  <div class="legend-row">
+                    @if (item.emoji) {
+                      <span class="legend-emoji">{{ item.emoji }}</span>
+                    }
+                    <span class="legend-dot" [style.background]="item.color"></span>
+                    <span class="legend-name">{{ item.label }}</span>
+                    <span class="legend-pct">{{ getInvestmentChartPercentage(item.value) | number:'1.1-1' }}%</span>
+                    <span class="legend-val">{{ item.value | currencyMxn }}</span>
+                  </div>
+                }
+              </div>
             </div>
           }
 
           <div class="investments-list">
             @for (inv of investmentSvc.investments(); track inv.id) {
               <div class="investment-row">
+                <span class="risk-badge">{{ isHighRisk(inv.type) ? '🔥' : '🛡️' }}</span>
                 <div class="inv-icon" [style.background]="getInvestmentTypeColor(inv.type)"><ion-icon name="trending-up-outline"></ion-icon></div>
                 <div class="inv-info"><span class="inv-name">{{ inv.name }}</span><span class="inv-type">{{ getInvestmentTypeLabel(inv.type) }}</span></div>
                 <div class="inv-values"><span class="inv-amount">{{ inv.amount | currencyMxn }}</span><span class="inv-return">{{ inv.expected_return }}% anual</span></div>
@@ -1004,19 +1065,19 @@
           }
         </div>
 
-        <!-- Rule of 120 Card - Always visible -->
-        <div class="card rule120-card" [class.balanced]="riskAllocationStatus === 'balanced'" [class.too-risky]="riskAllocationStatus === 'too-risky'" [class.too-conservative]="riskAllocationStatus === 'too-conservative'">
-          <div class="rule120-header">
-            <div class="rule120-icon"><ion-icon name="scale-outline"></ion-icon></div>
+        <!-- Rule of 110 Card - Always visible -->
+        <div class="card rule110-card" [class.balanced]="riskAllocationStatus === 'balanced'" [class.too-risky]="riskAllocationStatus === 'too-risky'" [class.too-conservative]="riskAllocationStatus === 'too-conservative'">
+          <div class="rule110-header">
+            <div class="rule110-icon"><ion-icon name="scale-outline"></ion-icon></div>
             <div>
-              <h3 class="card-title">Regla del 120</h3>
+              <h3 class="card-title">Regla del 110</h3>
               <p class="card-subtitle">Balance riesgo vs seguridad según tu edad</p>
             </div>
           </div>
 
-          <div class="rule120-formula">
-            <span class="formula-text">120 - {{ retCurrentAge }} años = </span>
-            <span class="formula-result">{{ rule120RecommendedRisk }}% en riesgo</span>
+          <div class="rule110-formula">
+            <span class="formula-text">110 - {{ retCurrentAge }} años = </span>
+            <span class="formula-result">{{ rule110RecommendedRisk }}% en riesgo</span>
           </div>
 
           <div class="allocation-comparison">
@@ -1024,12 +1085,12 @@
               <div class="alloc-label">Recomendado para ti</div>
               <div class="alloc-bars">
                 <div class="alloc-bar-container">
-                  <div class="alloc-bar risky" [style.width.%]="rule120RecommendedRisk"></div>
-                  <div class="alloc-bar conservative" [style.width.%]="rule120RecommendedConservative"></div>
+                  <div class="alloc-bar risky" [style.width.%]="rule110RecommendedRisk"></div>
+                  <div class="alloc-bar conservative" [style.width.%]="rule110RecommendedConservative"></div>
                 </div>
                 <div class="alloc-legend">
-                  <span class="legend-risky">{{ rule120RecommendedRisk }}% Riesgo</span>
-                  <span class="legend-conservative">{{ rule120RecommendedConservative }}% Conservador</span>
+                  <span class="legend-risky">{{ rule110RecommendedRisk }}% Riesgo</span>
+                  <span class="legend-conservative">{{ rule110RecommendedConservative }}% Conservador</span>
                 </div>
               </div>
             </div>
@@ -1049,7 +1110,7 @@
                 </div>
               </div>
 
-              <div class="rule120-status" [class]="riskAllocationStatus">
+              <div class="rule110-status" [class]="riskAllocationStatus">
                 {{ getRiskStatusMessage() }}
               </div>
             } @else {
@@ -1059,7 +1120,7 @@
             }
           </div>
 
-          <div class="rule120-types">
+          <div class="rule110-types">
             <div class="type-group">
               <span class="type-label risky">🔥 Mayor riesgo/rendimiento:</span>
               <span class="type-list">Acciones, ETFs, Cripto</span>
@@ -1072,17 +1133,6 @@
         </div>
 
         @if (investmentSvc.investments().length > 0) {
-          <div class="card"><h3 class="card-title">Distribución por Tipo</h3>
-            <div class="distribution-list">
-              @for (item of getInvestmentsByType(); track item.type.value) {
-                <div class="dist-row">
-                  <div class="dist-info"><span>{{ item.type.label }}</span><span class="dist-amount">{{ item.total | currencyMxn }} ({{ item.percentage | number:'1.1-1' }}%)</span></div>
-                  <div class="dist-bar"><div class="dist-fill" [style.width.%]="item.percentage" [style.background]="item.type.color"></div></div>
-                </div>
-              }
-            </div>
-          </div>
-
           <div class="card compound-card"><h3 class="card-title"><ion-icon name="trending-up-outline"></ion-icon> Proyección a Futuro</h3>
             <div class="projection-grid">
               <div class="projection-item"><span class="proj-label">1 año</span><span class="proj-value">{{ getInvestmentProjection(1) | currencyMxn }}</span></div>
