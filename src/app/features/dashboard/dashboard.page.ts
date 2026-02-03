@@ -341,6 +341,10 @@ export class DashboardPage implements OnInit {
     expected_return: 8
   };
 
+  // Investment inline amount edit
+  editingInvestmentAmountId: string | null = null;
+  editInvestmentAmount: number = 0;
+
   // Show CETES warning if emergency fund is below SOFIPO tax-exempt limit
   get showCetesWarning(): boolean {
     return this.newInvestment.type === 'cetes' && this.emergencyCurrentSavings < this.taxExemptLimit;
@@ -1424,6 +1428,31 @@ export class DashboardPage implements OnInit {
   cancelInvestmentEdit(): void {
     this.editingInvestmentId = null;
     this.editInvestment = { name: '', type: 'stocks', amount: 0, expected_return: 8 };
+  }
+
+  startEditInvestmentAmount(inv: Investment, event: Event): void {
+    event.stopPropagation(); // Prevent opening full edit form
+    this.editingInvestmentAmountId = inv.id;
+    this.editInvestmentAmount = inv.amount;
+  }
+
+  async saveInvestmentAmountEdit(): Promise<void> {
+    if (!this.editingInvestmentAmountId || !this.editInvestmentAmount) return;
+
+    const inv = this.investmentSvc.investments().find(i => i.id === this.editingInvestmentAmountId);
+    if (!inv) return;
+
+    await this.investmentSvc.updateInvestment(this.editingInvestmentAmountId, {
+      ...inv,
+      amount: this.editInvestmentAmount
+    });
+
+    this.cancelInvestmentAmountEdit();
+  }
+
+  cancelInvestmentAmountEdit(): void {
+    this.editingInvestmentAmountId = null;
+    this.editInvestmentAmount = 0;
   }
 
   getInvestmentTypeLabel(type: string): string {

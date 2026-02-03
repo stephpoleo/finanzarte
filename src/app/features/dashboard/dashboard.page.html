@@ -1097,7 +1097,15 @@
                     <span class="inv-type">{{ getInvestmentTypeLabel(inv.type) }} · {{ inv.expected_return }}%</span>
                   </div>
                   <div class="inv-values">
-                    <span class="inv-amount">{{ inv.amount | currencyMxn }}</span>
+                    @if (editingInvestmentAmountId === inv.id) {
+                      <div class="inv-amount-edit">
+                        <input type="number" [(ngModel)]="editInvestmentAmount" (click)="$event.stopPropagation()" (keyup.enter)="saveInvestmentAmountEdit()" (keyup.escape)="cancelInvestmentAmountEdit()" />
+                        <button class="btn-amount-save" (click)="saveInvestmentAmountEdit(); $event.stopPropagation()"><ion-icon name="checkmark-outline"></ion-icon></button>
+                        <button class="btn-amount-cancel" (click)="cancelInvestmentAmountEdit(); $event.stopPropagation()"><ion-icon name="close-outline"></ion-icon></button>
+                      </div>
+                    } @else {
+                      <span class="inv-amount" (click)="startEditInvestmentAmount(inv, $event)">{{ inv.amount | currencyMxn }}</span>
+                    }
                   </div>
                   <button class="inv-delete" (click)="deleteInvestment(inv.id); $event.stopPropagation()"><ion-icon name="trash-outline"></ion-icon></button>
                 </div>

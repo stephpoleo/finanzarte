@@ -689,6 +689,7 @@
   align-items: center;
   gap: 8px;
   margin-bottom: 16px;
+  justify-content: space-between;
 
   .icon-amber {
     color: #f59e0b;
@@ -3290,6 +3291,71 @@
   font-size: 0.95rem;
   font-weight: 600;
   color: #1f2937;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #e5e7eb;
+  }
+}
+
+.inv-amount-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  input {
+    width: 100px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid #6366f1;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: white;
+    text-align: right;
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+  }
+
+  .btn-amount-save,
+  .btn-amount-cancel {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+
+    ion-icon {
+      font-size: 16px;
+    }
+  }
+
+  .btn-amount-save {
+    background: #6366f1;
+    color: white;
+
+    &:hover {
+      background: #4f46e5;
+    }
+  }
+
+  .btn-amount-cancel {
+    background: #e5e7eb;
+    color: #6b7280;
+
+    &:hover {
+      background: #d1d5db;
+    }
+  }
 }
 
 .inv-delete {
