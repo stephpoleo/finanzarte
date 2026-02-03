@@ -3218,13 +3218,6 @@
   gap: 8px;
 }
 
-.risk-badge {
-  font-size: 1rem;
-  width: 24px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
 .investment-row {
   display: flex;
   align-items: center;
@@ -3232,6 +3225,16 @@
   padding: 12px;
   background: #f9fafb;
   border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+
+  &:active {
+    background: #e5e7eb;
+  }
 }
 
 .inv-icon {
@@ -3242,10 +3245,18 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  position: relative;
 
   ion-icon {
     font-size: 18px;
     color: white;
+  }
+
+  .inv-risk-emoji {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    font-size: 0.7rem;
   }
 }
 
@@ -3276,41 +3287,9 @@
 
 .inv-amount {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #1f2937;
-}
-
-.inv-return {
-  display: inline-block;
-  font-size: 0.65rem;
-  background: #e5e7eb;
-  color: #374151;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin-top: 2px;
-}
-
-.inv-edit {
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  color: #6b7280;
-  cursor: pointer;
-
-  &:hover {
-    background: #f3f4f6;
-    color: #6366f1;
-  }
-
-  ion-icon {
-    font-size: 16px;
-  }
 }
 
 .inv-delete {
@@ -3336,26 +3315,75 @@
 
 .investment-edit-form {
   background: #eef2ff;
-  border-radius: 10px;
-  padding: 12px;
+  border-radius: 12px;
+  padding: 16px;
+
+  .edit-form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    span {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #4f46e5;
+    }
+
+    .btn-close {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: #6b7280;
+      cursor: pointer;
+
+      &:hover {
+        background: #e0e7ff;
+      }
+
+      ion-icon {
+        font-size: 18px;
+      }
+    }
+  }
 
   .form-row {
     display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .form-field-edit {
+    flex: 1;
+
+    label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 500;
+      color: #6366f1;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
 
     input, select {
-      flex: 1;
-      height: 38px;
-      padding: 0 10px;
+      width: 100%;
+      height: 40px;
+      padding: 0 12px;
       border: 1px solid #c7d2fe;
-      border-radius: 6px;
-      font-size: 0.85rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
       background: white;
 
       &:focus {
         outline: none;
         border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
       }
     }
 
@@ -3366,8 +3394,41 @@
 
   .form-btns-inline {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     justify-content: flex-end;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #c7d2fe;
+
+    .btn-cancel-text {
+      padding: 10px 20px;
+      background: transparent;
+      border: 1px solid #c7d2fe;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #6b7280;
+      cursor: pointer;
+
+      &:hover {
+        background: #f5f3ff;
+      }
+    }
+
+    .btn-save-text {
+      padding: 10px 24px;
+      background: #6366f1;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+
+      &:hover {
+        background: #4f46e5;
+      }
+    }
 
     .btn-save, .btn-cancel {
       width: 36px;

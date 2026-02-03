@@ -1052,31 +1052,54 @@
             @for (inv of investmentSvc.investments(); track inv.id) {
               @if (editingInvestmentId === inv.id) {
                 <div class="investment-edit-form">
-                  <div class="form-row">
-                    <input type="text" [(ngModel)]="editInvestment.name" placeholder="Nombre" />
-                    <input type="number" [(ngModel)]="editInvestment.amount" placeholder="Monto" />
+                  <div class="edit-form-header">
+                    <span>Editando inversión</span>
+                    <button class="btn-close" (click)="cancelInvestmentEdit()"><ion-icon name="close-outline"></ion-icon></button>
                   </div>
                   <div class="form-row">
-                    <select [(ngModel)]="editInvestment.type">
-                      @for (t of investmentTypes; track t.value) {
-                        <option [value]="t.value">{{ t.label }}</option>
-                      }
-                    </select>
-                    <input type="number" [(ngModel)]="editInvestment.expected_return" placeholder="Retorno %" />
+                    <div class="form-field-edit">
+                      <label>Nombre</label>
+                      <input type="text" [ngModel]="editInvestment.name" (ngModelChange)="editInvestment.name = $event" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-field-edit">
+                      <label>Tipo</label>
+                      <select [ngModel]="editInvestment.type" (ngModelChange)="editInvestment.type = $event">
+                        @for (t of investmentTypes; track t.value) {
+                          <option [value]="t.value">{{ t.label }}</option>
+                        }
+                      </select>
+                    </div>
+                    <div class="form-field-edit">
+                      <label>Monto</label>
+                      <input type="number" [ngModel]="editInvestment.amount" (ngModelChange)="editInvestment.amount = $event" />
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-field-edit">
+                      <label>Retorno anual (%)</label>
+                      <input type="number" [ngModel]="editInvestment.expected_return" (ngModelChange)="editInvestment.expected_return = $event" />
+                    </div>
                   </div>
                   <div class="form-btns-inline">
-                    <button class="btn-save" (click)="saveInvestmentEdit()"><ion-icon name="checkmark-outline"></ion-icon></button>
-                    <button class="btn-cancel" (click)="cancelInvestmentEdit()"><ion-icon name="close-outline"></ion-icon></button>
+                    <button class="btn-cancel-text" (click)="cancelInvestmentEdit()">Cancelar</button>
+                    <button class="btn-save-text" (click)="saveInvestmentEdit()">Guardar</button>
                   </div>
                 </div>
               } @else {
-                <div class="investment-row">
-                  <span class="risk-badge">{{ isHighRisk(inv.type) ? '🔥' : '🛡️' }}</span>
-                  <div class="inv-icon" [style.background]="getInvestmentTypeColor(inv.type)"><ion-icon name="trending-up-outline"></ion-icon></div>
-                  <div class="inv-info"><span class="inv-name">{{ inv.name }}</span><span class="inv-type">{{ getInvestmentTypeLabel(inv.type) }}</span></div>
-                  <div class="inv-values"><span class="inv-amount">{{ inv.amount | currencyMxn }}</span><span class="inv-return">{{ inv.expected_return }}% anual</span></div>
-                  <button class="inv-edit" (click)="startEditInvestment(inv)"><ion-icon name="create-outline"></ion-icon></button>
-                  <button class="inv-delete" (click)="deleteInvestment(inv.id)"><ion-icon name="trash-outline"></ion-icon></button>
+                <div class="investment-row" (click)="startEditInvestment(inv)">
+                  <div class="inv-icon" [style.background]="getInvestmentTypeColor(inv.type)">
+                    <span class="inv-risk-emoji">{{ isHighRisk(inv.type) ? '🔥' : '🛡️' }}</span>
+                  </div>
+                  <div class="inv-info">
+                    <span class="inv-name">{{ inv.name }}</span>
+                    <span class="inv-type">{{ getInvestmentTypeLabel(inv.type) }} · {{ inv.expected_return }}%</span>
+                  </div>
+                  <div class="inv-values">
+                    <span class="inv-amount">{{ inv.amount | currencyMxn }}</span>
+                  </div>
+                  <button class="inv-delete" (click)="deleteInvestment(inv.id); $event.stopPropagation()"><ion-icon name="trash-outline"></ion-icon></button>
                 </div>
               }
             }
