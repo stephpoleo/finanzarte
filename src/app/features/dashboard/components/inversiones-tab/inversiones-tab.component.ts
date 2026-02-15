@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonIcon } from '@ionic/angular/standalone';
@@ -15,12 +15,14 @@ import {
   chevronBackOutline,
   chevronForwardOutline,
   scaleOutline,
-  bulbOutline
+  bulbOutline,
+  shieldCheckmarkOutline
 } from 'ionicons/icons';
 
 import { InvestmentService } from '../../../../core/services/investment.service';
 import { UserSettingsService } from '../../../../core/services/user-settings.service';
 import { FinancialRatesService } from '../../../../core/services/financial-rates.service';
+import { EmergencyAllocationService } from '../../../../core/services/emergency-allocation.service';
 import { CurrencyMxnPipe } from '../../../../shared/pipes/currency-mxn.pipe';
 import {
   Investment,
@@ -28,7 +30,8 @@ import {
   InvestmentTypeInfo,
   INVESTMENT_TYPES,
   HIGH_RISK_TYPES,
-  RateSuggestion
+  RateSuggestion,
+  CetesAllocation
 } from '../../../../models';
 import { TAX_EXEMPT_LIMIT } from '../../../../data/savings-instruments';
 
@@ -45,7 +48,7 @@ interface ChartSegment {
   templateUrl: './inversiones-tab.component.html',
   styleUrls: ['./inversiones-tab.component.scss']
 })
-export class InversionesTabComponent {
+export class InversionesTabComponent implements OnInit {
   // Form state
   showInvestmentForm = false;
   newInvestment: { name: string; type: InvestmentType; initial_amount: number; current_amount: number; expected_return: number } = {
@@ -72,6 +75,10 @@ export class InversionesTabComponent {
   investmentChartTitles = ['Riesgo vs Conservador', 'Por Tipo de Inversión'];
   investmentChartSubtitles = ['Distribución por nivel de riesgo', 'Distribución por categoría'];
 
+  // Pagination state
+  currentPage = 1;
+  itemsPerPage = 5;
+
   investmentTypes: InvestmentTypeInfo[] = INVESTMENT_TYPES;
   taxExemptLimit = TAX_EXEMPT_LIMIT;
 
@@ -81,7 +88,8 @@ export class InversionesTabComponent {
   constructor(
     public investmentSvc: InvestmentService,
     public userSettings: UserSettingsService,
-    public ratesService: FinancialRatesService
+    public ratesService: FinancialRatesService,
+    public emergencyAllocationSvc: EmergencyAllocationService
   ) {
     addIcons({
       trendingUpOutline,
@@ -95,22 +103,64 @@ export class InversionesTabComponent {
       chevronBackOutline,
       chevronForwardOutline,
       scaleOutline,
-      bulbOutline
+      bulbOutline,
+      shieldCheckmarkOutline
     });
   }
 
-  // Investment computed values
-  get totalInvested(): number {
-    return this.investmentSvc.totalInvested();
+  async ngOnInit(): Promise<void> {
+    // Load investments and emergency allocations
+    await Promise.all([
+      this.investmentSvc.loadInvestments(),
+      this.emergencyAllocationSvc.loadAllocations()
+    ]);
   }
 
-  get weightedReturn(): number {
-    return this.investmentSvc.weightedReturn();
-  }
+  // Emergency CETES from emergency fund distribution (computed signals)
+  emergencyCetes = computed(() => this.emergencyAllocationSvc.cetesAllocation());
 
-  get projectedAnnualReturn(): number {
-    return this.investmentSvc.projectedAnnualReturn();
-  }
+  hasEmergencyCetes = computed(() => {
+    const cetes = this.emergencyCetes();
+    return cetes !== null && cetes.amount > 0;
+  });
+
+  // Pagination computed values
+  totalPages = computed(() => Math.ceil(this.investmentSvc.investments().length / this.itemsPerPage));
+
+  paginatedInvestments = computed(() => {
+    const investments = this.investmentSvc.investments();
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    return investments.slice(start, end);
+  });
+
+  // Investment computed values (including emergency CETES)
+  totalInvested = computed(() => {
+    const investmentTotal = this.investmentSvc.totalInvested();
+    const emergencyCetesAmount = this.emergencyCetes()?.amount || 0;
+    return investmentTotal + emergencyCetesAmount;
+  });
+
+  weightedReturn = computed(() => {
+    const investmentTotal = this.investmentSvc.totalInvested();
+    const investmentWeightedReturn = this.investmentSvc.weightedReturn();
+    const emergencyCetes = this.emergencyCetes();
+
+    if (!emergencyCetes || emergencyCetes.amount <= 0) {
+      return investmentWeightedReturn;
+    }
+
+    const total = investmentTotal + emergencyCetes.amount;
+    if (total === 0) return 0;
+
+    // Weighted average: (inv_total * inv_rate + cetes_amount * cetes_rate) / total
+    const weightedSum = (investmentTotal * investmentWeightedReturn) + (emergencyCetes.amount * emergencyCetes.rate);
+    return weightedSum / total;
+  });
+
+  projectedAnnualReturn = computed(() => {
+    return this.totalInvested() * (this.weightedReturn() / 100);
+  });
 
   get emergencyCurrentSavings(): number {
     return this.userSettings.emergencyCurrentSavings();
@@ -191,6 +241,29 @@ export class InversionesTabComponent {
     this.currentRateSuggestion = null;
   }
 
+  // Pagination methods
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage = page;
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages()) {
+      this.currentPage++;
+    }
+  }
+
+  prevPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  resetPagination(): void {
+    this.currentPage = 1;
+  }
+
   // Rate suggestion methods
   onInvestmentTypeChange(type: string): void {
     this.newInvestment.type = type as InvestmentType;
@@ -221,19 +294,29 @@ export class InversionesTabComponent {
   async addInvestment(): Promise<void> {
     if (!this.newInvestment.name || !this.newInvestment.initial_amount) return;
     const currentAmount = this.newInvestment.current_amount || this.newInvestment.initial_amount;
-    await this.investmentSvc.addInvestment({
+    const { data, error } = await this.investmentSvc.addInvestment({
       name: this.newInvestment.name,
       type: this.newInvestment.type,
       initial_amount: this.newInvestment.initial_amount,
       current_amount: currentAmount,
       expected_return: this.newInvestment.expected_return
     });
+
+    if (error) {
+      console.error('Error adding investment:', error);
+      return;
+    }
+
     this.showInvestmentForm = false;
     this.resetInvestmentForm();
   }
 
   async deleteInvestment(id: string): Promise<void> {
     await this.investmentSvc.deleteInvestment(id);
+    // Adjust current page if needed after deletion
+    if (this.currentPage > this.totalPages() && this.totalPages() > 0) {
+      this.currentPage = this.totalPages();
+    }
   }
 
   startEditInvestment(inv: Investment): void {
@@ -283,7 +366,7 @@ export class InversionesTabComponent {
   }
 
   getInvestmentProjection(years: number): number {
-    return this.totalInvested * Math.pow(1 + this.weightedReturn / 100, years);
+    return this.totalInvested() * Math.pow(1 + this.weightedReturn() / 100, years);
   }
 
   // Chart carousel methods
@@ -307,7 +390,7 @@ export class InversionesTabComponent {
   getInvestmentChartSegments(): ChartSegment[] {
     const circumference = 2 * Math.PI * 70;
     const segments: ChartSegment[] = [];
-    const total = this.totalInvested;
+    const total = this.totalInvested();
     if (total === 0) return segments;
 
     if (this.currentInvestmentChart === 0) {
@@ -373,7 +456,7 @@ export class InversionesTabComponent {
     if (this.investmentChartAnimating) return [];
 
     const angles: number[] = [];
-    const total = this.totalInvested;
+    const total = this.totalInvested();
     if (total === 0) return [];
 
     if (this.currentInvestmentChart === 0) {
@@ -412,7 +495,7 @@ export class InversionesTabComponent {
   }
 
   getInvestmentChartPercentage(value: number): number {
-    const total = this.totalInvested;
+    const total = this.totalInvested();
     return total > 0 ? (value / total) * 100 : 0;
   }
 }

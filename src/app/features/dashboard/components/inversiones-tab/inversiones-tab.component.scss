@@ -994,3 +994,121 @@
   color: #9ca3af;
   margin: 0;
 }
+
+/* Emergency CETES Section */
+.emergency-cetes-section {
+  margin-bottom: 16px;
+
+  .emergency-cetes-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    color: #0891b2;
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    ion-icon {
+      font-size: 18px;
+    }
+  }
+}
+
+.emergency-cetes-card {
+  background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+  border: 1px solid #a5f3fc;
+
+  .inv-card-header {
+    .emergency-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #0891b2;
+      background: #cffafe;
+      padding: 4px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .inv-card-stats {
+    background: rgba(255, 255, 255, 0.8);
+
+    .inv-stat {
+      &:last-child {
+        border-top-color: #a5f3fc;
+      }
+
+      .stat-value.positive {
+        color: #0891b2;
+      }
+    }
+  }
+}
+
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding: 12px;
+  background: #f3f4f6;
+  border-radius: 12px;
+}
+
+.pagination-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #6366f1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: #6366f1;
+    color: white;
+    border-color: #6366f1;
+  }
+
+  &:disabled {
+    color: #d1d5db;
+    cursor: not-allowed;
+    background: #f9fafb;
+  }
+
+  ion-icon {
+    font-size: 18px;
+  }
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  .pagination-current {
+    color: #6366f1;
+    font-weight: 700;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .pagination-separator {
+    color: #9ca3af;
+  }
+
+  .pagination-total {
+    color: #6b7280;
+    min-width: 20px;
+    text-align: center;
+  }
+}

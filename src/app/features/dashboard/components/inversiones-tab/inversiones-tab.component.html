@@ -11,17 +11,17 @@
       <div class="hero-box large">
         <ion-icon name="cash-outline"></ion-icon>
         <span class="box-label">Total Invertido</span>
-        <span class="box-value big">{{ totalInvested | currencyMxn }}</span>
+        <span class="box-value big">{{ totalInvested() | currencyMxn }}</span>
       </div>
       <div class="hero-box large">
         <ion-icon name="pie-chart-outline"></ion-icon>
         <span class="box-label">Retorno Promedio</span>
-        <span class="box-value big">{{ weightedReturn | number:'1.1-1' }}%</span>
+        <span class="box-value big">{{ weightedReturn() | number:'1.1-1' }}%</span>
       </div>
     </div>
     <div class="hero-box full">
       <span class="box-label">Retorno Anual Proyectado</span>
-      <span class="box-value">{{ projectedAnnualReturn | currencyMxn }}</span>
+      <span class="box-value">{{ projectedAnnualReturn() | currencyMxn }}</span>
     </div>
   </div>
 
@@ -133,7 +133,7 @@
             }
           </svg>
           <div class="chart-center">
-            <span class="chart-total">{{ totalInvested | currencyMxn }}</span>
+            <span class="chart-total">{{ totalInvested() | currencyMxn }}</span>
             <span class="chart-lbl">Total</span>
           </div>
         </div>
@@ -154,8 +154,38 @@
       </div>
     }
 
+    <!-- Emergency CETES from custom distribution -->
+    @if (hasEmergencyCetes()) {
+      <div class="emergency-cetes-section">
+        <div class="emergency-cetes-header">
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          <span>Fondo de Emergencia</span>
+        </div>
+        <div class="investment-card emergency-cetes-card">
+          <div class="inv-card-header">
+            <div class="inv-title-row">
+              <span class="inv-risk-badge">🛡️</span>
+              <span class="inv-name">CETES {{ emergencyCetes()!.term_days }} días</span>
+            </div>
+            <span class="emergency-badge">Emergencia</span>
+          </div>
+          <div class="inv-card-type">CETES · Tasa: {{ emergencyCetes()!.rate | number:'1.2-2' }}%</div>
+          <div class="inv-card-stats">
+            <div class="inv-stat">
+              <span class="stat-label">Monto asignado</span>
+              <span class="stat-value">{{ emergencyCetes()!.amount | currencyMxn }}</span>
+            </div>
+            <div class="inv-stat">
+              <span class="stat-label">Rendimiento anual</span>
+              <span class="stat-value positive">+{{ emergencyCetes()!.amount * emergencyCetes()!.rate / 100 | currencyMxn }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
     <div class="investments-list">
-      @for (inv of investmentSvc.investments(); track inv.id) {
+      @for (inv of paginatedInvestments(); track inv.id) {
         @if (editingInvestmentId === inv.id) {
           <div class="investment-edit-form">
             <div class="edit-form-header">
@@ -234,6 +264,23 @@
         }
       }
     </div>
+
+    <!-- Pagination controls -->
+    @if (totalPages() > 1) {
+      <div class="pagination-controls">
+        <button class="pagination-btn" [disabled]="currentPage === 1" (click)="prevPage()">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </button>
+        <div class="pagination-info">
+          <span class="pagination-current">{{ currentPage }}</span>
+          <span class="pagination-separator">/</span>
+          <span class="pagination-total">{{ totalPages() }}</span>
+        </div>
+        <button class="pagination-btn" [disabled]="currentPage === totalPages()" (click)="nextPage()">
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </button>
+      </div>
+    }
 
     @if (investmentSvc.investments().length === 0 && !showInvestmentForm) {
       <p class="empty-msg">No hay inversiones registradas</p>
@@ -326,7 +373,7 @@
           <span class="proj-value">{{ getInvestmentProjection(10) | currencyMxn }}</span>
         </div>
       </div>
-      <p class="proj-note">* Proyecciones basadas en tu retorno promedio de {{ weightedReturn | number:'1.1-1' }}%</p>
+      <p class="proj-note">* Proyecciones basadas en tu retorno promedio de {{ weightedReturn() | number:'1.1-1' }}%</p>
     </div>
   }
 </main>
