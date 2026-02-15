@@ -1,0 +1,81 @@
+<main class="main-content">
+  <div class="hero-card purple">
+    <div class="hero-header">
+      <div class="hero-icon"><ion-icon name="flag-outline"></ion-icon></div>
+      <div>
+        <h3>Plan de Retiro</h3>
+        <p>Planifica tu futuro financiero</p>
+      </div>
+    </div>
+    <div class="hero-stat">
+      <span class="stat-label">Proyección al Retiro</span>
+      <span class="stat-value">{{ retTotalFund | currencyMxn }}</span>
+      <span class="stat-hint">En {{ retYearsToRetirement }} años ({{ retRetirementAge }} años)</span>
+    </div>
+    <div class="hero-grid">
+      <div class="hero-box">
+        <ion-icon name="calendar-outline"></ion-icon>
+        <span class="box-label">Años hasta retiro</span>
+        <span class="box-value">{{ retYearsToRetirement }}</span>
+      </div>
+      <div class="hero-box">
+        <ion-icon name="trending-up-outline"></ion-icon>
+        <span class="box-label">Retorno anual</span>
+        <span class="box-value">{{ retExpectedReturn }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Parámetros de Planificación</h3>
+    <div class="form-grid-2">
+      <div class="form-field">
+        <label>Edad Actual</label>
+        <input type="number" [(ngModel)]="retCurrentAge" placeholder="30"/>
+      </div>
+      <div class="form-field">
+        <label>Edad de Retiro</label>
+        <input type="number" [(ngModel)]="retRetirementAge" placeholder="65"/>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Ahorros Actuales para Retiro</label>
+      <input type="number" [(ngModel)]="retCurrentSavings" placeholder="0.00"/>
+    </div>
+    <div class="form-field">
+      <label>Contribución Mensual</label>
+      <input type="number" [(ngModel)]="retMonthlyContribution" placeholder="0.00"/>
+    </div>
+    <div class="form-field">
+      <label>Retorno Anual Esperado (%)</label>
+      <input type="number" [(ngModel)]="retExpectedReturn" placeholder="7"/>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Análisis de Suficiencia</h3>
+    <div class="analysis-row">
+      <span>Fondo Proyectado</span>
+      <span class="analysis-value">{{ retTotalFund | currencyMxn }}</span>
+    </div>
+    <div class="analysis-row">
+      <span>Fondo Recomendado</span>
+      <span class="analysis-value">{{ retRecommendedFund | currencyMxn }}</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="retFundProgress"></div>
+    </div>
+    <p class="analysis-hint">
+      @if (retTotalFund >= retRecommendedFund) {
+        ✓ Tu plan está en camino a cumplir las recomendaciones
+      } @else {
+        Considera aumentar tu contribución mensual
+      }
+    </p>
+    <div class="ret-income-box">
+      <span class="income-label">Ingreso Mensual Estimado</span>
+      <span class="income-value">{{ retMonthlyIncome | currencyMxn }}</span>
+      <span class="income-hint">Usando la regla del 4% de retiro anual</span>
+    </div>
+  </div>
+</main>

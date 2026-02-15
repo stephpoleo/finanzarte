@@ -222,7 +222,8 @@ CREATE TABLE IF NOT EXISTS investments (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   type TEXT CHECK (type IN ('stocks', 'bonds', 'etf', 'crypto', 'real-estate', 'mutual-funds', 'cetes', 'afore', 'other')) NOT NULL,
-  amount DECIMAL(12,2) NOT NULL,
+  initial_amount DECIMAL(12,2) NOT NULL, -- What was originally invested
+  current_amount DECIMAL(12,2) NOT NULL, -- Current value of the investment
   expected_return DECIMAL(5,2) DEFAULT 8.0, -- Annual expected return %
   purchase_date DATE,
   notes TEXT,
@@ -253,6 +254,14 @@ CREATE POLICY "Users can delete own investments" ON investments
 -- Index for faster queries
 CREATE INDEX IF NOT EXISTS idx_investments_user_id ON investments(user_id);
 CREATE INDEX IF NOT EXISTS idx_investments_type ON investments(type);
+
+-- MIGRATION: If you have an existing database with the old 'amount' column:
+-- ALTER TABLE investments ADD COLUMN initial_amount DECIMAL(12,2);
+-- ALTER TABLE investments ADD COLUMN current_amount DECIMAL(12,2);
+-- UPDATE investments SET initial_amount = amount, current_amount = amount;
+-- ALTER TABLE investments DROP COLUMN amount;
+-- ALTER TABLE investments ALTER COLUMN initial_amount SET NOT NULL;
+-- ALTER TABLE investments ALTER COLUMN current_amount SET NOT NULL;
 
 -- =====================================================
 -- USER SETTINGS TABLE
@@ -429,6 +438,86 @@ DROP TRIGGER IF EXISTS on_deposit_change ON savings_deposits;
 CREATE TRIGGER on_deposit_change
   AFTER INSERT OR DELETE ON savings_deposits
   FOR EACH ROW EXECUTE FUNCTION update_goal_on_deposit();
+
+-- =====================================================
+-- FINANCIAL RATES TABLES (READ-ONLY for app users)
+-- These tables are populated by an external API
+-- =====================================================
+
+-- CETES Rates
+-- Table should already exist from external API, just add RLS
+ALTER TABLE IF EXISTS cetes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow authenticated users to read cetes" ON cetes;
+CREATE POLICY "Allow authenticated users to read cetes" ON cetes
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- Index for efficient queries
+CREATE INDEX IF NOT EXISTS idx_cetes_plazo_fecha ON cetes(plazo, fecha_subasta DESC);
+
+-- SOFIPOs Institutions
+ALTER TABLE IF EXISTS sofipos ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow authenticated users to read sofipos" ON sofipos;
+CREATE POLICY "Allow authenticated users to read sofipos" ON sofipos
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- Index for sorting by rate
+CREATE INDEX IF NOT EXISTS idx_sofipos_gat ON sofipos(gat_nominal DESC);
+
+-- SOFIPO Rates by Term
+ALTER TABLE IF EXISTS sofipo_plazos ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow authenticated users to read sofipo_plazos" ON sofipo_plazos;
+CREATE POLICY "Allow authenticated users to read sofipo_plazos" ON sofipo_plazos
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- Index for efficient joins
+CREATE INDEX IF NOT EXISTS idx_sofipo_plazos_sofipo_id ON sofipo_plazos(sofipo_id);
+
+-- Fondos y ETFs
+ALTER TABLE IF EXISTS fondos_etfs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow authenticated users to read fondos_etfs" ON fondos_etfs;
+CREATE POLICY "Allow authenticated users to read fondos_etfs" ON fondos_etfs
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- Index for ticker lookup
+CREATE INDEX IF NOT EXISTS idx_fondos_etfs_ticker ON fondos_etfs(ticker);
+CREATE INDEX IF NOT EXISTS idx_fondos_etfs_tipo ON fondos_etfs(tipo);
+
+-- =====================================================
+-- FINANCIAL RATES VIEWS
+-- =====================================================
+
+-- Latest CETES rates by term
+CREATE OR REPLACE VIEW latest_cetes_rates AS
+SELECT DISTINCT ON (plazo)
+  id, plazo, tasa, fecha_subasta, fecha_vencimiento
+FROM cetes
+ORDER BY plazo, fecha_subasta DESC;
+
+-- SOFIPOs with their best available rate
+CREATE OR REPLACE VIEW sofipos_with_best_rate AS
+SELECT
+  s.id,
+  s.nombre,
+  s.gat_nominal,
+  s.gat_real,
+  s.fecha_actualizacion,
+  COALESCE(MAX(sp.tasa), s.gat_nominal) as best_rate
+FROM sofipos s
+LEFT JOIN sofipo_plazos sp ON s.id = sp.sofipo_id
+GROUP BY s.id, s.nombre, s.gat_nominal, s.gat_real, s.fecha_actualizacion
+ORDER BY best_rate DESC;
 
 -- =====================================================
 -- MIGRATION HELPERS (run only if updating existing DB)

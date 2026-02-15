@@ -1,9 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { AuthService } from './auth.service';
+import { EnvironmentService } from './environment.service';
 import { SavingsGoal, SavingsDeposit } from '../../models';
-import { environment } from '../../../environments/environment';
-import { MOCK_GOALS, MOCK_DEPOSITS, MOCK_USER_ID } from '../../data/mock-data';
+import { MOCK_GOALS, MOCK_DEPOSITS } from '../../data/mock-data';
 
 @Injectable({
   providedIn: 'root'
@@ -29,30 +28,30 @@ export class SavingsGoalService {
 
   constructor(
     private supabase: SupabaseService,
-    private auth: AuthService
+    private env: EnvironmentService
   ) {
-    // In dev mode, load mock data immediately
-    if ((environment as any).devMode) {
+    if (this.env.isDevMode) {
       this.goalsData.set([...MOCK_GOALS]);
       this.depositsData.set([...MOCK_DEPOSITS]);
     }
   }
 
   async loadGoals(): Promise<SavingsGoal[]> {
-    // Dev mode: return mock goals
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       return this.goalsData();
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) return [];
-
-    if (!this.supabase.isConfigured) return [];
+    if (access.mode === 'error') {
+      console.error('Error loading savings goals:', access.error.message);
+      return [];
+    }
 
     const { data, error } = await this.supabase.client
       .from('savings_goals')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', access.userId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -65,12 +64,15 @@ export class SavingsGoalService {
   }
 
   async getGoal(id: string): Promise<SavingsGoal | null> {
-    // Dev mode: find in mock data
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       return this.goalsData().find(g => g.id === id) || null;
     }
 
-    if (!this.supabase.isConfigured) return null;
+    if (access.mode === 'error') {
+      return null;
+    }
 
     const { data, error } = await this.supabase.client
       .from('savings_goals')
@@ -94,12 +96,13 @@ export class SavingsGoalService {
     color?: string;
     icon?: string;
   }): Promise<{ data: SavingsGoal | null; error: Error | null }> {
+    const access = this.env.checkAccess();
     const now = new Date().toISOString();
-    // Dev mode: add to local mock data
-    if ((environment as any).devMode) {
+
+    if (access.mode === 'dev') {
       const newGoal: SavingsGoal = {
         id: Date.now().toString(),
-        user_id: MOCK_USER_ID,
+        user_id: access.userId,
         name: goal.name,
         target_amount: goal.target_amount,
         current_amount: 0,
@@ -114,19 +117,14 @@ export class SavingsGoalService {
       return { data: newGoal, error: null };
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) {
-      return { data: null, error: new Error('User not authenticated') };
-    }
-
-    if (!this.supabase.isConfigured) {
-      return { data: null, error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { data: null, error: access.error };
     }
 
     const { data, error } = await this.supabase.client
       .from('savings_goals')
       .insert({
-        user_id: userId,
+        user_id: access.userId,
         name: goal.name,
         target_amount: goal.target_amount,
         current_amount: 0,
@@ -152,16 +150,17 @@ export class SavingsGoalService {
     id: string,
     updates: Partial<Omit<SavingsGoal, 'id' | 'user_id' | 'created_at'>>
   ): Promise<{ error: Error | null }> {
-    // Dev mode: update local mock data
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       this.goalsData.update(goals =>
         goals.map(g => g.id === id ? { ...g, ...updates } : g)
       );
       return { error: null };
     }
 
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
@@ -179,15 +178,16 @@ export class SavingsGoalService {
   }
 
   async deleteGoal(id: string): Promise<{ error: Error | null }> {
-    // Dev mode: delete from local mock data
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       this.goalsData.update(goals => goals.filter(g => g.id !== id));
       this.depositsData.update(deposits => deposits.filter(d => d.goal_id !== id));
       return { error: null };
     }
 
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
@@ -204,12 +204,15 @@ export class SavingsGoalService {
 
   // Deposits
   async loadDeposits(goalId: string): Promise<SavingsDeposit[]> {
-    // Dev mode: filter mock deposits
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       return this.depositsData().filter(d => d.goal_id === goalId);
     }
 
-    if (!this.supabase.isConfigured) return [];
+    if (access.mode === 'error') {
+      return [];
+    }
 
     const { data, error } = await this.supabase.client
       .from('savings_deposits')
@@ -222,7 +225,6 @@ export class SavingsGoalService {
       return [];
     }
 
-    // Update deposits for this goal
     const otherDeposits = this.depositsData().filter(d => d.goal_id !== goalId);
     this.depositsData.set([...otherDeposits, ...(data || [])]);
     return data || [];
@@ -234,14 +236,15 @@ export class SavingsGoalService {
     note?: string | null;
     deposit_date?: string;
   }): Promise<{ data: SavingsDeposit | null; error: Error | null }> {
+    const access = this.env.checkAccess();
     const now = new Date().toISOString();
     const today = now.split('T')[0];
-    // Dev mode: add to local mock data
-    if ((environment as any).devMode) {
+
+    if (access.mode === 'dev') {
       const newDeposit: SavingsDeposit = {
         id: Date.now().toString(),
         goal_id: deposit.goal_id,
-        user_id: MOCK_USER_ID,
+        user_id: access.userId,
         amount: deposit.amount,
         note: deposit.note || null,
         deposit_date: deposit.deposit_date || today,
@@ -261,21 +264,15 @@ export class SavingsGoalService {
       return { data: newDeposit, error: null };
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) {
-      return { data: null, error: new Error('User not authenticated') };
+    if (access.mode === 'error') {
+      return { data: null, error: access.error };
     }
 
-    if (!this.supabase.isConfigured) {
-      return { data: null, error: new Error('Supabase not configured') };
-    }
-
-    // Start a transaction-like operation
     const { data: depositData, error: depositError } = await this.supabase.client
       .from('savings_deposits')
       .insert({
         goal_id: deposit.goal_id,
-        user_id: userId,
+        user_id: access.userId,
         amount: deposit.amount,
         note: deposit.note || null,
         deposit_date: deposit.deposit_date || today
@@ -300,8 +297,9 @@ export class SavingsGoalService {
   }
 
   async deleteDeposit(deposit: SavingsDeposit): Promise<{ error: Error | null }> {
-    // Dev mode: delete from local mock data
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       this.depositsData.update(deposits =>
         deposits.filter(d => d.id !== deposit.id)
       );
@@ -318,8 +316,8 @@ export class SavingsGoalService {
       return { error: null };
     }
 
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
@@ -348,7 +346,7 @@ export class SavingsGoalService {
   }
 
   clearData(): void {
-    if ((environment as any).devMode) {
+    if (this.env.isDevMode) {
       this.goalsData.set([...MOCK_GOALS]);
       this.depositsData.set([...MOCK_DEPOSITS]);
     } else {

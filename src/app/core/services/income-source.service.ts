@@ -1,9 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { AuthService } from './auth.service';
+import { EnvironmentService } from './environment.service';
 import { IncomeSource, IncomeFrequency } from '../../models';
-import { environment } from '../../../environments/environment';
-import { MOCK_INCOME_SOURCES, MOCK_USER_ID } from '../../data/mock-data';
+import { MOCK_INCOME_SOURCES } from '../../data/mock-data';
 
 @Injectable({
   providedIn: 'root'
@@ -19,29 +18,29 @@ export class IncomeSourceService {
 
   constructor(
     private supabase: SupabaseService,
-    private auth: AuthService
+    private env: EnvironmentService
   ) {
-    // In dev mode, load mock data immediately
-    if ((environment as any).devMode) {
+    if (this.env.isDevMode) {
       this.incomeSourcesData.set([...MOCK_INCOME_SOURCES]);
     }
   }
 
   async loadIncomeSources(): Promise<IncomeSource[]> {
-    // Dev mode: return mock data
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       return this.incomeSourcesData();
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) return [];
-
-    if (!this.supabase.isConfigured) return [];
+    if (access.mode === 'error') {
+      console.error('Error loading income sources:', access.error.message);
+      return [];
+    }
 
     const { data, error } = await this.supabase.client
       .from('income_sources')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', access.userId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -60,12 +59,13 @@ export class IncomeSourceService {
     gross_amount?: number;
     frequency?: IncomeFrequency;
   }): Promise<{ data: IncomeSource | null; error: Error | null }> {
+    const access = this.env.checkAccess();
     const now = new Date().toISOString();
-    // Dev mode: add to local mock data
-    if ((environment as any).devMode) {
+
+    if (access.mode === 'dev') {
       const newSource: IncomeSource = {
         id: Date.now().toString(),
-        user_id: MOCK_USER_ID,
+        user_id: access.userId,
         name: incomeSource.name,
         amount: incomeSource.amount,
         is_gross: incomeSource.is_gross || false,
@@ -78,19 +78,14 @@ export class IncomeSourceService {
       return { data: newSource, error: null };
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) {
-      return { data: null, error: new Error('User not authenticated') };
-    }
-
-    if (!this.supabase.isConfigured) {
-      return { data: null, error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { data: null, error: access.error };
     }
 
     const { data, error } = await this.supabase.client
       .from('income_sources')
       .insert({
-        user_id: userId,
+        user_id: access.userId,
         name: incomeSource.name,
         amount: incomeSource.amount,
         is_gross: incomeSource.is_gross || false,
@@ -114,16 +109,17 @@ export class IncomeSourceService {
     id: string,
     updates: Partial<Omit<IncomeSource, 'id' | 'user_id' | 'created_at'>>
   ): Promise<{ error: Error | null }> {
-    // Dev mode: update local mock data
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       this.incomeSourcesData.update(sources =>
         sources.map(s => s.id === id ? { ...s, ...updates } : s)
       );
       return { error: null };
     }
 
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
@@ -141,16 +137,17 @@ export class IncomeSourceService {
   }
 
   async deleteIncomeSource(id: string): Promise<{ error: Error | null }> {
-    // Dev mode: delete from local mock data
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       this.incomeSourcesData.update(sources =>
         sources.filter(s => s.id !== id)
       );
       return { error: null };
     }
 
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
@@ -168,7 +165,7 @@ export class IncomeSourceService {
   }
 
   clearIncomeSources(): void {
-    if ((environment as any).devMode) {
+    if (this.env.isDevMode) {
       this.incomeSourcesData.set([...MOCK_INCOME_SOURCES]);
     } else {
       this.incomeSourcesData.set([]);

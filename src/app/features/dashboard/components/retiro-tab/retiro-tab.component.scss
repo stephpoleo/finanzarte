@@ -1,0 +1,244 @@
+/* Main Content */
+.main-content {
+  padding: 16px;
+  padding-bottom: 80px;
+}
+
+/* Hero Card */
+.hero-card {
+  border-radius: 20px;
+  padding: 20px;
+  color: white;
+  margin-bottom: 16px;
+
+  &.purple {
+    background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+  }
+}
+
+.hero-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  .hero-icon {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    ion-icon {
+      font-size: 24px;
+    }
+  }
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  p {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    margin: 2px 0 0;
+  }
+}
+
+.hero-stat {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+
+  .stat-label {
+    display: block;
+    font-size: 0.75rem;
+    opacity: 0.8;
+  }
+
+  .stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 4px 0;
+  }
+
+  .stat-hint {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.875rem;
+    opacity: 0.9;
+
+    ion-icon {
+      font-size: 16px;
+    }
+  }
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.hero-box {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px;
+
+  ion-icon {
+    font-size: 16px;
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+
+  .box-label {
+    display: block;
+    font-size: 0.7rem;
+    opacity: 0.8;
+  }
+
+  .box-value {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+}
+
+/* Card Base */
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 16px;
+}
+
+/* Form Fields */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form-field {
+  margin-bottom: 16px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+  }
+
+  input {
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 1rem;
+    color: #1f2937;
+
+    &:focus {
+      outline: none;
+      border-color: #8b5cf6;
+      background: white;
+    }
+
+    /* Hide number spinners */
+    -moz-appearance: textfield;
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      appearance: none;
+    }
+  }
+}
+
+/* Analysis Section */
+.analysis-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.analysis-value {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.analysis-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 8px 0 16px;
+}
+
+/* Progress Bar */
+.progress-bar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Retirement Income Box */
+.ret-income-box {
+  background: #eff6ff;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.income-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #1e3a8a;
+  margin-bottom: 4px;
+}
+
+.income-value {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e3a8a;
+}
+
+.income-hint {
+  display: block;
+  font-size: 0.7rem;
+  color: #3b82f6;
+  margin-top: 4px;
+}

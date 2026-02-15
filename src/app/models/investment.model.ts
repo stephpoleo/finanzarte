@@ -16,7 +16,8 @@ export interface Investment {
   user_id: string;
   name: string;
   type: InvestmentType;
-  amount: number;
+  initial_amount: number; // What was originally invested (punto de entrada)
+  current_amount: number; // Current value of the investment
   expected_return: number; // Annual expected return percentage
   purchase_date: string | null;
   notes: string | null;

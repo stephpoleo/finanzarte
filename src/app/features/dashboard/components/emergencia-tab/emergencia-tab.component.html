@@ -1,0 +1,328 @@
+<main class="main-content">
+  <!-- Sub-tabs -->
+  <div class="sub-tabs">
+    <button class="sub-tab" [class.active]="emergencySubTab === 'savings'" (click)="emergencySubTab = 'savings'">
+      <ion-icon name="shield-checkmark-outline"></ion-icon> Ahorros
+    </button>
+    <button class="sub-tab" [class.active]="emergencySubTab === 'planb'" (click)="emergencySubTab = 'planb'">
+      <ion-icon name="alert-outline"></ion-icon> Plan B
+    </button>
+  </div>
+
+  @if (emergencySubTab === 'savings') {
+    <!-- Emergency Fund Hero Card -->
+    <div class="emergency-card">
+      <div class="emergency-header">
+        <div class="emergency-icon"><ion-icon name="shield-checkmark-outline"></ion-icon></div>
+        <div>
+          <h3>Fondo de Emergencia</h3>
+          <p>Tu colchón financiero para imprevistos</p>
+        </div>
+      </div>
+      <div class="emergency-stats">
+        <span class="stat-label">Ahorro Actual</span>
+        <div class="stat-input-row">
+          <span class="currency-prefix">$</span>
+          <input type="number" class="stat-input" [(ngModel)]="emergencyCurrentSavings" placeholder="0"/>
+        </div>
+        @if (getCurrentMilestone()) {
+          <span class="stat-hint">
+            <ion-icon name="checkmark-circle"></ion-icon>
+            {{ getCurrentMilestone()?.emoji }} {{ getCurrentMilestone()?.label }} alcanzado
+          </span>
+        }
+      </div>
+      <div class="emergency-rec">
+        <span class="rec-label">Recomendación para ahorro</span>
+        <span class="rec-pct">{{ emergencyRecommendedPct }}% de tu disponible</span>
+        <span class="rec-amount">{{ emergencyRecommendedAmount | currencyMxn }}/mes</span>
+      </div>
+    </div>
+
+    <!-- Calculation Toggle -->
+    <div class="calc-toggle">
+      <span class="toggle-label">Calcular con:</span>
+      <div class="toggle-buttons">
+        <button class="toggle-btn" [class.active]="!emergencyCalcByIncome" (click)="emergencyCalcByIncome = false">Gastos</button>
+        <button class="toggle-btn" [class.active]="emergencyCalcByIncome" (click)="emergencyCalcByIncome = true">Ingresos</button>
+      </div>
+    </div>
+
+    <!-- Milestones Card -->
+    <div class="card">
+      <h3 class="card-title">Metas de Emergencia</h3>
+      <p class="card-subtitle">Basado en tus {{ emergencyBaseLabel }} mensuales de {{ emergencyBase | currencyMxn }}</p>
+      <div class="milestones">
+        @for (milestone of emergencyMilestones; track milestone.label) {
+          <div class="milestone" [class.done]="isMilestoneDone(milestone)" [class.current]="getNextMilestone()?.label === milestone.label">
+            <div class="milestone-hdr">
+              <div class="milestone-left">
+                @if (isMilestoneDone(milestone)) {
+                  <ion-icon name="checkmark-circle" class="check"></ion-icon>
+                } @else {
+                  <ion-icon name="ellipse-outline" class="circle"></ion-icon>
+                }
+                <div>
+                  <span class="milestone-label">{{ milestone.emoji }} {{ milestone.label }}</span>
+                  <span class="milestone-target">Meta: {{ getMilestoneTarget(milestone) | currencyMxn }}</span>
+                </div>
+              </div>
+              <span class="milestone-badge">{{ getMilestoneProgress(milestone) | number:'1.0-0' }}%</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="getMilestoneProgress(milestone)"></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Where to Save Allocation Card -->
+    <div class="card allocation-card">
+      <div class="card-header-row">
+        <div class="card-header-left">
+          <ion-icon name="shield-outline" class="icon-cyan"></ion-icon>
+          <h3 class="card-title">Dónde Guardar tu Fondo</h3>
+        </div>
+      </div>
+
+      <div class="alloc-row">
+        <div class="alloc-left">
+          <span class="alloc-icon">🏦</span>
+          <div class="alloc-info">
+            <span class="alloc-label">SOFIPOs</span>
+            <span class="alloc-value">{{ sofipoAmount | currencyMxn }}</span>
+          </div>
+        </div>
+        <div class="alloc-right">
+          <div class="alloc-progress">
+            <div class="alloc-bar">
+              <div class="alloc-fill sofipo" [style.width.%]="sofipoPercentage"></div>
+            </div>
+            <span class="alloc-pct">{{ sofipoPercentage | number:'1.0-0' }}%</span>
+          </div>
+          <span class="alloc-limit">Exento de ISR hasta {{ taxExemptLimit | currencyMxn }}</span>
+        </div>
+      </div>
+
+      @if (cetesAmount > 0) {
+        <div class="alloc-row cetes">
+          <div class="alloc-left">
+            <span class="alloc-icon">📊</span>
+            <div class="alloc-info">
+              <span class="alloc-label">CETES</span>
+              <span class="alloc-value">{{ cetesAmount | currencyMxn }}</span>
+            </div>
+          </div>
+          <div class="alloc-right">
+            <div class="alloc-progress">
+              <div class="alloc-bar">
+                <div class="alloc-fill cetes" [style.width.%]="cetesPercentage"></div>
+              </div>
+              <span class="alloc-pct">{{ cetesPercentage | number:'1.0-0' }}%</span>
+            </div>
+            <span class="alloc-note">Excedente del límite SOFIPO</span>
+          </div>
+        </div>
+      }
+
+      <p class="alloc-hint">
+        Maximiza tu rendimiento usando primero las SOFIPOs (exentas de ISR hasta 5 UMAs), y después CETES para el excedente.
+      </p>
+    </div>
+
+    <!-- SOFIPOs Carousel -->
+    <div class="card sofipos-card">
+      <h3 class="card-title">SOFIPOs Populares</h3>
+      @if (ratesLoading) {
+        <div class="loading-indicator">Cargando tasas...</div>
+      } @else {
+        <div class="sofipos-carousel">
+          @for (sofipo of sofipos; track sofipo.id) {
+            <div class="sofipo-card" [class.best]="isBestSofipo(sofipo)">
+              @if (isBestSofipo(sofipo)) {
+                <span class="best-badge">Mejor tasa</span>
+              }
+              <span class="sofipo-name">{{ sofipo.nombre }}</span>
+              <div class="sofipo-rate">
+                <span class="rate-number">{{ sofipo.flexibleRate | number:'1.1-1' }}%</span>
+                <span class="rate-period">GAT Nominal</span>
+              </div>
+              <span class="sofipo-term">Flexible</span>
+            </div>
+          }
+        </div>
+        <div class="rates-footer">
+          <span class="rates-updated">
+            Tasas actualizadas: {{ ratesService.metadata().lastFetched | date:'shortDate' }}
+          </span>
+        </div>
+      }
+      <div class="instrument-footer">
+        <span class="ipab-badge">
+          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          Protegido por IPAB
+        </span>
+      </div>
+    </div>
+
+    <!-- CETES Info -->
+    <div class="card">
+      <h3 class="card-title">CETES (Certificados de la Tesorería)</h3>
+      <div class="cetes-info">
+        <div class="cetes-rate">
+          <span class="rate-value">{{ cetesRate | number:'1.2-2' }}%</span>
+          <span class="rate-label">Tasa anual actual (28 días)</span>
+        </div>
+        <div class="cetes-details">
+          <div class="detail-item">
+            <ion-icon name="checkmark-circle"></ion-icon>
+            <span>Respaldados por el gobierno federal</span>
+          </div>
+          <div class="detail-item">
+            <ion-icon name="checkmark-circle"></ion-icon>
+            <span>Inversión desde $100 MXN</span>
+          </div>
+          <div class="detail-item">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            <span>Rendimientos sujetos a ISR</span>
+          </div>
+        </div>
+        <div class="cetes-footer">
+          <a href="https://cetesdirecto.com" target="_blank" rel="noopener noreferrer" class="cetes-link">
+            <ion-icon name="open-outline"></ion-icon>
+            Abrir cuenta en CetesDirecto
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tips (Collapsible) -->
+    <div class="card tips collapsible" [class.expanded]="emergencyTipsExpanded">
+      <div class="tips-header" (click)="toggleEmergencyTips()">
+        <h3>💡 Tips para tu Fondo de Emergencia</h3>
+        <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+      </div>
+      @if (emergencyTipsExpanded) {
+        <ul>
+          <li><strong>Meta mínima:</strong> 3-6 meses de gastos básicos</li>
+          <li><strong>Acceso rápido:</strong> Usa cuentas de ahorro o CETES a 28 días</li>
+          <li><strong>Separado:</strong> Mantén este dinero en una cuenta diferente</li>
+          <li><strong>No inviertas:</strong> Este fondo es para emergencias, no para rendimientos</li>
+          <li><strong>Actualiza:</strong> Revisa tu meta cuando cambien tus gastos</li>
+        </ul>
+      }
+    </div>
+  }
+
+  @if (emergencySubTab === 'planb') {
+    <!-- Plan B Hero Card -->
+    <div class="emergency-card planb">
+      <div class="emergency-header">
+        <div class="emergency-icon"><ion-icon name="alert-outline"></ion-icon></div>
+        <div>
+          <h3>Plan B de Emergencia</h3>
+          <p>Gastos que puedes cancelar en una crisis</p>
+        </div>
+      </div>
+      <div class="emergency-stats">
+        <span class="stat-label">Ahorro Mensual Potencial</span>
+        <span class="stat-value">{{ planBTotalSavings | currencyMxn }}</span>
+        <span class="stat-hint">
+          <ion-icon name="information-circle-outline"></ion-icon>
+          Extiende tu cobertura {{ planBAdditionalMonths | number:'1.1-1' }} meses adicionales
+        </span>
+      </div>
+      <div class="planb-stats-grid">
+        <div class="planb-stat">
+          <span class="stat-label">Meses base</span>
+          <span class="stat-value">{{ emergencyMonthsCovered | number:'1.1-1' }}</span>
+        </div>
+        <div class="planb-stat">
+          <span class="stat-label">Con Plan B</span>
+          <span class="stat-value highlight">{{ planBTotalMonthsCovered | number:'1.1-1' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cancellable Expenses Card -->
+    <div class="card">
+      <div class="card-header-row">
+        <h3 class="card-title">Gastos Cancelables</h3>
+        <button class="add-btn" (click)="toggleCancellableForm()">
+          <ion-icon name="add-outline"></ion-icon>
+        </button>
+      </div>
+
+      @if (showCancellableForm) {
+        <div class="cancellable-form">
+          <div class="form-field">
+            <label>Nombre del Gasto</label>
+            <input type="text" [(ngModel)]="newCancellable.name" placeholder="Ej: Netflix, Gimnasio"/>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label>Monto Mensual</label>
+              <input type="number" [(ngModel)]="newCancellable.monthly_cost" placeholder="0.00"/>
+            </div>
+            <div class="form-field">
+              <label>Categoría</label>
+              <select [(ngModel)]="newCancellable.category">
+                @for (cat of cancellableCategories; track cat.value) {
+                  <option [value]="cat.value">{{ cat.icon }} {{ cat.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-field">
+            <label>Prioridad de Cancelación</label>
+            <select [(ngModel)]="newCancellable.priority">
+              @for (pri of cancellablePriorities; track pri.value) {
+                <option [value]="pri.value">{{ pri.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-btns">
+            <button class="btn-primary" (click)="addCancellableExpense()">Agregar</button>
+            <button class="btn-secondary" (click)="toggleCancellableForm()">Cancelar</button>
+          </div>
+        </div>
+      }
+
+      @if (cancellableExpenses.expenses().length > 0) {
+        <div class="cancellable-list">
+          @for (expense of cancellableExpenses.expenses(); track expense.id) {
+            <div class="cancellable-item">
+              <div class="cancellable-left">
+                <span class="cancellable-icon">{{ getCategoryIcon(expense.category) }}</span>
+                <div class="cancellable-info">
+                  <span class="cancellable-name">{{ expense.name }}</span>
+                  <span class="cancellable-meta">{{ getCategoryLabel(expense.category) }} · {{ getPriorityLabel(expense.priority) }}</span>
+                </div>
+              </div>
+              <div class="cancellable-right">
+                <span class="cancellable-amount">{{ expense.monthly_cost | currencyMxn }}/mes</span>
+                <button class="cancellable-delete" (click)="deleteCancellableExpense(expense.id)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      } @else if (!showCancellableForm) {
+        <p class="empty-msg">No hay gastos cancelables registrados</p>
+      }
+    </div>
+
+    <!-- Plan B Tips -->
+    <div class="card tips">
+      <h3>💡 Cómo usar tu Plan B</h3>
+      <ul>
+        <li><strong>Antes de la crisis:</strong> Identifica qué gastos son realmente esenciales</li>
+        <li><strong>Prioriza:</strong> Los gastos "inmediatos" son los primeros en irse</li>
+        <li><strong>Renegocia:</strong> Antes de cancelar, intenta renegociar precios</li>
+        <li><strong>Revisa renovaciones:</strong> Atención a las fechas de renovación automática</li>
+      </ul>
+    </div>
+  }
+</main>

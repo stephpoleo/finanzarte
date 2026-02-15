@@ -1,8 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { AuthService } from './auth.service';
+import { EnvironmentService } from './environment.service';
 import { UserSettings, DEFAULT_USER_SETTINGS, FINANCIAL_LEVELS, EMERGENCY_MILESTONES } from '../../models';
-import { environment } from '../../../environments/environment';
 import { MOCK_SETTINGS } from '../../data/mock-data';
 
 @Injectable({
@@ -137,35 +136,35 @@ export class UserSettingsService {
 
   constructor(
     private supabase: SupabaseService,
-    private auth: AuthService
+    private env: EnvironmentService
   ) {
-    // In dev mode, load mock settings immediately
-    if ((environment as any).devMode) {
+    if (this.env.isDevMode) {
       this.settingsData.set({ ...MOCK_SETTINGS });
     }
   }
 
   async loadSettings(): Promise<UserSettings | null> {
-    // Dev mode: return mock settings
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       return this.settingsData();
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) return null;
-
-    if (!this.supabase.isConfigured) return null;
+    if (access.mode === 'error') {
+      console.error('Error loading user settings:', access.error.message);
+      return null;
+    }
 
     const { data, error } = await this.supabase.client
       .from('user_settings')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', access.userId)
       .single();
 
     if (error) {
       // If no settings exist, create default ones
       if (error.code === 'PGRST116') {
-        return this.createDefaultSettings();
+        return this.createDefaultSettings(access.userId);
       }
       console.error('Error loading user settings:', error);
       return null;
@@ -175,9 +174,8 @@ export class UserSettingsService {
     return data;
   }
 
-  private async createDefaultSettings(): Promise<UserSettings | null> {
-    const userId = this.auth.user()?.id;
-    if (!userId || !this.supabase.isConfigured) return null;
+  private async createDefaultSettings(userId: string): Promise<UserSettings | null> {
+    if (!this.env.canUseSupabase) return null;
 
     const { data, error } = await this.supabase.client
       .from('user_settings')
@@ -200,8 +198,9 @@ export class UserSettingsService {
   async updateSettings(
     updates: Partial<Omit<UserSettings, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
   ): Promise<{ error: Error | null }> {
-    // Dev mode: update local mock data
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       const current = this.settingsData();
       if (current) {
         this.settingsData.set({
@@ -213,19 +212,14 @@ export class UserSettingsService {
       return { error: null };
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) {
-      return { error: new Error('User not authenticated') };
-    }
-
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
       .from('user_settings')
       .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('user_id', userId);
+      .eq('user_id', access.userId);
 
     if (!error) {
       const current = this.settingsData();
@@ -310,7 +304,7 @@ export class UserSettingsService {
   }
 
   clearSettings(): void {
-    if ((environment as any).devMode) {
+    if (this.env.isDevMode) {
       this.settingsData.set({ ...MOCK_SETTINGS });
     } else {
       this.settingsData.set(null);

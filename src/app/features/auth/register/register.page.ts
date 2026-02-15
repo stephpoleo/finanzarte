@@ -28,7 +28,6 @@ import {
   personOutline,
   calendarOutline,
   arrowForward,
-  walletOutline,
   arrowBack,
 } from 'ionicons/icons';
 import { AuthService } from '../../../core/services/auth.service';
@@ -65,7 +64,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <!-- Logo Section -->
           <div class="logo-section">
             <div class="logo-box">
-              <ion-icon name="wallet-outline"></ion-icon>
+              <img src="assets/images/finanzarte_logo.jpeg" alt="Finanzarte" class="logo-img" />
             </div>
             <h1 class="app-title">Finanzarte</h1>
             <p class="app-subtitle">Crea tu cuenta</p>
@@ -257,9 +256,11 @@ import { AuthService } from '../../../core/services/auth.service';
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
       }
 
-      .logo-box ion-icon {
-        font-size: 36px;
-        color: #4f6df5;
+      .logo-box .logo-img {
+        width: 54px;
+        height: 54px;
+        object-fit: contain;
+        border-radius: 8px;
       }
 
       .app-title {
@@ -415,8 +416,9 @@ import { AuthService } from '../../../core/services/auth.service';
           border-radius: 14px;
         }
 
-        .logo-box ion-icon {
-          font-size: 28px;
+        .logo-box .logo-img {
+          width: 42px;
+          height: 42px;
         }
 
         .app-title {
@@ -457,8 +459,9 @@ import { AuthService } from '../../../core/services/auth.service';
           height: 52px;
         }
 
-        .logo-box ion-icon {
-          font-size: 26px;
+        .logo-box .logo-img {
+          width: 38px;
+          height: 38px;
         }
 
         .app-title {
@@ -498,7 +501,6 @@ export class RegisterPage {
       personOutline,
       calendarOutline,
       arrowForward,
-      walletOutline,
       arrowBack,
     });
 

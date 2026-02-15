@@ -1,0 +1,332 @@
+<main class="main-content">
+  <div class="hero-card blue">
+    <div class="hero-header">
+      <div class="hero-icon"><ion-icon name="trending-up-outline"></ion-icon></div>
+      <div>
+        <h3>Inversiones</h3>
+        <p>Haz crecer tu patrimonio</p>
+      </div>
+    </div>
+    <div class="hero-grid">
+      <div class="hero-box large">
+        <ion-icon name="cash-outline"></ion-icon>
+        <span class="box-label">Total Invertido</span>
+        <span class="box-value big">{{ totalInvested | currencyMxn }}</span>
+      </div>
+      <div class="hero-box large">
+        <ion-icon name="pie-chart-outline"></ion-icon>
+        <span class="box-label">Retorno Promedio</span>
+        <span class="box-value big">{{ weightedReturn | number:'1.1-1' }}%</span>
+      </div>
+    </div>
+    <div class="hero-box full">
+      <span class="box-label">Retorno Anual Proyectado</span>
+      <span class="box-value">{{ projectedAnnualReturn | currencyMxn }}</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header-row">
+      <h3 class="card-title">Tu Portafolio</h3>
+      <button class="add-btn" (click)="toggleInvestmentForm()">
+        <ion-icon name="add-outline"></ion-icon>
+      </button>
+    </div>
+
+    @if (showInvestmentForm) {
+      <div class="investment-form">
+        <div class="form-field">
+          <label>Nombre de la Inversión</label>
+          <input type="text"
+                 [(ngModel)]="newInvestment.name"
+                 (ngModelChange)="onInvestmentNameChange($event)"
+                 placeholder="Ej: VOO, S&P 500 ETF, BTC"/>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Tipo</label>
+            <select [(ngModel)]="newInvestment.type" (ngModelChange)="onInvestmentTypeChange($event)">
+              @for (t of investmentTypes; track t.value) {
+                <option [value]="t.value">{{ t.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Retorno Anual Esperado (%)</label>
+            <div class="input-with-suggestion">
+              <input type="number" [(ngModel)]="newInvestment.expected_return" placeholder="8"/>
+              @if (currentRateSuggestion) {
+                <button class="suggest-btn" (click)="applySuggestedRate()" type="button"
+                        title="Aplicar tasa sugerida">
+                  Usar {{ currentRateSuggestion.rate | number:'1.1-1' }}%
+                </button>
+              }
+            </div>
+            @if (currentRateSuggestion) {
+              <span class="rate-hint">
+                💡 {{ currentRateSuggestion.source }}
+              </span>
+            }
+          </div>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Monto Invertido</label>
+            <input type="number" [(ngModel)]="newInvestment.initial_amount" placeholder="0.00"/>
+          </div>
+          <div class="form-field">
+            <label>Valor Actual</label>
+            <input type="number" [(ngModel)]="newInvestment.current_amount" placeholder="0.00"/>
+          </div>
+        </div>
+        @if (showCetesWarning) {
+          <div class="cetes-warning">
+            <ion-icon name="bulb-outline"></ion-icon>
+            <div class="warning-content">
+              <strong>Tip fiscal:</strong> Las SOFIPOs ofrecen tasas similares a CETES
+              ({{ liveSofipoRate | number:'1.1-1' }}% vs {{ liveCetesRate | number:'1.1-1' }}%)
+              pero están exentas de ISR hasta {{ taxExemptLimit | currencyMxn }} (5 UMAs).
+              Tu fondo de emergencia actual es {{ emergencyCurrentSavings | currencyMxn }}.
+              Considera llenar primero tus SOFIPOs.
+            </div>
+          </div>
+        }
+        <div class="form-btns">
+          <button class="btn-primary" (click)="addInvestment()">Agregar Inversión</button>
+          <button class="btn-secondary" (click)="toggleInvestmentForm()">Cancelar</button>
+        </div>
+      </div>
+    }
+
+    @if (investmentSvc.investments().length > 0) {
+      <div class="investment-chart-card">
+        <div class="chart-header">
+          <div class="chart-title-section">
+            <h4 class="chart-title">{{ investmentChartTitles[currentInvestmentChart] }}</h4>
+            <p class="chart-subtitle">{{ investmentChartSubtitles[currentInvestmentChart] }}</p>
+          </div>
+          <div class="chart-nav">
+            <button class="nav-arrow" (click)="prevInvestmentChart()">
+              <ion-icon name="chevron-back-outline"></ion-icon>
+            </button>
+            <div class="dots">
+              @for (i of [0, 1]; track i) {
+                <span class="dot" [class.active]="currentInvestmentChart === i"></span>
+              }
+            </div>
+            <button class="nav-arrow" (click)="nextInvestmentChart()">
+              <ion-icon name="chevron-forward-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="chart-wrapper">
+          <svg class="pie-chart" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#f3f4f6" stroke-width="24"/>
+            @for (seg of getInvestmentChartSegments(); track $index) {
+              <circle cx="100" cy="100" r="70" fill="none" [attr.stroke]="seg.color" stroke-width="24"
+                [attr.stroke-dasharray]="seg.dashArray" [attr.stroke-dashoffset]="seg.offset" transform="rotate(-90 100 100)"/>
+            }
+            @for (sep of getInvestmentChartSeparators(); track $index) {
+              <line [attr.x1]="sep.x1" [attr.y1]="sep.y1" [attr.x2]="sep.x2" [attr.y2]="sep.y2"
+                    stroke="white" stroke-width="4"/>
+            }
+          </svg>
+          <div class="chart-center">
+            <span class="chart-total">{{ totalInvested | currencyMxn }}</span>
+            <span class="chart-lbl">Total</span>
+          </div>
+        </div>
+
+        <div class="chart-legend">
+          @for (item of getInvestmentChartLegend(); track item.label) {
+            <div class="legend-row">
+              @if (item.emoji) {
+                <span class="legend-emoji">{{ item.emoji }}</span>
+              }
+              <span class="legend-dot" [style.background]="item.color"></span>
+              <span class="legend-name">{{ item.label }}</span>
+              <span class="legend-pct">{{ getInvestmentChartPercentage(item.value) | number:'1.1-1' }}%</span>
+              <span class="legend-val">{{ item.value | currencyMxn }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="investments-list">
+      @for (inv of investmentSvc.investments(); track inv.id) {
+        @if (editingInvestmentId === inv.id) {
+          <div class="investment-edit-form">
+            <div class="edit-form-header">
+              <span>Editando inversión</span>
+              <button class="btn-close" (click)="cancelInvestmentEdit()">
+                <ion-icon name="close-outline"></ion-icon>
+              </button>
+            </div>
+            <div class="form-row">
+              <div class="form-field-edit">
+                <label>Nombre</label>
+                <input type="text" [(ngModel)]="editInvestment.name" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field-edit">
+                <label>Tipo</label>
+                <select [(ngModel)]="editInvestment.type">
+                  @for (t of investmentTypes; track t.value) {
+                    <option [value]="t.value">{{ t.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="form-field-edit">
+                <label>Retorno esperado (%)</label>
+                <input type="number" [(ngModel)]="editInvestment.expected_return" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-field-edit">
+                <label>Monto invertido</label>
+                <input type="number" [(ngModel)]="editInvestment.initial_amount" />
+              </div>
+              <div class="form-field-edit">
+                <label>Valor actual</label>
+                <input type="number" [(ngModel)]="editInvestment.current_amount" />
+              </div>
+            </div>
+            <div class="form-btns-inline">
+              <button class="btn-cancel-text" (click)="cancelInvestmentEdit()">Cancelar</button>
+              <button class="btn-save-text" (click)="saveInvestmentEdit()">Guardar</button>
+            </div>
+          </div>
+        } @else {
+          <div class="investment-card">
+            <div class="inv-card-header">
+              <div class="inv-title-row">
+                <span class="inv-risk-badge">{{ isHighRisk(inv.type) ? '🔥' : '🛡️' }}</span>
+                <span class="inv-name">{{ inv.name }}</span>
+              </div>
+              <div class="inv-actions">
+                <button class="inv-btn" (click)="startEditInvestment(inv)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="inv-btn danger" (click)="deleteInvestment(inv.id)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+            <div class="inv-card-type">{{ getInvestmentTypeLabel(inv.type) }} · Retorno esperado: {{ inv.expected_return }}%</div>
+            <div class="inv-card-stats">
+              <div class="inv-stat">
+                <span class="stat-label">Invertido</span>
+                <span class="stat-value">{{ inv.initial_amount | currencyMxn }}</span>
+              </div>
+              <div class="inv-stat">
+                <span class="stat-label">Valor actual</span>
+                <span class="stat-value">{{ inv.current_amount | currencyMxn }}</span>
+              </div>
+              <div class="inv-stat" [class.positive]="inv.current_amount >= inv.initial_amount" [class.negative]="inv.current_amount < inv.initial_amount">
+                <span class="stat-label">Rendimiento</span>
+                <span class="stat-value">{{ inv.current_amount >= inv.initial_amount ? '+' : '' }}{{ inv.current_amount - inv.initial_amount | currencyMxn }} ({{ inv.initial_amount > 0 ? ((inv.current_amount - inv.initial_amount) / inv.initial_amount * 100 | number:'1.1-1') : '0.0' }}%)</span>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    @if (investmentSvc.investments().length === 0 && !showInvestmentForm) {
+      <p class="empty-msg">No hay inversiones registradas</p>
+    }
+  </div>
+
+  <!-- Rule of 110 Card -->
+  <div class="card rule110-card" [class.balanced]="riskAllocationStatus === 'balanced'" [class.too-risky]="riskAllocationStatus === 'too-risky'" [class.too-conservative]="riskAllocationStatus === 'too-conservative'">
+    <div class="rule110-header">
+      <div class="rule110-icon"><ion-icon name="scale-outline"></ion-icon></div>
+      <div>
+        <h3 class="card-title">Regla del 110</h3>
+        <p class="card-subtitle">Balance riesgo vs seguridad según tu edad</p>
+      </div>
+    </div>
+
+    <div class="rule110-formula">
+      <span class="formula-text">110 - {{ retCurrentAge }} años = </span>
+      <span class="formula-result">{{ rule110RecommendedRisk }}% en riesgo</span>
+    </div>
+
+    <div class="allocation-comparison">
+      <div class="alloc-section">
+        <div class="alloc-label">Recomendado para ti</div>
+        <div class="alloc-bars">
+          <div class="alloc-bar-container">
+            <div class="alloc-bar risky" [style.width.%]="rule110RecommendedRisk"></div>
+            <div class="alloc-bar conservative" [style.width.%]="rule110RecommendedConservative"></div>
+          </div>
+          <div class="alloc-legend">
+            <span class="legend-risky">{{ rule110RecommendedRisk }}% Riesgo</span>
+            <span class="legend-conservative">{{ rule110RecommendedConservative }}% Conservador</span>
+          </div>
+        </div>
+      </div>
+
+      @if (investmentSvc.investments().length > 0) {
+        <div class="alloc-section">
+          <div class="alloc-label">Tu portafolio actual</div>
+          <div class="alloc-bars">
+            <div class="alloc-bar-container">
+              <div class="alloc-bar risky" [style.width.%]="currentRiskyPercentage"></div>
+              <div class="alloc-bar conservative" [style.width.%]="currentConservativePercentage"></div>
+            </div>
+            <div class="alloc-legend">
+              <span class="legend-risky">{{ currentRiskyPercentage | number:'1.0-0' }}% Riesgo</span>
+              <span class="legend-conservative">{{ currentConservativePercentage | number:'1.0-0' }}% Conservador</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rule110-status" [class]="riskAllocationStatus">
+          {{ getRiskStatusMessage() }}
+        </div>
+      } @else {
+        <div class="alloc-empty">
+          <p>Agrega inversiones para ver cómo se compara tu portafolio con la recomendación</p>
+        </div>
+      }
+    </div>
+
+    <div class="rule110-types">
+      <div class="type-group">
+        <span class="type-label risky">🔥 Mayor riesgo/rendimiento:</span>
+        <span class="type-list">Acciones, ETFs, Cripto</span>
+      </div>
+      <div class="type-group">
+        <span class="type-label conservative">🛡️ Menor riesgo/rendimiento:</span>
+        <span class="type-list">Bonos, Bienes Raíces, Fondos Mutuos</span>
+      </div>
+    </div>
+  </div>
+
+  @if (investmentSvc.investments().length > 0) {
+    <div class="card compound-card">
+      <h3 class="card-title">
+        <ion-icon name="trending-up-outline"></ion-icon> Proyección a Futuro
+      </h3>
+      <div class="projection-grid">
+        <div class="projection-item">
+          <span class="proj-label">1 año</span>
+          <span class="proj-value">{{ getInvestmentProjection(1) | currencyMxn }}</span>
+        </div>
+        <div class="projection-item">
+          <span class="proj-label">5 años</span>
+          <span class="proj-value">{{ getInvestmentProjection(5) | currencyMxn }}</span>
+        </div>
+        <div class="projection-item">
+          <span class="proj-label">10 años</span>
+          <span class="proj-value">{{ getInvestmentProjection(10) | currencyMxn }}</span>
+        </div>
+      </div>
+      <p class="proj-note">* Proyecciones basadas en tu retorno promedio de {{ weightedReturn | number:'1.1-1' }}%</p>
+    </div>
+  }
+</main>
