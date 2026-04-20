@@ -673,38 +673,6 @@ CREATE TABLE IF NOT EXISTS households (
 -- Enable RLS
 ALTER TABLE households ENABLE ROW LEVEL SECURITY;
 
--- Policies: members can read, owner can update/delete
-DROP POLICY IF EXISTS "Household members can view" ON households;
-CREATE POLICY "Household members can view" ON households
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM household_members hm
-      WHERE hm.household_id = id AND hm.user_id = auth.uid()
-    )
-  );
-
-DROP POLICY IF EXISTS "Household owner can update" ON households;
-CREATE POLICY "Household owner can update" ON households
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM household_members hm
-      WHERE hm.household_id = id AND hm.user_id = auth.uid() AND hm.role = 'owner'
-    )
-  );
-
-DROP POLICY IF EXISTS "Household owner can delete" ON households;
-CREATE POLICY "Household owner can delete" ON households
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM household_members hm
-      WHERE hm.household_id = id AND hm.user_id = auth.uid() AND hm.role = 'owner'
-    )
-  );
-
-DROP POLICY IF EXISTS "Authenticated users can create households" ON households;
-CREATE POLICY "Authenticated users can create households" ON households
-  FOR INSERT TO authenticated WITH CHECK (true);
-
 -- =====================================================
 -- HOUSEHOLD MEMBERS TABLE
 -- Links users to households (max 2 for MVP)
@@ -721,23 +689,6 @@ CREATE TABLE IF NOT EXISTS household_members (
 
 -- Enable RLS
 ALTER TABLE household_members ENABLE ROW LEVEL SECURITY;
-
--- Policies: members can see who is in their household
-DROP POLICY IF EXISTS "Members can view household members" ON household_members;
-CREATE POLICY "Members can view household members" ON household_members
-  FOR SELECT USING (
-    household_id IN (
-      SELECT hm.household_id FROM household_members hm WHERE hm.user_id = auth.uid()
-    )
-  );
-
-DROP POLICY IF EXISTS "Users can insert own membership" ON household_members;
-CREATE POLICY "Users can insert own membership" ON household_members
-  FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
-
-DROP POLICY IF EXISTS "Users can delete own membership" ON household_members;
-CREATE POLICY "Users can delete own membership" ON household_members
-  FOR DELETE USING (user_id = auth.uid());
 
 -- Index for faster queries
 CREATE INDEX IF NOT EXISTS idx_household_members_user_id ON household_members(user_id);
@@ -762,32 +713,6 @@ CREATE TABLE IF NOT EXISTS household_invitations (
 -- Enable RLS
 ALTER TABLE household_invitations ENABLE ROW LEVEL SECURITY;
 
--- Policies: creator can see/cancel, invited user can see/respond
-DROP POLICY IF EXISTS "Creators can view own invitations" ON household_invitations;
-CREATE POLICY "Creators can view own invitations" ON household_invitations
-  FOR SELECT USING (invited_by = auth.uid());
-
-DROP POLICY IF EXISTS "Invited users can view invitations" ON household_invitations;
-CREATE POLICY "Invited users can view invitations" ON household_invitations
-  FOR SELECT USING (invited_user_id = auth.uid());
-
-DROP POLICY IF EXISTS "Members can create invitations" ON household_invitations;
-CREATE POLICY "Members can create invitations" ON household_invitations
-  FOR INSERT TO authenticated WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM household_members hm
-      WHERE hm.household_id = household_id AND hm.user_id = auth.uid()
-    )
-  );
-
-DROP POLICY IF EXISTS "Creators can cancel invitations" ON household_invitations;
-CREATE POLICY "Creators can cancel invitations" ON household_invitations
-  FOR UPDATE USING (invited_by = auth.uid());
-
-DROP POLICY IF EXISTS "Invited users can respond to invitations" ON household_invitations;
-CREATE POLICY "Invited users can respond to invitations" ON household_invitations
-  FOR UPDATE USING (invited_user_id = auth.uid());
-
 -- Index for faster queries
 CREATE INDEX IF NOT EXISTS idx_household_invitations_email ON household_invitations(invited_email);
 CREATE INDEX IF NOT EXISTS idx_household_invitations_household_id ON household_invitations(household_id);
@@ -808,13 +733,99 @@ CREATE TABLE IF NOT EXISTS shared_expenses (
 -- Enable RLS
 ALTER TABLE shared_expenses ENABLE ROW LEVEL SECURITY;
 
--- Policies: both members can read, each marks/unmarks their own
+-- Index for faster queries
+CREATE INDEX IF NOT EXISTS idx_shared_expenses_household_id ON shared_expenses(household_id);
+CREATE INDEX IF NOT EXISTS idx_shared_expenses_expense_id ON shared_expenses(expense_id);
+
+-- =====================================================
+-- HOUSEHOLD HELPER FUNCTION (SECURITY DEFINER)
+-- Bypasses RLS to avoid infinite recursion in policies
+-- =====================================================
+CREATE OR REPLACE FUNCTION get_user_household_id(p_user_id UUID)
+RETURNS UUID AS $$
+  SELECT household_id FROM household_members WHERE user_id = p_user_id LIMIT 1;
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- =====================================================
+-- HOUSEHOLD RLS POLICIES
+-- Must be defined after all tables and helper function exist
+-- =====================================================
+
+-- Households policies (use get_user_household_id to avoid recursion)
+DROP POLICY IF EXISTS "Household members can view" ON households;
+CREATE POLICY "Household members can view" ON households
+  FOR SELECT USING (
+    id = get_user_household_id(auth.uid())
+    OR created_by = auth.uid()
+  );
+
+DROP POLICY IF EXISTS "Household owner can update" ON households;
+CREATE POLICY "Household owner can update" ON households
+  FOR UPDATE USING (
+    id = get_user_household_id(auth.uid())
+    AND EXISTS (
+      SELECT 1 FROM household_members hm
+      WHERE hm.household_id = id AND hm.user_id = auth.uid() AND hm.role = 'owner'
+    )
+  );
+
+DROP POLICY IF EXISTS "Household owner can delete" ON households;
+CREATE POLICY "Household owner can delete" ON households
+  FOR DELETE USING (
+    id = get_user_household_id(auth.uid())
+    AND EXISTS (
+      SELECT 1 FROM household_members hm
+      WHERE hm.household_id = id AND hm.user_id = auth.uid() AND hm.role = 'owner'
+    )
+  );
+
+DROP POLICY IF EXISTS "Authenticated users can create households" ON households;
+CREATE POLICY "Authenticated users can create households" ON households
+  FOR INSERT TO authenticated WITH CHECK (true);
+
+-- Household Members policies (use get_user_household_id to avoid recursion)
+DROP POLICY IF EXISTS "Members can view household members" ON household_members;
+CREATE POLICY "Members can view household members" ON household_members
+  FOR SELECT USING (
+    household_id = get_user_household_id(auth.uid())
+  );
+
+DROP POLICY IF EXISTS "Users can insert own membership" ON household_members;
+CREATE POLICY "Users can insert own membership" ON household_members
+  FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "Users can delete own membership" ON household_members;
+CREATE POLICY "Users can delete own membership" ON household_members
+  FOR DELETE USING (user_id = auth.uid());
+
+-- Household Invitations policies
+DROP POLICY IF EXISTS "Creators can view own invitations" ON household_invitations;
+CREATE POLICY "Creators can view own invitations" ON household_invitations
+  FOR SELECT USING (invited_by = auth.uid());
+
+DROP POLICY IF EXISTS "Invited users can view invitations" ON household_invitations;
+CREATE POLICY "Invited users can view invitations" ON household_invitations
+  FOR SELECT USING (invited_user_id = auth.uid());
+
+DROP POLICY IF EXISTS "Members can create invitations" ON household_invitations;
+CREATE POLICY "Members can create invitations" ON household_invitations
+  FOR INSERT TO authenticated WITH CHECK (
+    household_id = get_user_household_id(auth.uid())
+  );
+
+DROP POLICY IF EXISTS "Creators can cancel invitations" ON household_invitations;
+CREATE POLICY "Creators can cancel invitations" ON household_invitations
+  FOR UPDATE USING (invited_by = auth.uid());
+
+DROP POLICY IF EXISTS "Invited users can respond to invitations" ON household_invitations;
+CREATE POLICY "Invited users can respond to invitations" ON household_invitations
+  FOR UPDATE USING (invited_user_id = auth.uid());
+
+-- Shared Expenses policies (use get_user_household_id to avoid recursion)
 DROP POLICY IF EXISTS "Household members can view shared expenses" ON shared_expenses;
 CREATE POLICY "Household members can view shared expenses" ON shared_expenses
   FOR SELECT USING (
-    household_id IN (
-      SELECT hm.household_id FROM household_members hm WHERE hm.user_id = auth.uid()
-    )
+    household_id = get_user_household_id(auth.uid())
   );
 
 DROP POLICY IF EXISTS "Users can mark own expenses as shared" ON shared_expenses;
@@ -825,27 +836,25 @@ DROP POLICY IF EXISTS "Users can unmark own shared expenses" ON shared_expenses;
 CREATE POLICY "Users can unmark own shared expenses" ON shared_expenses
   FOR DELETE USING (user_id = auth.uid());
 
--- Index for faster queries
-CREATE INDEX IF NOT EXISTS idx_shared_expenses_household_id ON shared_expenses(household_id);
-CREATE INDEX IF NOT EXISTS idx_shared_expenses_expense_id ON shared_expenses(expense_id);
-
--- =====================================================
--- Modify expenses RLS: allow partner to read shared expenses
--- =====================================================
+-- Allow partner to read shared expenses
 DROP POLICY IF EXISTS "Partner can view shared expenses" ON expenses;
 CREATE POLICY "Partner can view shared expenses" ON expenses
   FOR SELECT USING (
     id IN (
       SELECT se.expense_id FROM shared_expenses se
-      WHERE se.household_id IN (
-        SELECT hm.household_id FROM household_members hm WHERE hm.user_id = auth.uid()
-      )
+      WHERE se.household_id = get_user_household_id(auth.uid())
     )
   );
 
 -- =====================================================
 -- HOUSEHOLD HELPER FUNCTIONS
 -- =====================================================
+
+-- Function to look up a user ID by email (for invitations)
+CREATE OR REPLACE FUNCTION get_user_id_by_email(p_email TEXT)
+RETURNS UUID AS $$
+  SELECT id FROM auth.users WHERE email = lower(trim(p_email)) LIMIT 1;
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
 
 -- Function to get household income summary (SECURITY DEFINER to bypass RLS)
 CREATE OR REPLACE FUNCTION get_household_income_summary(p_household_id UUID)

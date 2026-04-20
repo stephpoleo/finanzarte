@@ -1,5 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { AuthService } from './auth.service';
 import { EnvironmentService } from './environment.service';
 import {
   Household,
@@ -67,6 +68,7 @@ export class HouseholdService {
 
   constructor(
     private supabase: SupabaseService,
+    private auth: AuthService,
     private env: EnvironmentService
   ) {
     if (this.env.isDevMode) {
@@ -190,7 +192,7 @@ export class HouseholdService {
 
   private getEmail(): string | undefined {
     if (this.env.isDevMode) return 'dev@finanzarte.com';
-    return undefined; // Auth service should provide this
+    return this.auth.user()?.email;
   }
 
   // ==================== Create Household ====================
@@ -266,21 +268,21 @@ export class HouseholdService {
 
     if (access.mode === 'error') return { error: access.error };
 
-    // Check that the email is registered
-    const { data: profile } = await this.supabase.client
-      .from('profiles')
-      .select('id')
-      .eq('id', (await this.supabase.client.rpc('get_user_id_by_email', { p_email: email })).data)
-      .single();
+    // Check if the email is registered
+    const { data: userId } = await this.supabase.client
+      .rpc('get_user_id_by_email', { p_email: email });
 
-    // Insert invitation (the DB function will validate)
+    const isRegistered = !!userId;
+    console.log(`[Invitation] Email: ${email}, userId found: ${userId}, isRegistered: ${isRegistered}`);
+
+    // Insert invitation
     const { error } = await this.supabase.client
       .from('household_invitations')
       .insert({
         household_id: household.id,
         invited_by: access.userId,
         invited_email: email.toLowerCase().trim(),
-        invited_user_id: profile?.id || null
+        invited_user_id: userId || null
       });
 
     if (error) {
@@ -288,6 +290,27 @@ export class HouseholdService {
         return { error: new Error('Ya existe una invitación para este correo') };
       }
       return { error: new Error(error.message) };
+    }
+
+    // Send email only if the user is NOT registered in the app
+    if (!isRegistered) {
+      try {
+        const inviterName = this.auth.user()?.user_metadata?.['full_name'] || 'Tu pareja';
+        console.log(`[Invitation] Sending email to ${email} from ${inviterName}`);
+        const { data: fnData, error: fnError } = await this.supabase.client.functions.invoke('send-household-invitation', {
+          body: {
+            invited_email: email.toLowerCase().trim(),
+            invited_by_name: inviterName,
+            household_name: household.name
+          }
+        });
+        console.log('[Invitation] Edge function response:', fnData, fnError);
+      } catch (emailError) {
+        // Don't fail the invitation if email fails — invitation is already saved
+        console.warn('Could not send invitation email:', emailError);
+      }
+    } else {
+      console.log(`[Invitation] User is registered, skipping email`);
     }
 
     return { error: null };
