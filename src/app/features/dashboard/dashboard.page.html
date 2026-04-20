@@ -11,9 +11,14 @@
           <p class="brand-tagline">El arte de las finanzas</p>
         </div>
       </div>
-      <button class="logout-btn" (click)="logout()" title="Cerrar sesión">
-        <ion-icon name="log-out-outline"></ion-icon>
-      </button>
+      <div class="header-actions">
+        <button class="settings-btn" (click)="goToSettings()" title="Ajustes">
+          <ion-icon name="settings-outline"></ion-icon>
+        </button>
+        <button class="logout-btn" (click)="logout()" title="Cerrar sesión">
+          <ion-icon name="log-out-outline"></ion-icon>
+        </button>
+      </div>
     </header>
 
     <!-- Household Toggle -->

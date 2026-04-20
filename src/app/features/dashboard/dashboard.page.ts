@@ -10,10 +10,12 @@ import {
   IonRefresherContent,
   RefresherEventDetail
 } from '@ionic/angular/standalone';
+import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
 import {
   menuOutline,
   logOutOutline,
+  settingsOutline,
   walletOutline,
   shieldCheckmarkOutline,
   leafOutline,
@@ -77,11 +79,13 @@ export class DashboardPage implements OnInit {
     private userSettings: UserSettingsService,
     private cancellableExpenses: CancellableExpenseService,
     private shortTermGoals: ShortTermGoalService,
+    private router: Router,
     public household: HouseholdService
   ) {
     addIcons({
       menuOutline,
       logOutOutline,
+      settingsOutline,
       walletOutline,
       shieldCheckmarkOutline,
       leafOutline,
@@ -137,6 +141,10 @@ export class DashboardPage implements OnInit {
     if (monthsCovered < 6) return 50;
     if (monthsCovered < 12) return 25;
     return 0; // Emergency fund complete
+  }
+
+  goToSettings(): void {
+    this.router.navigate(['/settings']);
   }
 
   async logout(): Promise<void> {

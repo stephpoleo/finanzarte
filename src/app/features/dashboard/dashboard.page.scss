@@ -16,6 +16,13 @@
   border-bottom: 1px solid #e5e7eb;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-btn,
 .logout-btn {
   display: flex;
   align-items: center;
@@ -33,16 +40,24 @@
     color: #6b7280;
   }
 
-  &:hover {
-    background: #fee2e2;
-
-    ion-icon {
-      color: #dc2626;
-    }
-  }
-
   &:active {
     transform: scale(0.95);
+  }
+}
+
+.settings-btn:hover {
+  background: #e0e7ff;
+
+  ion-icon {
+    color: #4f46e5;
+  }
+}
+
+.logout-btn:hover {
+  background: #fee2e2;
+
+  ion-icon {
+    color: #dc2626;
   }
 }
 
