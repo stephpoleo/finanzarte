@@ -5,3 +5,6 @@ export * from './income-source.model';
 export * from './investment.model';
 export * from './user-settings.model';
 export * from './cancellable-expense.model';
+export * from './financial-rates.model';
+export * from './emergency-allocation.model';
+export * from './short-term-goal.model';

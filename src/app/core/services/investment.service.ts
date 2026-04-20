@@ -1,9 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { AuthService } from './auth.service';
+import { EnvironmentService } from './environment.service';
 import { Investment, InvestmentType, INVESTMENT_TYPES, HIGH_RISK_TYPES, LOW_RISK_TYPES } from '../../models';
-import { environment } from '../../../environments/environment';
-import { MOCK_INVESTMENTS, MOCK_USER_ID } from '../../data/mock-data';
+import { MOCK_INVESTMENTS } from '../../data/mock-data';
 
 @Injectable({
   providedIn: 'root'
@@ -14,30 +13,42 @@ export class InvestmentService {
   investments = computed(() => this.investmentsData());
 
   totalInvested = computed(() =>
-    this.investmentsData().reduce((sum, inv) => sum + inv.amount, 0)
+    this.investmentsData().reduce((sum, inv) => sum + inv.current_amount, 0)
   );
+
+  totalInitialInvested = computed(() =>
+    this.investmentsData().reduce((sum, inv) => sum + inv.initial_amount, 0)
+  );
+
+  totalReturn = computed(() =>
+    this.totalInvested() - this.totalInitialInvested()
+  );
+
+  totalReturnPercentage = computed(() => {
+    const initial = this.totalInitialInvested();
+    return initial > 0 ? ((this.totalInvested() - initial) / initial) * 100 : 0;
+  });
 
   weightedReturn = computed(() => {
     const total = this.totalInvested();
     if (total === 0) return 0;
-    return this.investmentsData().reduce((sum, inv) => sum + (inv.amount * inv.expected_return), 0) / total;
+    return this.investmentsData().reduce((sum, inv) => sum + (inv.current_amount * inv.expected_return), 0) / total;
   });
 
   projectedAnnualReturn = computed(() =>
     this.totalInvested() * (this.weightedReturn() / 100)
   );
 
-  // Risk allocation based on investment types
   highRiskAmount = computed(() =>
     this.investmentsData()
       .filter(inv => HIGH_RISK_TYPES.includes(inv.type))
-      .reduce((sum, inv) => sum + inv.amount, 0)
+      .reduce((sum, inv) => sum + inv.current_amount, 0)
   );
 
   lowRiskAmount = computed(() =>
     this.investmentsData()
       .filter(inv => LOW_RISK_TYPES.includes(inv.type) || inv.type === 'other')
-      .reduce((sum, inv) => sum + inv.amount, 0)
+      .reduce((sum, inv) => sum + inv.current_amount, 0)
   );
 
   highRiskPercentage = computed(() => {
@@ -52,29 +63,29 @@ export class InvestmentService {
 
   constructor(
     private supabase: SupabaseService,
-    private auth: AuthService
+    private env: EnvironmentService
   ) {
-    // In dev mode, load mock investments immediately
-    if ((environment as any).devMode) {
+    if (this.env.isDevMode) {
       this.investmentsData.set([...MOCK_INVESTMENTS]);
     }
   }
 
   async loadInvestments(): Promise<Investment[]> {
-    // Dev mode: return mock investments
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       return this.investmentsData();
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) return [];
-
-    if (!this.supabase.isConfigured) return [];
+    if (access.mode === 'error') {
+      console.error('Error loading investments:', access.error.message);
+      return [];
+    }
 
     const { data, error } = await this.supabase.client
       .from('investments')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', access.userId)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -89,21 +100,24 @@ export class InvestmentService {
   async addInvestment(investment: {
     name: string;
     type: InvestmentType;
-    amount: number;
+    initial_amount: number;
+    current_amount?: number;
     expected_return?: number;
     purchase_date?: string | null;
     notes?: string | null;
   }): Promise<{ data: Investment | null; error: Error | null }> {
+    const access = this.env.checkAccess();
     const now = new Date().toISOString();
+    const currentAmount = investment.current_amount ?? investment.initial_amount;
 
-    // Dev mode: add to local mock data
-    if ((environment as any).devMode) {
+    if (access.mode === 'dev') {
       const newInvestment: Investment = {
         id: Date.now().toString(),
-        user_id: MOCK_USER_ID,
+        user_id: access.userId,
         name: investment.name,
         type: investment.type,
-        amount: investment.amount,
+        initial_amount: investment.initial_amount,
+        current_amount: currentAmount,
         expected_return: investment.expected_return ?? 8,
         purchase_date: investment.purchase_date ?? null,
         notes: investment.notes ?? null,
@@ -114,22 +128,18 @@ export class InvestmentService {
       return { data: newInvestment, error: null };
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) {
-      return { data: null, error: new Error('User not authenticated') };
-    }
-
-    if (!this.supabase.isConfigured) {
-      return { data: null, error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { data: null, error: access.error };
     }
 
     const { data, error } = await this.supabase.client
       .from('investments')
       .insert({
-        user_id: userId,
+        user_id: access.userId,
         name: investment.name,
         type: investment.type,
-        amount: investment.amount,
+        initial_amount: investment.initial_amount,
+        current_amount: currentAmount,
         expected_return: investment.expected_return ?? 8,
         purchase_date: investment.purchase_date,
         notes: investment.notes
@@ -151,16 +161,17 @@ export class InvestmentService {
     id: string,
     updates: Partial<Omit<Investment, 'id' | 'user_id' | 'created_at'>>
   ): Promise<{ error: Error | null }> {
-    // Dev mode: update local mock data
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       this.investmentsData.update(investments =>
         investments.map(inv => inv.id === id ? { ...inv, ...updates, updated_at: new Date().toISOString() } : inv)
       );
       return { error: null };
     }
 
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
@@ -178,16 +189,17 @@ export class InvestmentService {
   }
 
   async deleteInvestment(id: string): Promise<{ error: Error | null }> {
-    // Dev mode: delete from local mock data
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       this.investmentsData.update(investments =>
         investments.filter(inv => inv.id !== id)
       );
       return { error: null };
     }
 
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
@@ -211,7 +223,7 @@ export class InvestmentService {
   getInvestmentsByType() {
     const byType: Record<InvestmentType, number> = {} as Record<InvestmentType, number>;
     this.investmentsData().forEach(inv => {
-      byType[inv.type] = (byType[inv.type] || 0) + inv.amount;
+      byType[inv.type] = (byType[inv.type] || 0) + inv.current_amount;
     });
     return INVESTMENT_TYPES
       .filter(type => byType[type.value] > 0)
@@ -222,8 +234,16 @@ export class InvestmentService {
       }));
   }
 
+  getInvestmentReturn(inv: Investment): { amount: number; percentage: number } {
+    const returnAmount = inv.current_amount - inv.initial_amount;
+    const returnPercentage = inv.initial_amount > 0
+      ? ((inv.current_amount - inv.initial_amount) / inv.initial_amount) * 100
+      : 0;
+    return { amount: returnAmount, percentage: returnPercentage };
+  }
+
   clearInvestments(): void {
-    if ((environment as any).devMode) {
+    if (this.env.isDevMode) {
       this.investmentsData.set([...MOCK_INVESTMENTS]);
     } else {
       this.investmentsData.set([]);

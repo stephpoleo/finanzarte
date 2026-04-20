@@ -22,7 +22,6 @@ import {
   mailOutline,
   lockClosedOutline,
   arrowForward,
-  walletOutline,
 } from 'ionicons/icons';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -49,7 +48,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <!-- Logo Section -->
           <div class="logo-section">
             <div class="logo-box">
-              <ion-icon name="wallet-outline"></ion-icon>
+              <img src="assets/images/finanzarte_logo.jpeg" alt="Finanzarte" class="logo-img" />
             </div>
             <h1 class="app-title">Finanzarte</h1>
             <p class="app-subtitle">El arte de las finanzas</p>
@@ -160,9 +159,11 @@ import { AuthService } from '../../../core/services/auth.service';
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
       }
 
-      .logo-box ion-icon {
-        font-size: 40px;
-        color: #4f6df5;
+      .logo-box .logo-img {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        border-radius: 8px;
       }
 
       .app-title {
@@ -292,8 +293,9 @@ import { AuthService } from '../../../core/services/auth.service';
           border-radius: 16px;
         }
 
-        .logo-box ion-icon {
-          font-size: 32px;
+        .logo-box .logo-img {
+          width: 48px;
+          height: 48px;
         }
 
         .app-title {
@@ -326,8 +328,9 @@ import { AuthService } from '../../../core/services/auth.service';
           height: 60px;
         }
 
-        .logo-box ion-icon {
-          font-size: 28px;
+        .logo-box .logo-img {
+          width: 44px;
+          height: 44px;
         }
 
         .app-title {
@@ -346,7 +349,7 @@ export class LoginPage {
     private fb: FormBuilder,
     private auth: AuthService,
   ) {
-    addIcons({ mailOutline, lockClosedOutline, arrowForward, walletOutline });
+    addIcons({ mailOutline, lockClosedOutline, arrowForward });
 
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],

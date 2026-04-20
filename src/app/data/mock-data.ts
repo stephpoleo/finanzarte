@@ -14,6 +14,8 @@ import {
   UserSettings,
   CancellableExpense
 } from '../models';
+import { SofipoAllocation, CetesAllocation } from '../models/emergency-allocation.model';
+import { ShortTermGoal } from '../models/short-term-goal.model';
 
 // Common constants
 export const MOCK_USER_ID = 'dev-user-123';
@@ -87,7 +89,8 @@ export const MOCK_INVESTMENTS: Investment[] = [
     user_id: MOCK_USER_ID,
     name: 'VOO - S&P 500 ETF',
     type: 'etf',
-    amount: 50000,
+    initial_amount: 45000,
+    current_amount: 50000,
     expected_return: 10,
     purchase_date: '2024-01-15',
     notes: 'Inversión principal en índice americano',
@@ -99,7 +102,8 @@ export const MOCK_INVESTMENTS: Investment[] = [
     user_id: MOCK_USER_ID,
     name: 'CETES 28 días',
     type: 'cetes',
-    amount: 30000,
+    initial_amount: 30000,
+    current_amount: 30000,
     expected_return: 11,
     purchase_date: '2024-06-01',
     notes: 'Inversión de bajo riesgo',
@@ -111,7 +115,8 @@ export const MOCK_INVESTMENTS: Investment[] = [
     user_id: MOCK_USER_ID,
     name: 'AFORE XXI Banorte',
     type: 'afore',
-    amount: 25000,
+    initial_amount: 22000,
+    current_amount: 25000,
     expected_return: 8,
     purchase_date: null,
     notes: 'Ahorro para el retiro',
@@ -218,6 +223,78 @@ export const MOCK_CANCELLABLE_EXPENSES: CancellableExpense[] = [
     notes: 'Solo cancelar si el auto no se usa, considerar cobertura mínima',
     renewal_date: '2026-06-01',
     renewal_frequency: 'annual',
+    created_at: mockNow,
+    updated_at: mockNow
+  }
+];
+
+// ==================== Emergency Fund Allocations ====================
+export const MOCK_SOFIPO_ALLOCATIONS: SofipoAllocation[] = [
+  {
+    id: '1',
+    user_id: MOCK_USER_ID,
+    sofipo_id: 1,
+    sofipo_name: 'Fondeadora',
+    amount: 25000,
+    term_days: 0,  // Flexible
+    rate: 9.50,
+    created_at: mockNow,
+    updated_at: mockNow
+  },
+  {
+    id: '2',
+    user_id: MOCK_USER_ID,
+    sofipo_id: 2,
+    sofipo_name: 'Nu Mexico',
+    amount: 10000,
+    term_days: 30,
+    rate: 7.50,
+    created_at: mockNow,
+    updated_at: mockNow
+  }
+];
+
+export const MOCK_CETES_ALLOCATION: CetesAllocation = {
+  id: '1',
+  user_id: MOCK_USER_ID,
+  amount: 10000,
+  term_days: 28,
+  rate: 10.75,
+  created_at: mockNow,
+  updated_at: mockNow
+};
+
+// ==================== Short-Term Goals ====================
+// Goals with deadline < 2 years (money that will be spent)
+const nextYear = new Date();
+nextYear.setFullYear(nextYear.getFullYear() + 1);
+const in6Months = new Date();
+in6Months.setMonth(in6Months.getMonth() + 6);
+
+export const MOCK_SHORT_TERM_GOALS: ShortTermGoal[] = [
+  {
+    id: '1',
+    user_id: MOCK_USER_ID,
+    name: 'Vacaciones Cancún',
+    target_amount: 25000,
+    current_amount: 8000,
+    deadline: in6Months.toISOString().split('T')[0],
+    monthly_contribution: 2834, // (25000 - 8000) / 6
+    color: '#06b6d4',
+    icon: 'airplane-outline',
+    created_at: mockNow,
+    updated_at: mockNow
+  },
+  {
+    id: '2',
+    user_id: MOCK_USER_ID,
+    name: 'Laptop Nueva',
+    target_amount: 30000,
+    current_amount: 12000,
+    deadline: nextYear.toISOString().split('T')[0],
+    monthly_contribution: 1500, // (30000 - 12000) / 12
+    color: '#8b5cf6',
+    icon: 'laptop-outline',
     created_at: mockNow,
     updated_at: mockNow
   }

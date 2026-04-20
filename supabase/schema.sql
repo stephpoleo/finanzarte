@@ -214,6 +214,48 @@ CREATE INDEX IF NOT EXISTS idx_savings_deposits_goal_id ON savings_deposits(goal
 CREATE INDEX IF NOT EXISTS idx_savings_deposits_user_id ON savings_deposits(user_id);
 
 -- =====================================================
+-- SHORT-TERM GOALS TABLE
+-- Goals with deadline < 2 years (money that will be spent)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS short_term_goals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  target_amount DECIMAL(12,2) NOT NULL,
+  current_amount DECIMAL(12,2) DEFAULT 0,
+  deadline DATE NOT NULL,
+  monthly_contribution DECIMAL(12,2) DEFAULT 0,
+  color TEXT DEFAULT '#06b6d4',
+  icon TEXT DEFAULT 'sparkles-outline',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE short_term_goals ENABLE ROW LEVEL SECURITY;
+
+-- Policies for short_term_goals
+DROP POLICY IF EXISTS "Users can view own short term goals" ON short_term_goals;
+CREATE POLICY "Users can view own short term goals" ON short_term_goals
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own short term goals" ON short_term_goals;
+CREATE POLICY "Users can insert own short term goals" ON short_term_goals
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own short term goals" ON short_term_goals;
+CREATE POLICY "Users can update own short term goals" ON short_term_goals
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own short term goals" ON short_term_goals;
+CREATE POLICY "Users can delete own short term goals" ON short_term_goals
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Index for faster queries
+CREATE INDEX IF NOT EXISTS idx_short_term_goals_user_id ON short_term_goals(user_id);
+CREATE INDEX IF NOT EXISTS idx_short_term_goals_deadline ON short_term_goals(deadline);
+
+-- =====================================================
 -- INVESTMENTS TABLE
 -- User investment portfolio
 -- =====================================================
@@ -222,7 +264,8 @@ CREATE TABLE IF NOT EXISTS investments (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   type TEXT CHECK (type IN ('stocks', 'bonds', 'etf', 'crypto', 'real-estate', 'mutual-funds', 'cetes', 'afore', 'other')) NOT NULL,
-  amount DECIMAL(12,2) NOT NULL,
+  initial_amount DECIMAL(12,2) NOT NULL, -- What was originally invested
+  current_amount DECIMAL(12,2) NOT NULL, -- Current value of the investment
   expected_return DECIMAL(5,2) DEFAULT 8.0, -- Annual expected return %
   purchase_date DATE,
   notes TEXT,
@@ -253,6 +296,14 @@ CREATE POLICY "Users can delete own investments" ON investments
 -- Index for faster queries
 CREATE INDEX IF NOT EXISTS idx_investments_user_id ON investments(user_id);
 CREATE INDEX IF NOT EXISTS idx_investments_type ON investments(type);
+
+-- MIGRATION: If you have an existing database with the old 'amount' column:
+-- ALTER TABLE investments ADD COLUMN initial_amount DECIMAL(12,2);
+-- ALTER TABLE investments ADD COLUMN current_amount DECIMAL(12,2);
+-- UPDATE investments SET initial_amount = amount, current_amount = amount;
+-- ALTER TABLE investments DROP COLUMN amount;
+-- ALTER TABLE investments ALTER COLUMN initial_amount SET NOT NULL;
+-- ALTER TABLE investments ALTER COLUMN current_amount SET NOT NULL;
 
 -- =====================================================
 -- USER SETTINGS TABLE
@@ -429,6 +480,182 @@ DROP TRIGGER IF EXISTS on_deposit_change ON savings_deposits;
 CREATE TRIGGER on_deposit_change
   AFTER INSERT OR DELETE ON savings_deposits
   FOR EACH ROW EXECUTE FUNCTION update_goal_on_deposit();
+
+-- =====================================================
+-- FINANCIAL RATES TABLES (READ-ONLY for app users)
+-- These tables are populated by an external API
+-- =====================================================
+
+-- CETES Rates
+-- Table should already exist from external API, just add RLS
+ALTER TABLE IF EXISTS cetes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow authenticated users to read cetes" ON cetes;
+CREATE POLICY "Allow authenticated users to read cetes" ON cetes
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- Index for efficient queries
+CREATE INDEX IF NOT EXISTS idx_cetes_plazo_fecha ON cetes(plazo, fecha_subasta DESC);
+
+-- SOFIPOs Institutions
+ALTER TABLE IF EXISTS sofipos ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow authenticated users to read sofipos" ON sofipos;
+CREATE POLICY "Allow authenticated users to read sofipos" ON sofipos
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- Index for sorting by rate
+CREATE INDEX IF NOT EXISTS idx_sofipos_gat ON sofipos(gat_nominal DESC);
+
+-- SOFIPO Rates by Term
+ALTER TABLE IF EXISTS sofipo_plazos ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow authenticated users to read sofipo_plazos" ON sofipo_plazos;
+CREATE POLICY "Allow authenticated users to read sofipo_plazos" ON sofipo_plazos
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- Index for efficient joins
+CREATE INDEX IF NOT EXISTS idx_sofipo_plazos_sofipo_id ON sofipo_plazos(sofipo_id);
+
+-- Fondos y ETFs
+ALTER TABLE IF EXISTS fondos_etfs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow authenticated users to read fondos_etfs" ON fondos_etfs;
+CREATE POLICY "Allow authenticated users to read fondos_etfs" ON fondos_etfs
+  FOR SELECT
+  TO authenticated
+  USING (true);
+
+-- Index for ticker lookup
+CREATE INDEX IF NOT EXISTS idx_fondos_etfs_ticker ON fondos_etfs(ticker);
+CREATE INDEX IF NOT EXISTS idx_fondos_etfs_tipo ON fondos_etfs(tipo);
+
+-- =====================================================
+-- FINANCIAL RATES VIEWS
+-- =====================================================
+
+-- Latest CETES rates by term
+CREATE OR REPLACE VIEW latest_cetes_rates AS
+SELECT DISTINCT ON (plazo)
+  id, plazo, tasa, fecha_subasta, fecha_vencimiento
+FROM cetes
+ORDER BY plazo, fecha_subasta DESC;
+
+-- SOFIPOs with their best available rate
+CREATE OR REPLACE VIEW sofipos_with_best_rate AS
+SELECT
+  s.id,
+  s.nombre,
+  s.gat_nominal,
+  s.gat_real,
+  s.fecha_actualizacion,
+  COALESCE(MAX(sp.tasa), s.gat_nominal) as best_rate
+FROM sofipos s
+LEFT JOIN sofipo_plazos sp ON s.id = sp.sofipo_id
+GROUP BY s.id, s.nombre, s.gat_nominal, s.gat_real, s.fecha_actualizacion
+ORDER BY best_rate DESC;
+
+-- =====================================================
+-- EMERGENCY FUND ALLOCATIONS (SOFIPO)
+-- User-customizable distribution of emergency funds
+-- =====================================================
+CREATE TABLE IF NOT EXISTS emergency_sofipo_allocations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  sofipo_id INTEGER REFERENCES sofipos(id) ON DELETE CASCADE NOT NULL,
+  sofipo_name TEXT NOT NULL,
+  amount DECIMAL(12,2) NOT NULL CHECK (amount >= 0),
+  term_days INTEGER DEFAULT 0,
+  rate DECIMAL(5,2) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, sofipo_id)
+);
+
+-- Enable RLS
+ALTER TABLE emergency_sofipo_allocations ENABLE ROW LEVEL SECURITY;
+
+-- Policies for emergency_sofipo_allocations
+DROP POLICY IF EXISTS "Users can view own sofipo allocations" ON emergency_sofipo_allocations;
+CREATE POLICY "Users can view own sofipo allocations" ON emergency_sofipo_allocations
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own sofipo allocations" ON emergency_sofipo_allocations;
+CREATE POLICY "Users can insert own sofipo allocations" ON emergency_sofipo_allocations
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own sofipo allocations" ON emergency_sofipo_allocations;
+CREATE POLICY "Users can update own sofipo allocations" ON emergency_sofipo_allocations
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own sofipo allocations" ON emergency_sofipo_allocations;
+CREATE POLICY "Users can delete own sofipo allocations" ON emergency_sofipo_allocations
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Index for faster queries
+CREATE INDEX IF NOT EXISTS idx_emergency_sofipo_allocations_user_id ON emergency_sofipo_allocations(user_id);
+
+-- =====================================================
+-- EMERGENCY FUND ALLOCATIONS (CETES)
+-- Single CETES allocation per user
+-- =====================================================
+CREATE TABLE IF NOT EXISTS emergency_cetes_allocation (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  amount DECIMAL(12,2) NOT NULL CHECK (amount >= 0),
+  term_days INTEGER DEFAULT 28 CHECK (term_days IN (28, 91, 182, 364)),
+  rate DECIMAL(5,2) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE emergency_cetes_allocation ENABLE ROW LEVEL SECURITY;
+
+-- Policies for emergency_cetes_allocation
+DROP POLICY IF EXISTS "Users can view own cetes allocation" ON emergency_cetes_allocation;
+CREATE POLICY "Users can view own cetes allocation" ON emergency_cetes_allocation
+  FOR SELECT USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can insert own cetes allocation" ON emergency_cetes_allocation;
+CREATE POLICY "Users can insert own cetes allocation" ON emergency_cetes_allocation
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can update own cetes allocation" ON emergency_cetes_allocation;
+CREATE POLICY "Users can update own cetes allocation" ON emergency_cetes_allocation
+  FOR UPDATE USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete own cetes allocation" ON emergency_cetes_allocation;
+CREATE POLICY "Users can delete own cetes allocation" ON emergency_cetes_allocation
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Index for faster queries
+CREATE INDEX IF NOT EXISTS idx_emergency_cetes_allocation_user_id ON emergency_cetes_allocation(user_id);
+
+-- View for emergency fund distribution summary
+CREATE OR REPLACE VIEW emergency_fund_distribution AS
+SELECT
+  u.user_id,
+  COALESCE(SUM(esa.amount), 0) as total_sofipo,
+  COALESCE(eca.amount, 0) as total_cetes,
+  COALESCE(SUM(esa.amount), 0) + COALESCE(eca.amount, 0) as total_allocated,
+  CASE
+    WHEN COALESCE(SUM(esa.amount), 0) + COALESCE(eca.amount, 0) > 0 THEN
+      (
+        COALESCE(SUM(esa.amount * esa.rate), 0) + COALESCE(eca.amount * eca.rate, 0)
+      ) / (COALESCE(SUM(esa.amount), 0) + COALESCE(eca.amount, 0))
+    ELSE 0
+  END as weighted_average_rate
+FROM user_settings u
+LEFT JOIN emergency_sofipo_allocations esa ON u.user_id = esa.user_id
+LEFT JOIN emergency_cetes_allocation eca ON u.user_id = eca.user_id
+GROUP BY u.user_id, eca.amount, eca.rate;
 
 -- =====================================================
 -- MIGRATION HELPERS (run only if updating existing DB)

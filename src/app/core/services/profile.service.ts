@@ -1,9 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { AuthService } from './auth.service';
+import { EnvironmentService } from './environment.service';
 import { TaxCalculationService } from './tax-calculation.service';
 import { UserProfile } from '../../models';
-import { environment } from '../../../environments/environment';
 import { MOCK_PROFILE } from '../../data/mock-data';
 
 @Injectable({
@@ -16,30 +15,30 @@ export class ProfileService {
 
   constructor(
     private supabase: SupabaseService,
-    private auth: AuthService,
+    private env: EnvironmentService,
     private taxCalculation: TaxCalculationService
   ) {
-    // In dev mode, load mock profile immediately
-    if ((environment as any).devMode) {
+    if (this.env.isDevMode) {
       this.profileData.set(MOCK_PROFILE);
     }
   }
 
   async loadProfile(): Promise<UserProfile | null> {
-    // Dev mode: return mock profile
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       return this.profileData();
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) return null;
-
-    if (!this.supabase.isConfigured) return null;
+    if (access.mode === 'error') {
+      console.error('Error loading profile:', access.error.message);
+      return null;
+    }
 
     const { data, error } = await this.supabase.client
       .from('profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('id', access.userId)
       .single();
 
     if (error) {
@@ -52,10 +51,10 @@ export class ProfileService {
   }
 
   async updateSalary(grossSalary: number): Promise<{ error: Error | null }> {
+    const access = this.env.checkAccess();
     const breakdown = this.taxCalculation.calculateTaxBreakdown(grossSalary);
 
-    // Dev mode: update mock profile locally
-    if ((environment as any).devMode) {
+    if (access.mode === 'dev') {
       const currentProfile = this.profileData();
       if (currentProfile) {
         this.profileData.set({
@@ -67,13 +66,8 @@ export class ProfileService {
       return { error: null };
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) {
-      return { error: new Error('User not authenticated') };
-    }
-
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
@@ -83,7 +77,7 @@ export class ProfileService {
         net_salary: breakdown.netSalary,
         updated_at: new Date().toISOString()
       })
-      .eq('id', userId);
+      .eq('id', access.userId);
 
     if (!error) {
       const currentProfile = this.profileData();
@@ -100,8 +94,9 @@ export class ProfileService {
   }
 
   async updateNetSalary(netSalary: number): Promise<{ error: Error | null }> {
-    // Dev mode: update mock profile locally
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       const currentProfile = this.profileData();
       if (currentProfile) {
         this.profileData.set({
@@ -112,13 +107,8 @@ export class ProfileService {
       return { error: null };
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) {
-      return { error: new Error('User not authenticated') };
-    }
-
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
@@ -127,7 +117,7 @@ export class ProfileService {
         net_salary: netSalary,
         updated_at: new Date().toISOString()
       })
-      .eq('id', userId);
+      .eq('id', access.userId);
 
     if (!error) {
       const currentProfile = this.profileData();
@@ -143,8 +133,9 @@ export class ProfileService {
   }
 
   async updateProfile(updates: Partial<UserProfile>): Promise<{ error: Error | null }> {
-    // Dev mode: update mock profile locally
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       const currentProfile = this.profileData();
       if (currentProfile) {
         this.profileData.set({ ...currentProfile, ...updates });
@@ -152,13 +143,8 @@ export class ProfileService {
       return { error: null };
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) {
-      return { error: new Error('User not authenticated') };
-    }
-
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
@@ -167,7 +153,7 @@ export class ProfileService {
         ...updates,
         updated_at: new Date().toISOString()
       })
-      .eq('id', userId);
+      .eq('id', access.userId);
 
     if (!error) {
       const currentProfile = this.profileData();
@@ -180,7 +166,7 @@ export class ProfileService {
   }
 
   clearProfile(): void {
-    if ((environment as any).devMode) {
+    if (this.env.isDevMode) {
       this.profileData.set(MOCK_PROFILE);
     } else {
       this.profileData.set(null);

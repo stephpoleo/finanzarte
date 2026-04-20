@@ -1,14 +1,13 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { SupabaseService } from './supabase.service';
-import { AuthService } from './auth.service';
+import { EnvironmentService } from './environment.service';
 import {
   CancellableExpense,
   CancellableCategory,
   CancellationPriority,
   RenewalFrequency
 } from '../../models';
-import { environment } from '../../../environments/environment';
-import { MOCK_CANCELLABLE_EXPENSES, MOCK_USER_ID } from '../../data/mock-data';
+import { MOCK_CANCELLABLE_EXPENSES } from '../../data/mock-data';
 
 @Injectable({
   providedIn: 'root'
@@ -65,29 +64,29 @@ export class CancellableExpenseService {
 
   constructor(
     private supabase: SupabaseService,
-    private auth: AuthService
+    private env: EnvironmentService
   ) {
-    // In dev mode, load mock expenses immediately
-    if ((environment as any).devMode) {
+    if (this.env.isDevMode) {
       this.expensesData.set([...MOCK_CANCELLABLE_EXPENSES]);
     }
   }
 
   async loadExpenses(): Promise<CancellableExpense[]> {
-    // Dev mode: return mock expenses
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       return this.expensesData();
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) return [];
-
-    if (!this.supabase.isConfigured) return [];
+    if (access.mode === 'error') {
+      console.error('Error loading cancellable expenses:', access.error.message);
+      return [];
+    }
 
     const { data, error } = await this.supabase.client
       .from('cancellable_expenses')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', access.userId)
       .order('priority', { ascending: true });
 
     if (error) {
@@ -110,13 +109,13 @@ export class CancellableExpenseService {
     renewal_date?: string;
     renewal_frequency?: RenewalFrequency;
   }): Promise<{ data: CancellableExpense | null; error: Error | null }> {
+    const access = this.env.checkAccess();
     const now = new Date().toISOString();
 
-    // Dev mode: add to local mock data
-    if ((environment as any).devMode) {
+    if (access.mode === 'dev') {
       const newExpense: CancellableExpense = {
         id: Date.now().toString(),
-        user_id: MOCK_USER_ID,
+        user_id: access.userId,
         name: expense.name,
         monthly_cost: expense.monthly_cost,
         category: expense.category,
@@ -133,19 +132,14 @@ export class CancellableExpenseService {
       return { data: newExpense, error: null };
     }
 
-    const userId = this.auth.user()?.id;
-    if (!userId) {
-      return { data: null, error: new Error('User not authenticated') };
-    }
-
-    if (!this.supabase.isConfigured) {
-      return { data: null, error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { data: null, error: access.error };
     }
 
     const { data, error } = await this.supabase.client
       .from('cancellable_expenses')
       .insert({
-        user_id: userId,
+        user_id: access.userId,
         ...expense
       })
       .select()
@@ -165,16 +159,17 @@ export class CancellableExpenseService {
     id: string,
     updates: Partial<Omit<CancellableExpense, 'id' | 'user_id' | 'created_at'>>
   ): Promise<{ error: Error | null }> {
-    // Dev mode: update local mock data
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       this.expensesData.update(expenses =>
         expenses.map(e => e.id === id ? { ...e, ...updates, updated_at: new Date().toISOString() } : e)
       );
       return { error: null };
     }
 
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
@@ -192,16 +187,17 @@ export class CancellableExpenseService {
   }
 
   async deleteExpense(id: string): Promise<{ error: Error | null }> {
-    // Dev mode: delete from local mock data
-    if ((environment as any).devMode) {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
       this.expensesData.update(expenses =>
         expenses.filter(e => e.id !== id)
       );
       return { error: null };
     }
 
-    if (!this.supabase.isConfigured) {
-      return { error: new Error('Supabase not configured') };
+    if (access.mode === 'error') {
+      return { error: access.error };
     }
 
     const { error } = await this.supabase.client
@@ -219,7 +215,7 @@ export class CancellableExpenseService {
   }
 
   clearExpenses(): void {
-    if ((environment as any).devMode) {
+    if (this.env.isDevMode) {
       this.expensesData.set([...MOCK_CANCELLABLE_EXPENSES]);
     } else {
       this.expensesData.set([]);
