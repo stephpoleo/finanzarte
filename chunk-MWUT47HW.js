@@ -1,0 +1,1 @@
+import{z as n}from"./chunk-CSOO2EH5.js";var p=(()=>{let t=class t{transform(r,i=1){return r==null?"0%":`${r.toFixed(i)}%`}};t.\u0275fac=function(i){return new(i||t)},t.\u0275pipe=n({name:"percentage",type:t,pure:!0});let e=t;return e})();export{p as a};
