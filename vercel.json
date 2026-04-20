@@ -19,6 +19,10 @@
       "destination": "https://wicofxkzfdaeoavkfagf.supabase.co/realtime/:path*"
     },
     {
+      "source": "/sb-api/functions/:path*",
+      "destination": "https://wicofxkzfdaeoavkfagf.supabase.co/functions/:path*"
+    },
+    {
       "source": "/((?!sb-api|assets|icons|.*\\.).*)",
       "destination": "/index.html"
     }
