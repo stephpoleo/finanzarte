@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1776661598200,
+  "timestamp": 1776661774263,
   "index": "/finanzarte/index.html",
   "assetGroups": [
     {
@@ -11,6 +11,7 @@
         "ignoreVary": true
       },
       "urls": [
+        "/finanzarte/chunk-2QHB2XZH.js",
         "/finanzarte/chunk-3CIUETK2.js",
         "/finanzarte/chunk-42C7ZIID.js",
         "/finanzarte/chunk-4LPSRHFJ.js",
@@ -18,6 +19,7 @@
         "/finanzarte/chunk-4ZZLFLTZ.js",
         "/finanzarte/chunk-57JDVFA6.js",
         "/finanzarte/chunk-5BV5WPRX.js",
+        "/finanzarte/chunk-6SB3RO52.js",
         "/finanzarte/chunk-6ZYSWPSE.js",
         "/finanzarte/chunk-77WWYXB5.js",
         "/finanzarte/chunk-7KGURMOZ.js",
@@ -34,7 +36,6 @@
         "/finanzarte/chunk-I52UMRL7.js",
         "/finanzarte/chunk-JBX4CHHR.js",
         "/finanzarte/chunk-JWRNFPRW.js",
-        "/finanzarte/chunk-LRFAOQVF.js",
         "/finanzarte/chunk-M2X7KQLB.js",
         "/finanzarte/chunk-MOYXD5YU.js",
         "/finanzarte/chunk-MV7JVA6Y.js",
@@ -49,7 +50,6 @@
         "/finanzarte/chunk-PETQAWSK.js",
         "/finanzarte/chunk-QM7PHPOV.js",
         "/finanzarte/chunk-QYBRTGYM.js",
-        "/finanzarte/chunk-STND6WNQ.js",
         "/finanzarte/chunk-TZCNW6GR.js",
         "/finanzarte/chunk-TZPSEB2O.js",
         "/finanzarte/chunk-UD7WO3C2.js",
@@ -61,7 +61,7 @@
         "/finanzarte/chunk-WFVFJ7BJ.js",
         "/finanzarte/chunk-WXJXHNIG.js",
         "/finanzarte/index.html",
-        "/finanzarte/main-FHLCNRIF.js",
+        "/finanzarte/main-AIPUZBJH.js",
         "/finanzarte/manifest.webmanifest",
         "/finanzarte/polyfills-TDCRLYKL.js",
         "/finanzarte/styles-QHP6UCNN.css"
@@ -98,6 +98,7 @@
     "/finanzarte/assets/icon/favicon.png": "7798b8e0eb61d7375c245af78bbf5c916932bf13",
     "/finanzarte/assets/images/finanzarte_logo.jpeg": "3b5356dfe57b109fdba607ea5aa37b06be8f2623",
     "/finanzarte/assets/shapes.svg": "5413e95adabcb2cb639970051f55e0ddb64ace53",
+    "/finanzarte/chunk-2QHB2XZH.js": "87d752da0e6bc6e4379c9d7742bcf00c2a8d9f28",
     "/finanzarte/chunk-3CIUETK2.js": "0f18d2639c6045cc658228d9518101a349c783f8",
     "/finanzarte/chunk-42C7ZIID.js": "9a4312a44cc8ab8573488a48a18c01a6bb352c6b",
     "/finanzarte/chunk-4LPSRHFJ.js": "cb21e0cfd11c50f455dc36a0e576b363af45eae6",
@@ -105,6 +106,7 @@
     "/finanzarte/chunk-4ZZLFLTZ.js": "c12ec593450a806b73a6fa8311aba57c2fc50aca",
     "/finanzarte/chunk-57JDVFA6.js": "3aebf0e3e1989776bab7780bf6ccfbe610704527",
     "/finanzarte/chunk-5BV5WPRX.js": "1c4447e1292c70ed608d19f740d7404fa1b34134",
+    "/finanzarte/chunk-6SB3RO52.js": "aa9822cacb8973d282591b7edb821c2eb4c08082",
     "/finanzarte/chunk-6ZYSWPSE.js": "b057a495157c6594d4986efd3063d3575b50e5eb",
     "/finanzarte/chunk-77WWYXB5.js": "f293d066e54152e40ee86ec72d7c960e3b8237b6",
     "/finanzarte/chunk-7KGURMOZ.js": "27ca889a1a8ce9c98bae8853afda2496b2df5084",
@@ -121,7 +123,6 @@
     "/finanzarte/chunk-I52UMRL7.js": "cef6442e8d5ea3911da897896920a4e68984267e",
     "/finanzarte/chunk-JBX4CHHR.js": "745666864d2cdf5afc25d7bdf6bba536c0baebbf",
     "/finanzarte/chunk-JWRNFPRW.js": "4dc842a3564c58bae7da9b21f44b73a8a4af6335",
-    "/finanzarte/chunk-LRFAOQVF.js": "b523e71d63c2dfcb3505883091611818fcc4e621",
     "/finanzarte/chunk-M2X7KQLB.js": "7610d018b4a45d32351f6d9f64fb4fa41b99fe9e",
     "/finanzarte/chunk-MOYXD5YU.js": "9934744cb36df4d4095b875e337a4d6af006cc64",
     "/finanzarte/chunk-MV7JVA6Y.js": "7994ccee1de60fc5df90f4785b65b025e301a2e3",
@@ -136,7 +137,6 @@
     "/finanzarte/chunk-PETQAWSK.js": "33cc604f2836d9b4d5d52bcd850ca5419d544b92",
     "/finanzarte/chunk-QM7PHPOV.js": "677b09872e1f9eb6ba91cd8cb531b170e0049b63",
     "/finanzarte/chunk-QYBRTGYM.js": "1b85288df75a33cbac9b77cb0bf9d49abc9bfe1e",
-    "/finanzarte/chunk-STND6WNQ.js": "3c5344f60ff153526a244f30e334363b62bed313",
     "/finanzarte/chunk-TZCNW6GR.js": "878a2e392692a51c2a1adc514395eb96626dd786",
     "/finanzarte/chunk-TZPSEB2O.js": "a6def28ebdf7134b0ee698b53c94c87aa71709bb",
     "/finanzarte/chunk-UD7WO3C2.js": "1458a9486f1ad7d9f513a065d86a2bfaab5ed3fa",
@@ -155,8 +155,8 @@
     "/finanzarte/icons/icon-512x512.png": "1de182f76f7329dfa8f9fcdd1fdcdd695bea6a99",
     "/finanzarte/icons/icon-72x72.png": "aa88a6096bd973be7f6d7a5489bfa6bc2463f8c4",
     "/finanzarte/icons/icon-96x96.png": "7fb8f59c30ce2ff12c700321a0b39e14b3dc8f95",
-    "/finanzarte/index.html": "962cba7499c7c41aa40142e778ab44bc743ec279",
-    "/finanzarte/main-FHLCNRIF.js": "3ed87a9e40c8db0f99a207ab89a000b4cd9ca7fa",
+    "/finanzarte/index.html": "a42da47f23b6bddd7f67b9bf48da47c123c2d047",
+    "/finanzarte/main-AIPUZBJH.js": "0434be8d8af627d3d1c9aba090dfb893ae5d92db",
     "/finanzarte/manifest.webmanifest": "8a86969c6357dc5295b939d1ce60d454f6f1259d",
     "/finanzarte/polyfills-TDCRLYKL.js": "454f6db4230cc7ab61b24fe465dcc92bf041737d",
     "/finanzarte/styles-QHP6UCNN.css": "a751e0a19c17da84bbb6e0d11f53c1ee13d17735"
