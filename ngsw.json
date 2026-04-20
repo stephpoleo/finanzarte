@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1776659618343,
+  "timestamp": 1776659964378,
   "index": "/finanzarte/index.html",
   "assetGroups": [
     {
@@ -62,6 +62,7 @@
         "/finanzarte/chunk-ZBOHFMFP.js",
         "/finanzarte/index.html",
         "/finanzarte/main-LFL3T3CP.js",
+        "/finanzarte/manifest.webmanifest",
         "/finanzarte/polyfills-TDCRLYKL.js",
         "/finanzarte/styles-QHP6UCNN.css"
       ],
@@ -78,7 +79,15 @@
         "/finanzarte/assets/icon/favicon.jpeg",
         "/finanzarte/assets/icon/favicon.png",
         "/finanzarte/assets/images/finanzarte_logo.jpeg",
-        "/finanzarte/assets/shapes.svg"
+        "/finanzarte/assets/shapes.svg",
+        "/finanzarte/icons/icon-128x128.png",
+        "/finanzarte/icons/icon-144x144.png",
+        "/finanzarte/icons/icon-152x152.png",
+        "/finanzarte/icons/icon-192x192.png",
+        "/finanzarte/icons/icon-384x384.png",
+        "/finanzarte/icons/icon-512x512.png",
+        "/finanzarte/icons/icon-72x72.png",
+        "/finanzarte/icons/icon-96x96.png"
       ],
       "patterns": []
     }
@@ -138,8 +147,17 @@
     "/finanzarte/chunk-WFVFJ7BJ.js": "65d68ad54590f135510903d522f655f4b6361082",
     "/finanzarte/chunk-WXJXHNIG.js": "c6e46bc6ff6d39903c684346e122319921b21289",
     "/finanzarte/chunk-ZBOHFMFP.js": "0f39d0c65df66d150183b9a3d3587ff2c1f328a8",
+    "/finanzarte/icons/icon-128x128.png": "f912963bdc6d5a38d8f1dd0afbaab2ce8d657acb",
+    "/finanzarte/icons/icon-144x144.png": "b155fd5f2fd5d2ea7760721063003c4cd95fd783",
+    "/finanzarte/icons/icon-152x152.png": "eae6e0f0c8afb8aaae339e2a569b43e9238e5e6c",
+    "/finanzarte/icons/icon-192x192.png": "15c4180454633880d98674aa7394656196c91584",
+    "/finanzarte/icons/icon-384x384.png": "94a915751ef6c9282df9aea405ad679230631814",
+    "/finanzarte/icons/icon-512x512.png": "1de182f76f7329dfa8f9fcdd1fdcdd695bea6a99",
+    "/finanzarte/icons/icon-72x72.png": "aa88a6096bd973be7f6d7a5489bfa6bc2463f8c4",
+    "/finanzarte/icons/icon-96x96.png": "7fb8f59c30ce2ff12c700321a0b39e14b3dc8f95",
     "/finanzarte/index.html": "e113edc8280ac53efc3bd3a0c46bdc0bcea71d0c",
     "/finanzarte/main-LFL3T3CP.js": "b0ac1db1e326b9888d2d49edf359d05bc5c0fdf0",
+    "/finanzarte/manifest.webmanifest": "8a86969c6357dc5295b939d1ce60d454f6f1259d",
     "/finanzarte/polyfills-TDCRLYKL.js": "454f6db4230cc7ab61b24fe465dcc92bf041737d",
     "/finanzarte/styles-QHP6UCNN.css": "a751e0a19c17da84bbb6e0d11f53c1ee13d17735"
   },
