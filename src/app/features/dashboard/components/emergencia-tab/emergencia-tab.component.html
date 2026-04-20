@@ -493,7 +493,7 @@
           @for (expense of cancellableExpenses.expenses(); track expense.id) {
             <div class="cancellable-item">
               <div class="cancellable-left">
-                <span class="cancellable-icon">{{ getCategoryIcon(expense.category) }}</span>
+                <span class="cancellable-icon"><ion-icon [name]="getCategoryIcon(expense.category)"></ion-icon></span>
                 <div class="cancellable-info">
                   <span class="cancellable-name">{{ expense.name }}</span>
                   <span class="cancellable-meta">{{ getCategoryLabel(expense.category) }} · {{ getPriorityLabel(expense.priority) }}</span>

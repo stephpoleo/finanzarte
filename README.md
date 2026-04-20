@@ -1,6 +1,6 @@
 # Finanzarte
 
-App de finanzas personales para usuarios mexicanos.
+App de finanzas personales para usuarios mexicanos. Incluye calculadora de impuestos (ISR/IMSS), presupuesto, fondo de emergencia, inversiones, retiro y **finanzas en pareja**.
 
 ## Tech Stack
 
@@ -83,12 +83,24 @@ Con `devMode: true` en `environment.ts`:
 - Datos de ejemplo precargados
 - No requiere conexión a Supabase
 
+## Funcionalidades
+
+- **Presupuesto** — Ingresos y gastos mensuales con gráficas
+- **Fondo de Emergencia** — Roadmap de milestones, distribución en SOFIPOs/CETES
+- **Ahorros** — Metas a corto y largo plazo
+- **Inversiones** — Portafolio con Rule of 110, rendimientos por tipo
+- **Retiro** — Proyecciones con interés compuesto
+- **Finanzas en Pareja** — Vincular cuentas, gastos compartidos (proporcional o 50/50), ingreso combinado
+- **Calculadora fiscal** — ISR 2024, IMSS, subsidio al empleo
+
 ## Base de Datos
 
 El schema de Supabase está en `supabase/schema.sql`. Incluye:
 - Tablas con Row Level Security (RLS)
 - Triggers para creación automática de perfil
 - Vistas y funciones auxiliares
+- Tablas de hogar (households, invitaciones, gastos compartidos)
+- Funciones SECURITY DEFINER para ingreso agregado y aceptar invitaciones
 
 ## Licencia
 

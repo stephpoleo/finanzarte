@@ -658,6 +658,267 @@ LEFT JOIN emergency_cetes_allocation eca ON u.user_id = eca.user_id
 GROUP BY u.user_id, eca.amount, eca.rate;
 
 -- =====================================================
+-- HOUSEHOLDS TABLE
+-- Central entity for couple/household financial sharing
+-- =====================================================
+CREATE TABLE IF NOT EXISTS households (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT DEFAULT 'Mi Hogar',
+  expense_split_mode TEXT CHECK (expense_split_mode IN ('proportional', '50-50')) DEFAULT 'proportional',
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE households ENABLE ROW LEVEL SECURITY;
+
+-- Policies: members can read, owner can update/delete
+DROP POLICY IF EXISTS "Household members can view" ON households;
+CREATE POLICY "Household members can view" ON households
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM household_members hm
+      WHERE hm.household_id = id AND hm.user_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Household owner can update" ON households;
+CREATE POLICY "Household owner can update" ON households
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM household_members hm
+      WHERE hm.household_id = id AND hm.user_id = auth.uid() AND hm.role = 'owner'
+    )
+  );
+
+DROP POLICY IF EXISTS "Household owner can delete" ON households;
+CREATE POLICY "Household owner can delete" ON households
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM household_members hm
+      WHERE hm.household_id = id AND hm.user_id = auth.uid() AND hm.role = 'owner'
+    )
+  );
+
+DROP POLICY IF EXISTS "Authenticated users can create households" ON households;
+CREATE POLICY "Authenticated users can create households" ON households
+  FOR INSERT TO authenticated WITH CHECK (true);
+
+-- =====================================================
+-- HOUSEHOLD MEMBERS TABLE
+-- Links users to households (max 2 for MVP)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS household_members (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  household_id UUID REFERENCES households(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  role TEXT CHECK (role IN ('owner', 'member')) DEFAULT 'member',
+  joined_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(household_id, user_id),
+  UNIQUE(user_id) -- a user can only be in one household
+);
+
+-- Enable RLS
+ALTER TABLE household_members ENABLE ROW LEVEL SECURITY;
+
+-- Policies: members can see who is in their household
+DROP POLICY IF EXISTS "Members can view household members" ON household_members;
+CREATE POLICY "Members can view household members" ON household_members
+  FOR SELECT USING (
+    household_id IN (
+      SELECT hm.household_id FROM household_members hm WHERE hm.user_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can insert own membership" ON household_members;
+CREATE POLICY "Users can insert own membership" ON household_members
+  FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "Users can delete own membership" ON household_members;
+CREATE POLICY "Users can delete own membership" ON household_members
+  FOR DELETE USING (user_id = auth.uid());
+
+-- Index for faster queries
+CREATE INDEX IF NOT EXISTS idx_household_members_user_id ON household_members(user_id);
+CREATE INDEX IF NOT EXISTS idx_household_members_household_id ON household_members(household_id);
+
+-- =====================================================
+-- HOUSEHOLD INVITATIONS TABLE
+-- Invitation flow for joining a household
+-- =====================================================
+CREATE TABLE IF NOT EXISTS household_invitations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  household_id UUID REFERENCES households(id) ON DELETE CASCADE NOT NULL,
+  invited_by UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  invited_email TEXT NOT NULL,
+  invited_user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  status TEXT CHECK (status IN ('pending', 'accepted', 'declined', 'cancelled')) DEFAULT 'pending',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  responded_at TIMESTAMPTZ,
+  UNIQUE(household_id, invited_email)
+);
+
+-- Enable RLS
+ALTER TABLE household_invitations ENABLE ROW LEVEL SECURITY;
+
+-- Policies: creator can see/cancel, invited user can see/respond
+DROP POLICY IF EXISTS "Creators can view own invitations" ON household_invitations;
+CREATE POLICY "Creators can view own invitations" ON household_invitations
+  FOR SELECT USING (invited_by = auth.uid());
+
+DROP POLICY IF EXISTS "Invited users can view invitations" ON household_invitations;
+CREATE POLICY "Invited users can view invitations" ON household_invitations
+  FOR SELECT USING (invited_user_id = auth.uid());
+
+DROP POLICY IF EXISTS "Members can create invitations" ON household_invitations;
+CREATE POLICY "Members can create invitations" ON household_invitations
+  FOR INSERT TO authenticated WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM household_members hm
+      WHERE hm.household_id = household_id AND hm.user_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Creators can cancel invitations" ON household_invitations;
+CREATE POLICY "Creators can cancel invitations" ON household_invitations
+  FOR UPDATE USING (invited_by = auth.uid());
+
+DROP POLICY IF EXISTS "Invited users can respond to invitations" ON household_invitations;
+CREATE POLICY "Invited users can respond to invitations" ON household_invitations
+  FOR UPDATE USING (invited_user_id = auth.uid());
+
+-- Index for faster queries
+CREATE INDEX IF NOT EXISTS idx_household_invitations_email ON household_invitations(invited_email);
+CREATE INDEX IF NOT EXISTS idx_household_invitations_household_id ON household_invitations(household_id);
+
+-- =====================================================
+-- SHARED EXPENSES TABLE
+-- Marks existing expenses as shared within a household
+-- =====================================================
+CREATE TABLE IF NOT EXISTS shared_expenses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  household_id UUID REFERENCES households(id) ON DELETE CASCADE NOT NULL,
+  expense_id UUID REFERENCES expenses(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(expense_id)
+);
+
+-- Enable RLS
+ALTER TABLE shared_expenses ENABLE ROW LEVEL SECURITY;
+
+-- Policies: both members can read, each marks/unmarks their own
+DROP POLICY IF EXISTS "Household members can view shared expenses" ON shared_expenses;
+CREATE POLICY "Household members can view shared expenses" ON shared_expenses
+  FOR SELECT USING (
+    household_id IN (
+      SELECT hm.household_id FROM household_members hm WHERE hm.user_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can mark own expenses as shared" ON shared_expenses;
+CREATE POLICY "Users can mark own expenses as shared" ON shared_expenses
+  FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "Users can unmark own shared expenses" ON shared_expenses;
+CREATE POLICY "Users can unmark own shared expenses" ON shared_expenses
+  FOR DELETE USING (user_id = auth.uid());
+
+-- Index for faster queries
+CREATE INDEX IF NOT EXISTS idx_shared_expenses_household_id ON shared_expenses(household_id);
+CREATE INDEX IF NOT EXISTS idx_shared_expenses_expense_id ON shared_expenses(expense_id);
+
+-- =====================================================
+-- Modify expenses RLS: allow partner to read shared expenses
+-- =====================================================
+DROP POLICY IF EXISTS "Partner can view shared expenses" ON expenses;
+CREATE POLICY "Partner can view shared expenses" ON expenses
+  FOR SELECT USING (
+    id IN (
+      SELECT se.expense_id FROM shared_expenses se
+      WHERE se.household_id IN (
+        SELECT hm.household_id FROM household_members hm WHERE hm.user_id = auth.uid()
+      )
+    )
+  );
+
+-- =====================================================
+-- HOUSEHOLD HELPER FUNCTIONS
+-- =====================================================
+
+-- Function to get household income summary (SECURITY DEFINER to bypass RLS)
+CREATE OR REPLACE FUNCTION get_household_income_summary(p_household_id UUID)
+RETURNS TABLE(user_id UUID, full_name TEXT, total_income DECIMAL) AS $$
+BEGIN
+  -- Validate caller is a member of this household
+  IF NOT EXISTS (
+    SELECT 1 FROM household_members hm
+    WHERE hm.household_id = p_household_id AND hm.user_id = auth.uid()
+  ) THEN
+    RAISE EXCEPTION 'Not a member of this household';
+  END IF;
+
+  RETURN QUERY
+  SELECT
+    hm.user_id,
+    COALESCE(p.full_name, 'Sin nombre') AS full_name,
+    COALESCE(SUM(i.amount), 0) AS total_income
+  FROM household_members hm
+  LEFT JOIN profiles p ON p.id = hm.user_id
+  LEFT JOIN income_sources i ON i.user_id = hm.user_id
+  WHERE hm.household_id = p_household_id
+  GROUP BY hm.user_id, p.full_name;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to accept a household invitation
+CREATE OR REPLACE FUNCTION accept_household_invitation(p_invitation_id UUID, p_user_id UUID)
+RETURNS VOID AS $$
+DECLARE
+  v_invitation household_invitations%ROWTYPE;
+  v_member_count INTEGER;
+BEGIN
+  -- Get invitation
+  SELECT * INTO v_invitation
+  FROM household_invitations
+  WHERE id = p_invitation_id AND status = 'pending';
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Invitation not found or already responded';
+  END IF;
+
+  -- Verify the user is the invited user
+  IF v_invitation.invited_user_id IS NOT NULL AND v_invitation.invited_user_id != p_user_id THEN
+    RAISE EXCEPTION 'This invitation is not for you';
+  END IF;
+
+  -- Check user is not already in a household
+  IF EXISTS (SELECT 1 FROM household_members WHERE user_id = p_user_id) THEN
+    RAISE EXCEPTION 'Already in a household';
+  END IF;
+
+  -- Check household doesn't already have 2 members (MVP limit)
+  SELECT COUNT(*) INTO v_member_count
+  FROM household_members
+  WHERE household_id = v_invitation.household_id;
+
+  IF v_member_count >= 2 THEN
+    RAISE EXCEPTION 'Household already has maximum members';
+  END IF;
+
+  -- Add member
+  INSERT INTO household_members (household_id, user_id, role)
+  VALUES (v_invitation.household_id, p_user_id, 'member');
+
+  -- Update invitation status
+  UPDATE household_invitations
+  SET status = 'accepted', responded_at = NOW(), invited_user_id = p_user_id
+  WHERE id = p_invitation_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- =====================================================
 -- MIGRATION HELPERS (run only if updating existing DB)
 -- =====================================================
 -- Add birth_date to profiles if it doesn't exist

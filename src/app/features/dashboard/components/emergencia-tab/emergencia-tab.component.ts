@@ -18,7 +18,11 @@ import {
   createOutline,
   closeOutline,
   checkmarkOutline,
-  warningOutline
+  warningOutline,
+  cardOutline,
+  peopleOutline,
+  constructOutline,
+  ellipsisHorizontalOutline
 } from 'ionicons/icons';
 
 import { UserSettingsService } from '../../../../core/services/user-settings.service';
@@ -144,7 +148,11 @@ export class EmergenciaTabComponent implements OnInit {
       createOutline,
       closeOutline,
       checkmarkOutline,
-      warningOutline
+      warningOutline,
+      cardOutline,
+      peopleOutline,
+      constructOutline,
+      ellipsisHorizontalOutline
     });
   }
 

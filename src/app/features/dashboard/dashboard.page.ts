@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonContent,
+  IonHeader,
+  IonFooter,
+  IonToolbar,
   IonIcon,
   IonRefresher,
   IonRefresherContent,
@@ -15,7 +18,10 @@ import {
   shieldCheckmarkOutline,
   leafOutline,
   trendingUpOutline,
-  flagOutline
+  flagOutline,
+  homeOutline,
+  personOutline,
+  peopleOutline
 } from 'ionicons/icons';
 
 import { ProfileService } from '../../core/services/profile.service';
@@ -27,6 +33,7 @@ import { InvestmentService } from '../../core/services/investment.service';
 import { UserSettingsService } from '../../core/services/user-settings.service';
 import { CancellableExpenseService } from '../../core/services/cancellable-expense.service';
 import { ShortTermGoalService } from '../../core/services/short-term-goal.service';
+import { HouseholdService } from '../../core/services/household.service';
 
 import { PresupuestoTabComponent } from './components/presupuesto-tab/presupuesto-tab.component';
 import { EmergenciaTabComponent } from './components/emergencia-tab/emergencia-tab.component';
@@ -42,6 +49,9 @@ type TabType = 'presupuesto' | 'emergencia' | 'ahorros' | 'inversiones' | 'retir
   imports: [
     CommonModule,
     IonContent,
+    IonHeader,
+    IonFooter,
+    IonToolbar,
     IonRefresher,
     IonRefresherContent,
     IonIcon,
@@ -66,7 +76,8 @@ export class DashboardPage implements OnInit {
     private investments: InvestmentService,
     private userSettings: UserSettingsService,
     private cancellableExpenses: CancellableExpenseService,
-    private shortTermGoals: ShortTermGoalService
+    private shortTermGoals: ShortTermGoalService,
+    public household: HouseholdService
   ) {
     addIcons({
       menuOutline,
@@ -75,7 +86,10 @@ export class DashboardPage implements OnInit {
       shieldCheckmarkOutline,
       leafOutline,
       trendingUpOutline,
-      flagOutline
+      flagOutline,
+      homeOutline,
+      personOutline,
+      peopleOutline
     });
   }
 
@@ -92,7 +106,8 @@ export class DashboardPage implements OnInit {
       this.investments.loadInvestments(),
       this.userSettings.loadSettings(),
       this.cancellableExpenses.loadExpenses(),
-      this.shortTermGoals.loadGoals()
+      this.shortTermGoals.loadGoals(),
+      this.household.loadHousehold()
     ]);
   }
 
