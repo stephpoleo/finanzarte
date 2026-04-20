@@ -14,12 +14,17 @@ import {
   trashOutline,
   alertCircleOutline,
   alertOutline,
-  openOutline
+  openOutline,
+  createOutline,
+  closeOutline,
+  checkmarkOutline,
+  warningOutline
 } from 'ionicons/icons';
 
 import { UserSettingsService } from '../../../../core/services/user-settings.service';
 import { CancellableExpenseService } from '../../../../core/services/cancellable-expense.service';
 import { FinancialRatesService } from '../../../../core/services/financial-rates.service';
+import { EmergencyAllocationService } from '../../../../core/services/emergency-allocation.service';
 import { CurrencyMxnPipe } from '../../../../shared/pipes/currency-mxn.pipe';
 import {
   CancellableExpense,
@@ -27,7 +32,14 @@ import {
   CancellationPriority,
   CANCELLABLE_CATEGORIES,
   CANCELLATION_PRIORITIES,
-  SofipoWithRates
+  SofipoWithRates,
+  SofipoAllocation,
+  CetesAllocation,
+  SofipoAllocationFormData,
+  CetesAllocationFormData,
+  SOFIPO_TERM_OPTIONS,
+  CETES_TERM_OPTIONS,
+  SOFIPO_TAX_EXEMPT_LIMIT
 } from '../../../../models';
 import { TAX_EXEMPT_LIMIT } from '../../../../data/savings-instruments';
 
@@ -55,6 +67,9 @@ export class EmergenciaTabComponent implements OnInit {
 
   // Calculation toggle
   emergencyCalcByIncome = false;
+
+  // Distribution mode: 'auto' (recommended) or 'custom' (user-defined)
+  distributionMode: 'auto' | 'custom' = 'auto';
 
   // Tax exempt limit (UMA-based constant)
   taxExemptLimit = TAX_EXEMPT_LIMIT;
@@ -86,10 +101,33 @@ export class EmergenciaTabComponent implements OnInit {
     { label: '24 meses', months: 24, emoji: '🏰' }
   ];
 
+  // SOFIPO allocation form state
+  showSofipoForm = false;
+  editingSofipoId: string | null = null;
+  sofipoForm: SofipoAllocationFormData = {
+    sofipo_id: 0,
+    sofipo_name: '',
+    amount: 0,
+    term_days: 0,
+    rate: 0
+  };
+  sofipoTermOptions = SOFIPO_TERM_OPTIONS;
+
+  // CETES allocation form state
+  showCetesForm = false;
+  editingCetes = false;
+  cetesForm: CetesAllocationFormData = {
+    amount: 0,
+    term_days: 28,
+    rate: 0
+  };
+  cetesTermOptions = CETES_TERM_OPTIONS;
+
   constructor(
     public userSettings: UserSettingsService,
     public cancellableExpenses: CancellableExpenseService,
-    public ratesService: FinancialRatesService
+    public ratesService: FinancialRatesService,
+    public allocationService: EmergencyAllocationService
   ) {
     addIcons({
       shieldCheckmarkOutline,
@@ -102,13 +140,25 @@ export class EmergenciaTabComponent implements OnInit {
       trashOutline,
       alertCircleOutline,
       alertOutline,
-      openOutline
+      openOutline,
+      createOutline,
+      closeOutline,
+      checkmarkOutline,
+      warningOutline
     });
   }
 
   async ngOnInit(): Promise<void> {
     this.cancellableExpenses.loadExpenses();
-    await this.ratesService.loadAllRates();
+    await Promise.all([
+      this.ratesService.loadAllRates(),
+      this.allocationService.loadAllocations()
+    ]);
+
+    // Show custom mode by default if user has allocations
+    if (this.allocationService.sofipoAllocations().length > 0 || this.allocationService.cetesAllocation()) {
+      this.distributionMode = 'custom';
+    }
   }
 
   // Financial rates from service
@@ -287,5 +337,157 @@ export class EmergenciaTabComponent implements OnInit {
 
   get planBTotalMonthsCovered(): number {
     return this.emergencyMonthsCovered + this.planBAdditionalMonths;
+  }
+
+  // ==================== Distribution Allocations ====================
+
+  get totalAllocated(): number {
+    return this.allocationService.totalAllocated();
+  }
+
+  get unallocatedAmount(): number {
+    return this.allocationService.getUnallocatedAmount(this.emergencyCurrentSavings);
+  }
+
+  get hasUnallocated(): boolean {
+    return this.unallocatedAmount > 0;
+  }
+
+  get exceedsTaxExemptLimit(): boolean {
+    return this.allocationService.exceedsTaxExemptLimit();
+  }
+
+  get sofipoExcessAmount(): number {
+    return this.allocationService.sofipoExcessAmount();
+  }
+
+  get weightedAverageRate(): number {
+    return this.allocationService.weightedAverageRate();
+  }
+
+  // Get available SOFIPOs (not yet allocated)
+  get availableSofipos(): SofipoWithRates[] {
+    return this.sofipos.filter(
+      s => !this.allocationService.isSofipoAllocated(s.id) ||
+           this.editingSofipoId !== null && this.allocationService.getAllocationBySofipoId(s.id)?.id === this.editingSofipoId
+    );
+  }
+
+  // SOFIPO Form Methods
+  openSofipoForm(allocation?: SofipoAllocation): void {
+    if (allocation) {
+      // Editing existing
+      this.editingSofipoId = allocation.id;
+      this.sofipoForm = {
+        sofipo_id: allocation.sofipo_id,
+        sofipo_name: allocation.sofipo_name,
+        amount: allocation.amount,
+        term_days: allocation.term_days,
+        rate: allocation.rate
+      };
+    } else {
+      // Adding new
+      this.editingSofipoId = null;
+      const firstAvailable = this.availableSofipos[0];
+      this.sofipoForm = {
+        sofipo_id: firstAvailable?.id || 0,
+        sofipo_name: firstAvailable?.nombre || '',
+        amount: 0,
+        term_days: 0,
+        rate: firstAvailable?.flexibleRate || 0
+      };
+    }
+    this.showSofipoForm = true;
+  }
+
+  closeSofipoForm(): void {
+    this.showSofipoForm = false;
+    this.editingSofipoId = null;
+  }
+
+  onSofipoSelect(sofipoId: number): void {
+    // sofipoForm.sofipo_id is already updated by [(ngModel)]
+    const sofipo = this.sofipos.find(s => s.id === sofipoId);
+    if (sofipo) {
+      this.sofipoForm.sofipo_name = sofipo.nombre;
+      this.sofipoForm.rate = this.getRateForSofipoTerm(sofipo, this.sofipoForm.term_days);
+    }
+  }
+
+  onSofipoTermChange(termDays: number): void {
+    // sofipoForm.term_days is already updated by [(ngModel)]
+    const sofipo = this.sofipos.find(s => s.id === this.sofipoForm.sofipo_id);
+    if (sofipo) {
+      this.sofipoForm.rate = this.getRateForSofipoTerm(sofipo, termDays);
+    }
+  }
+
+  getRateForSofipoTerm(sofipo: SofipoWithRates, termDays: number): number {
+    if (termDays === 0) {
+      return sofipo.flexibleRate;
+    }
+    const rateForTerm = sofipo.rates?.find(r => r.plazo === termDays);
+    return rateForTerm?.tasa || sofipo.flexibleRate;
+  }
+
+  async saveSofipoAllocation(): Promise<void> {
+    if (!this.sofipoForm.sofipo_id || this.sofipoForm.amount <= 0) return;
+
+    if (this.editingSofipoId) {
+      await this.allocationService.updateSofipoAllocation(this.editingSofipoId, this.sofipoForm);
+    } else {
+      await this.allocationService.addSofipoAllocation(this.sofipoForm);
+    }
+    this.closeSofipoForm();
+  }
+
+  async deleteSofipoAllocation(id: string): Promise<void> {
+    await this.allocationService.deleteSofipoAllocation(id);
+  }
+
+  getTermLabel(termDays: number): string {
+    if (termDays === 0) return 'Flexible';
+    return `${termDays} días`;
+  }
+
+  // CETES Form Methods
+  openCetesForm(): void {
+    const existing = this.allocationService.cetesAllocation();
+    if (existing) {
+      this.editingCetes = true;
+      this.cetesForm = {
+        amount: existing.amount,
+        term_days: existing.term_days,
+        rate: existing.rate
+      };
+    } else {
+      this.editingCetes = false;
+      this.cetesForm = {
+        amount: 0,
+        term_days: 28,
+        rate: this.ratesService.getCetesRateByTerm(28) || this.cetesRate
+      };
+    }
+    this.showCetesForm = true;
+  }
+
+  closeCetesForm(): void {
+    this.showCetesForm = false;
+    this.editingCetes = false;
+  }
+
+  onCetesTermChange(termDays: number): void {
+    // cetesForm.term_days is already updated by [(ngModel)]
+    this.cetesForm.rate = this.ratesService.getCetesRateByTerm(termDays) || this.cetesRate;
+  }
+
+  async saveCetesAllocation(): Promise<void> {
+    if (this.cetesForm.amount <= 0) return;
+    await this.allocationService.upsertCetesAllocation(this.cetesForm);
+    this.closeCetesForm();
+  }
+
+  async deleteCetesAllocation(): Promise<void> {
+    await this.allocationService.deleteCetesAllocation();
   }
 }

@@ -31,9 +31,9 @@
           <ion-icon name="shield-checkmark-outline"></ion-icon>
           <span>Emergencia</span>
         </button>
-        <button class="nav-tab" [class.active-amber]="activeTab === 'largo-plazo'" (click)="navigateToTab('largo-plazo')">
+        <button class="nav-tab" [class.active-amber]="activeTab === 'ahorros'" (click)="navigateToTab('ahorros')">
           <ion-icon name="leaf-outline"></ion-icon>
-          <span>Largo Plazo</span>
+          <span>Ahorros</span>
         </button>
         <button class="nav-tab" [class.active-indigo]="activeTab === 'inversiones'" (click)="navigateToTab('inversiones')">
           <ion-icon name="trending-up-outline"></ion-icon>
@@ -50,7 +50,7 @@
     @if (activeTab === 'presupuesto') {
       <app-presupuesto-tab
         (navigateToEmergencia)="navigateToTab('emergencia')"
-        (navigateToLargoPlazo)="navigateToTab('largo-plazo')">
+        (navigateToAhorros)="navigateToTab('ahorros')">
       </app-presupuesto-tab>
     }
 
@@ -59,9 +59,11 @@
       </app-emergencia-tab>
     }
 
-    @if (activeTab === 'largo-plazo') {
-      <app-largo-plazo-tab (navigateToInversiones)="navigateToTab('inversiones')">
-      </app-largo-plazo-tab>
+    @if (activeTab === 'ahorros') {
+      <app-ahorros-tab
+        [emergencyRecommendedPct]="emergencyRecommendedPct"
+        (navigateToInversiones)="navigateToTab('inversiones')">
+      </app-ahorros-tab>
     }
 
     @if (activeTab === 'inversiones') {

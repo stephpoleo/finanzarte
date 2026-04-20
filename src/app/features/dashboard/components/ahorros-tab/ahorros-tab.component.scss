@@ -64,7 +64,7 @@
 
   .stat-value {
     display: block;
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: 700;
     margin: 4px 0;
   }
@@ -94,10 +94,6 @@
       display: flex;
       flex-direction: column;
 
-      .breakdown-icon {
-        display: none;
-      }
-
       .breakdown-label {
         opacity: 0.7;
         font-size: 0.7rem;
@@ -105,7 +101,7 @@
 
       .breakdown-value {
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
       }
     }
   }
@@ -115,12 +111,22 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+
+  &.recommended {
+    margin-bottom: 12px;
+  }
 }
 
 .hero-box {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   padding: 12px;
+  min-width: 0;
+
+  &.full {
+    text-align: center;
+    margin-bottom: 12px;
+  }
 
   .box-label {
     display: block;
@@ -130,7 +136,7 @@
 
   .box-value {
     display: block;
-    font-size: 1.25rem;
+    font-size: 1rem;
     font-weight: 700;
   }
 
@@ -149,7 +155,6 @@
   padding: 20px;
   margin-bottom: 16px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
   box-sizing: border-box;
 }
 
@@ -164,6 +169,430 @@
   font-size: 0.75rem;
   color: #6b7280;
   margin: 2px 0 0;
+}
+
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+/* Short-Term Goals Card */
+.short-term-card {
+  border-top: 4px solid #06b6d4;
+
+  .section-hint {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 0 0 16px 0;
+  }
+
+  .empty-hint {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    text-align: center;
+    padding: 24px 0;
+    margin: 0;
+  }
+
+  .add-btn {
+    background: #06b6d4;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    ion-icon {
+      font-size: 18px;
+      color: white;
+    }
+  }
+}
+
+/* Short-term form */
+.short-term-form {
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+
+  .form-field {
+    margin-bottom: 12px;
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    input, select {
+      width: 100%;
+      min-width: 0;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      box-sizing: border-box;
+
+      &:focus {
+        outline: none;
+        border-color: #06b6d4;
+      }
+    }
+  }
+
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .icon-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    .icon-option {
+      width: 36px;
+      height: 36px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      ion-icon {
+        font-size: 18px;
+        color: #6b7280;
+      }
+
+      &.selected {
+        border-color: #06b6d4;
+        background: #ecfeff;
+
+        ion-icon {
+          color: #06b6d4;
+        }
+      }
+    }
+  }
+
+  .color-picker {
+    display: flex;
+    gap: 8px;
+
+    .color-option {
+      width: 28px;
+      height: 28px;
+      border: 2px solid transparent;
+      border-radius: 50%;
+      cursor: pointer;
+
+      &.selected {
+        border-color: #1f2937;
+      }
+    }
+  }
+
+  .form-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .btn-primary {
+    flex: 1;
+    padding: 10px;
+    background: #06b6d4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .btn-secondary {
+    flex: 1;
+    padding: 10px;
+    background: #f3f4f6;
+    color: #6b7280;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+/* Short-term list */
+.short-term-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.goal-card {
+  display: flex;
+  flex-direction: column;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-left-width: 4px;
+  border-radius: 12px;
+  padding: 14px;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.goal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.goal-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  ion-icon {
+    font-size: 18px;
+    color: white;
+  }
+}
+
+.goal-info {
+  flex: 1;
+  min-width: 0;
+
+  .goal-name {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1f2937;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .goal-deadline {
+    display: block;
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+}
+
+.goal-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+
+  .action-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    background: #e5e7eb;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    ion-icon {
+      font-size: 14px;
+      color: #6b7280;
+    }
+
+    &.delete ion-icon {
+      color: #ef4444;
+    }
+  }
+}
+
+.goal-progress {
+  margin-bottom: 10px;
+
+  .progress-bar {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 3px;
+    overflow: hidden;
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+  }
+}
+
+.goal-amounts {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #e5e7eb;
+  width: 100%;
+  box-sizing: border-box;
+
+  .amount-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+
+    .amount-label {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .amount-value {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    &.accent {
+      padding-top: 6px;
+      margin-top: 2px;
+      border-top: 1px dashed #e5e7eb;
+
+      .amount-label {
+        color: #06b6d4;
+        font-weight: 500;
+      }
+
+      .amount-value {
+        color: #06b6d4;
+        font-weight: 700;
+      }
+    }
+  }
+}
+
+/* Goal edit form */
+.goal-edit-form {
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 12px;
+  padding: 12px;
+
+  .form-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    input {
+      flex: 1;
+      min-width: 0;
+      padding: 8px 10px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      box-sizing: border-box;
+
+      &:focus {
+        outline: none;
+        border-color: #06b6d4;
+      }
+    }
+  }
+
+  .form-field.compact {
+    flex: 1;
+    min-width: 0;
+
+    label {
+      display: block;
+      font-size: 0.65rem;
+      color: #6b7280;
+      margin-bottom: 2px;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+  }
+
+  .form-btns-inline {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+
+    button {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      ion-icon {
+        font-size: 16px;
+      }
+    }
+
+    .btn-save {
+      background: #06b6d4;
+
+      ion-icon {
+        color: white;
+      }
+    }
+
+    .btn-cancel {
+      background: #e5e7eb;
+
+      ion-icon {
+        color: #6b7280;
+      }
+    }
+  }
+}
+
+/* Short-term summary */
+.short-term-summary {
+  background: #ecfeff;
+  border: 1px solid #99f6e4;
+  border-radius: 10px;
+  padding: 12px;
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #6b7280;
+    padding: 4px 0;
+
+    &.highlight {
+      color: #0e7490;
+      font-weight: 600;
+      padding-top: 8px;
+      margin-top: 4px;
+      border-top: 1px solid #99f6e4;
+    }
+  }
+
+  .summary-value {
+    font-weight: 500;
+  }
 }
 
 /* Tips Card - Collapsible */
@@ -661,3 +1090,4 @@
   color: #6b7280;
   margin-top: 8px;
 }
+

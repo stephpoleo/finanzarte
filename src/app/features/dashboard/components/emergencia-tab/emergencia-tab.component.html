@@ -84,52 +84,251 @@
           <ion-icon name="shield-outline" class="icon-cyan"></ion-icon>
           <h3 class="card-title">Dónde Guardar tu Fondo</h3>
         </div>
-      </div>
-
-      <div class="alloc-row">
-        <div class="alloc-left">
-          <span class="alloc-icon">🏦</span>
-          <div class="alloc-info">
-            <span class="alloc-label">SOFIPOs</span>
-            <span class="alloc-value">{{ sofipoAmount | currencyMxn }}</span>
-          </div>
-        </div>
-        <div class="alloc-right">
-          <div class="alloc-progress">
-            <div class="alloc-bar">
-              <div class="alloc-fill sofipo" [style.width.%]="sofipoPercentage"></div>
-            </div>
-            <span class="alloc-pct">{{ sofipoPercentage | number:'1.0-0' }}%</span>
-          </div>
-          <span class="alloc-limit">Exento de ISR hasta {{ taxExemptLimit | currencyMxn }}</span>
+        <div class="mode-toggle">
+          <button class="mode-btn" [class.active]="distributionMode === 'auto'" (click)="distributionMode = 'auto'">Auto</button>
+          <button class="mode-btn" [class.active]="distributionMode === 'custom'" (click)="distributionMode = 'custom'">Personalizar</button>
         </div>
       </div>
 
-      @if (cetesAmount > 0) {
-        <div class="alloc-row cetes">
+      @if (distributionMode === 'auto') {
+        <!-- Automatic Recommendation View -->
+        <div class="alloc-row">
           <div class="alloc-left">
-            <span class="alloc-icon">📊</span>
+            <span class="alloc-icon">🏦</span>
             <div class="alloc-info">
-              <span class="alloc-label">CETES</span>
-              <span class="alloc-value">{{ cetesAmount | currencyMxn }}</span>
+              <span class="alloc-label">SOFIPOs</span>
+              <span class="alloc-value">{{ sofipoAmount | currencyMxn }}</span>
             </div>
           </div>
           <div class="alloc-right">
             <div class="alloc-progress">
               <div class="alloc-bar">
-                <div class="alloc-fill cetes" [style.width.%]="cetesPercentage"></div>
+                <div class="alloc-fill sofipo" [style.width.%]="sofipoPercentage"></div>
               </div>
-              <span class="alloc-pct">{{ cetesPercentage | number:'1.0-0' }}%</span>
+              <span class="alloc-pct">{{ sofipoPercentage | number:'1.0-0' }}%</span>
             </div>
-            <span class="alloc-note">Excedente del límite SOFIPO</span>
+            <span class="alloc-limit">Exento de ISR hasta {{ taxExemptLimit | currencyMxn }}</span>
           </div>
         </div>
-      }
 
-      <p class="alloc-hint">
-        Maximiza tu rendimiento usando primero las SOFIPOs (exentas de ISR hasta 5 UMAs), y después CETES para el excedente.
-      </p>
+        @if (cetesAmount > 0) {
+          <div class="alloc-row cetes">
+            <div class="alloc-left">
+              <span class="alloc-icon">📊</span>
+              <div class="alloc-info">
+                <span class="alloc-label">CETES</span>
+                <span class="alloc-value">{{ cetesAmount | currencyMxn }}</span>
+              </div>
+            </div>
+            <div class="alloc-right">
+              <div class="alloc-progress">
+                <div class="alloc-bar">
+                  <div class="alloc-fill cetes" [style.width.%]="cetesPercentage"></div>
+                </div>
+                <span class="alloc-pct">{{ cetesPercentage | number:'1.0-0' }}%</span>
+              </div>
+              <span class="alloc-note">Excedente del límite SOFIPO</span>
+            </div>
+          </div>
+        }
+
+        <p class="alloc-hint">
+          Maximiza tu rendimiento usando primero las SOFIPOs (exentas de ISR hasta 5 UMAs), y después CETES para el excedente.
+        </p>
+      } @else {
+        <!-- Custom Distribution View -->
+        <div class="distribution-summary">
+          <div class="summary-row">
+            <span class="summary-label">Total del fondo</span>
+            <span class="summary-value">{{ emergencyCurrentSavings | currencyMxn }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Asignado</span>
+            <span class="summary-value assigned">{{ totalAllocated | currencyMxn }}</span>
+          </div>
+          @if (hasUnallocated) {
+            <div class="summary-row unallocated">
+              <span class="summary-label">
+                <ion-icon name="warning-outline"></ion-icon>
+                Sin asignar
+              </span>
+              <span class="summary-value">{{ unallocatedAmount | currencyMxn }}</span>
+            </div>
+          }
+          @if (weightedAverageRate > 0) {
+            <div class="summary-row rate">
+              <span class="summary-label">Rendimiento ponderado</span>
+              <span class="summary-value">{{ weightedAverageRate | number:'1.2-2' }}% anual</span>
+            </div>
+          }
+        </div>
+
+        @if (exceedsTaxExemptLimit) {
+          <div class="tax-warning">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            <span>Las SOFIPOs están exentas de ISR hasta {{ taxExemptLimit | currencyMxn }}. El excedente ({{ sofipoExcessAmount | currencyMxn }}) podría ir mejor en CETES.</span>
+          </div>
+        }
+      }
     </div>
+
+    @if (distributionMode === 'custom') {
+      <!-- SOFIPOs Allocations Card -->
+      <div class="card allocation-card">
+        <div class="card-header-row">
+          <div class="card-header-left">
+            <span class="section-icon">🏦</span>
+            <h3 class="card-title">SOFIPOs</h3>
+          </div>
+          <button class="add-btn" (click)="openSofipoForm()" [disabled]="availableSofipos.length === 0">
+            <ion-icon name="add-outline"></ion-icon>
+          </button>
+        </div>
+
+        @if (showSofipoForm) {
+          <div class="allocation-form">
+            <div class="form-field">
+              <label>SOFIPO</label>
+              <select [(ngModel)]="sofipoForm.sofipo_id" (ngModelChange)="onSofipoSelect($event)">
+                @for (sofipo of availableSofipos; track sofipo.id) {
+                  <option [ngValue]="sofipo.id">{{ sofipo.nombre }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-grid-2">
+              <div class="form-field">
+                <label>Monto</label>
+                <input type="number" [(ngModel)]="sofipoForm.amount" placeholder="0.00"/>
+              </div>
+              <div class="form-field">
+                <label>Plazo</label>
+                <select [(ngModel)]="sofipoForm.term_days" (ngModelChange)="onSofipoTermChange($event)">
+                  @for (term of sofipoTermOptions; track term.value) {
+                    <option [ngValue]="term.value">{{ term.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="form-field">
+              <label>Tasa anual</label>
+              <div class="rate-input">
+                <input type="number" [(ngModel)]="sofipoForm.rate" step="0.01"/>
+                <span class="rate-suffix">%</span>
+              </div>
+            </div>
+            <div class="form-btns">
+              <button class="btn-primary" (click)="saveSofipoAllocation()">
+                {{ editingSofipoId ? 'Guardar' : 'Agregar' }}
+              </button>
+              <button class="btn-secondary" (click)="closeSofipoForm()">Cancelar</button>
+            </div>
+          </div>
+        }
+
+        @if (allocationService.sofipoAllocations().length > 0) {
+          <div class="allocation-list">
+            @for (alloc of allocationService.sofipoAllocations(); track alloc.id) {
+              <div class="allocation-item sofipo">
+                <div class="allocation-left">
+                  <span class="allocation-icon">🏦</span>
+                  <div class="allocation-info">
+                    <span class="allocation-name">{{ alloc.sofipo_name }}</span>
+                    <span class="allocation-meta">{{ getTermLabel(alloc.term_days) }} · {{ alloc.rate | number:'1.2-2' }}%</span>
+                  </div>
+                </div>
+                <div class="allocation-right">
+                  <span class="allocation-amount">{{ alloc.amount | currencyMxn }}</span>
+                  <div class="allocation-actions">
+                    <button class="action-btn edit" (click)="openSofipoForm(alloc)">
+                      <ion-icon name="create-outline"></ion-icon>
+                    </button>
+                    <button class="action-btn delete" (click)="deleteSofipoAllocation(alloc.id)">
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        } @else if (!showSofipoForm) {
+          <p class="empty-msg">No hay asignaciones en SOFIPOs</p>
+        }
+      </div>
+
+      <!-- CETES Allocation Card -->
+      <div class="card allocation-card">
+        <div class="card-header-row">
+          <div class="card-header-left">
+            <span class="section-icon">📊</span>
+            <h3 class="card-title">CETES</h3>
+          </div>
+          @if (!allocationService.cetesAllocation()) {
+            <button class="add-btn" (click)="openCetesForm()">
+              <ion-icon name="add-outline"></ion-icon>
+            </button>
+          }
+        </div>
+
+        @if (showCetesForm) {
+          <div class="allocation-form">
+            <div class="form-grid-2">
+              <div class="form-field">
+                <label>Monto</label>
+                <input type="number" [(ngModel)]="cetesForm.amount" placeholder="0.00"/>
+              </div>
+              <div class="form-field">
+                <label>Plazo</label>
+                <select [(ngModel)]="cetesForm.term_days" (ngModelChange)="onCetesTermChange($event)">
+                  @for (term of cetesTermOptions; track term.value) {
+                    <option [ngValue]="term.value">{{ term.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="form-field">
+              <label>Tasa anual</label>
+              <div class="rate-input">
+                <input type="number" [(ngModel)]="cetesForm.rate" step="0.01"/>
+                <span class="rate-suffix">%</span>
+              </div>
+            </div>
+            <div class="form-btns">
+              <button class="btn-primary" (click)="saveCetesAllocation()">
+                {{ editingCetes ? 'Guardar' : 'Agregar' }}
+              </button>
+              <button class="btn-secondary" (click)="closeCetesForm()">Cancelar</button>
+            </div>
+          </div>
+        }
+
+        @if (allocationService.cetesAllocation(); as cetes) {
+          <div class="allocation-list">
+            <div class="allocation-item cetes">
+              <div class="allocation-left">
+                <span class="allocation-icon">📊</span>
+                <div class="allocation-info">
+                  <span class="allocation-name">CETES {{ cetes.term_days }} días</span>
+                  <span class="allocation-meta">{{ cetes.rate | number:'1.2-2' }}% anual</span>
+                </div>
+              </div>
+              <div class="allocation-right">
+                <span class="allocation-amount">{{ cetes.amount | currencyMxn }}</span>
+                <div class="allocation-actions">
+                  <button class="action-btn edit" (click)="openCetesForm()">
+                    <ion-icon name="create-outline"></ion-icon>
+                  </button>
+                  <button class="action-btn delete" (click)="deleteCetesAllocation()">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        } @else if (!showCetesForm) {
+          <p class="empty-msg">No hay asignación en CETES</p>
+        }
+      </div>
+    }
 
     <!-- SOFIPOs Carousel -->
     <div class="card sofipos-card">

@@ -26,14 +26,15 @@ import { IncomeSourceService } from '../../core/services/income-source.service';
 import { InvestmentService } from '../../core/services/investment.service';
 import { UserSettingsService } from '../../core/services/user-settings.service';
 import { CancellableExpenseService } from '../../core/services/cancellable-expense.service';
+import { ShortTermGoalService } from '../../core/services/short-term-goal.service';
 
 import { PresupuestoTabComponent } from './components/presupuesto-tab/presupuesto-tab.component';
 import { EmergenciaTabComponent } from './components/emergencia-tab/emergencia-tab.component';
-import { LargoPlazoTabComponent } from './components/largo-plazo-tab/largo-plazo-tab.component';
+import { AhorrosTabComponent } from './components/ahorros-tab/ahorros-tab.component';
 import { InversionesTabComponent } from './components/inversiones-tab/inversiones-tab.component';
 import { RetiroTabComponent } from './components/retiro-tab/retiro-tab.component';
 
-type TabType = 'presupuesto' | 'emergencia' | 'largo-plazo' | 'inversiones' | 'retiro';
+type TabType = 'presupuesto' | 'emergencia' | 'ahorros' | 'inversiones' | 'retiro';
 
 @Component({
   selector: 'app-dashboard',
@@ -46,7 +47,7 @@ type TabType = 'presupuesto' | 'emergencia' | 'largo-plazo' | 'inversiones' | 'r
     IonIcon,
     PresupuestoTabComponent,
     EmergenciaTabComponent,
-    LargoPlazoTabComponent,
+    AhorrosTabComponent,
     InversionesTabComponent,
     RetiroTabComponent
   ],
@@ -64,7 +65,8 @@ export class DashboardPage implements OnInit {
     private savingsGoals: SavingsGoalService,
     private investments: InvestmentService,
     private userSettings: UserSettingsService,
-    private cancellableExpenses: CancellableExpenseService
+    private cancellableExpenses: CancellableExpenseService,
+    private shortTermGoals: ShortTermGoalService
   ) {
     addIcons({
       menuOutline,
@@ -89,7 +91,8 @@ export class DashboardPage implements OnInit {
       this.savingsGoals.loadGoals(),
       this.investments.loadInvestments(),
       this.userSettings.loadSettings(),
-      this.cancellableExpenses.loadExpenses()
+      this.cancellableExpenses.loadExpenses(),
+      this.shortTermGoals.loadGoals()
     ]);
   }
 
@@ -104,6 +107,21 @@ export class DashboardPage implements OnInit {
 
   get emergencyAvailableSavings(): number {
     return Math.max(0, this.incomeSources.totalIncome() - this.expenses.totalExpenses());
+  }
+
+  // Emergency fund allocation based on milestone progress
+  get emergencyRecommendedPct(): number {
+    const currentSavings = this.userSettings.emergencyCurrentSavings();
+    const monthlyExpenses = this.expenses.totalExpenses() || 1;
+    const monthsCovered = currentSavings / monthlyExpenses;
+
+    // Milestones: Base ($10k), 1 mes, 3 meses, 6 meses, 12 meses, 24 meses
+    if (currentSavings < 10000) return 100;
+    if (monthsCovered < 1) return 100;
+    if (monthsCovered < 3) return 75;
+    if (monthsCovered < 6) return 50;
+    if (monthsCovered < 12) return 25;
+    return 0; // Emergency fund complete
   }
 
   async logout(): Promise<void> {

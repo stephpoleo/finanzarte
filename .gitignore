@@ -75,3 +75,9 @@ src/environments/environment.prod.ts
 # System files
 .DS_Store
 Thumbs.db
+
+# Claude Code local settings
+.claude/settings.local.json
+.claude/*.local.json
+.claude
+.docs/

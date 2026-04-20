@@ -420,6 +420,36 @@
   transition: width 0.3s ease;
 }
 
+/* Mode Toggle */
+.mode-toggle {
+  display: flex;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.mode-btn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &.active {
+    background: #06b6d4;
+    color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  &:not(.active):hover {
+    color: #374151;
+  }
+}
+
 /* Allocation Card */
 .allocation-card {
   .card-header-row {
@@ -994,4 +1024,282 @@
   color: #9ca3af;
   font-size: 0.875rem;
   margin: 0;
+}
+
+/* ==================== Distribution Section ==================== */
+
+.distribution-card {
+  .card-header-row {
+    margin-bottom: 12px;
+  }
+}
+
+.distribution-summary {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 8px;
+
+  &.unallocated {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+
+    .summary-label {
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      ion-icon {
+        font-size: 16px;
+      }
+    }
+
+    .summary-value {
+      color: #b45309;
+      font-weight: 700;
+    }
+  }
+
+  &.rate {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border: 1px solid #a7f3d0;
+
+    .summary-value {
+      color: #059669;
+      font-weight: 700;
+    }
+  }
+}
+
+.summary-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.summary-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+
+  &.assigned {
+    color: #06b6d4;
+  }
+}
+
+.tax-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 12px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: #92400e;
+  line-height: 1.4;
+
+  ion-icon {
+    flex-shrink: 0;
+    font-size: 18px;
+    color: #d97706;
+    margin-top: 1px;
+  }
+}
+
+.section-icon {
+  font-size: 1.25rem;
+}
+
+/* Allocation Form */
+.allocation-form {
+  background: #f3f4f6;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+
+  .form-field {
+    margin-bottom: 12px;
+
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+
+    input, select {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #1f2937;
+      box-sizing: border-box;
+
+      &:focus {
+        outline: none;
+        border-color: #06b6d4;
+      }
+
+      /* Hide number spinners */
+      -moz-appearance: textfield;
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        appearance: none;
+      }
+    }
+
+    select {
+      cursor: pointer;
+    }
+  }
+
+  .form-btns {
+    margin-top: 16px;
+
+    .btn-primary {
+      background: #06b6d4;
+
+      &:hover {
+        background: #0891b2;
+      }
+    }
+  }
+}
+
+.rate-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  input {
+    flex: 1;
+  }
+
+  .rate-suffix {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #6b7280;
+  }
+}
+
+/* Allocation List */
+.allocation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.allocation-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid #10b981;
+
+  &.cetes {
+    border-left-color: #3b82f6;
+  }
+}
+
+.allocation-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.allocation-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.allocation-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.allocation-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.allocation-meta {
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+.allocation-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.allocation-amount {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.allocation-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  ion-icon {
+    font-size: 18px;
+  }
+
+  &.edit:hover {
+    background: #ecfeff;
+    color: #06b6d4;
+  }
+
+  &.delete:hover {
+    background: #fef2f2;
+    color: #ef4444;
+  }
 }

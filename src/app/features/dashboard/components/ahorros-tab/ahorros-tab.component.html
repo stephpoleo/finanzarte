@@ -1,0 +1,379 @@
+<main class="main-content">
+  <div class="hero-card amber">
+    <div class="hero-header">
+      <div class="hero-icon"><ion-icon name="leaf-outline"></ion-icon></div>
+      <div>
+        <h3>Ahorros</h3>
+        <p>Corto y largo plazo</p>
+      </div>
+    </div>
+
+    <!-- Recommended Amount Section -->
+    @if (savingsRecommendedAmount > 0) {
+      @if (shortTermGoalSvc.goals().length === 0) {
+        <!-- No short-term goals: show full amount for long-term -->
+        <div class="hero-box full">
+          <span class="box-label">Ahorro Recomendado</span>
+          <span class="box-value">{{ savingsRecommendedAmount | currencyMxn }}/mes</span>
+          <span class="box-hint">100% para Largo Plazo</span>
+        </div>
+      } @else {
+        <!-- With short-term goals: show split -->
+        <div class="hero-grid recommended">
+          <div class="hero-box">
+            <span class="box-label">Corto Plazo</span>
+            <span class="box-value">{{ shortTermAllocation | currencyMxn }}</span>
+            <span class="box-hint">/mes</span>
+          </div>
+          <div class="hero-box">
+            <span class="box-label">Largo Plazo</span>
+            <span class="box-value">{{ longTermAllocation | currencyMxn }}</span>
+            <span class="box-hint">/mes</span>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Total Savings for Long-Term (Emergency + Investments) -->
+    <div class="hero-stat">
+      <span class="stat-label">Ahorro a Largo Plazo</span>
+      <span class="stat-value">{{ totalSavings | currencyMxn }}</span>
+      <div class="savings-breakdown">
+        <div class="breakdown-item">
+          <span class="breakdown-label">Emergencia</span>
+          <span class="breakdown-value">{{ emergencyCurrentSavings | currencyMxn }}</span>
+        </div>
+        <div class="breakdown-item">
+          <span class="breakdown-label">Invertido</span>
+          <span class="breakdown-value">{{ ltCurrentSavings | currencyMxn }}</span>
+        </div>
+      </div>
+      <span class="stat-hint">
+        @if (ltCurrentLevel) {
+          <ion-icon name="checkmark-circle-outline"></ion-icon> Nivel: {{ ltCurrentLevel.name }}
+        } @else {
+          Comienza tu camino a la libertad
+        }
+      </span>
+    </div>
+
+    <div class="hero-grid">
+      <div class="hero-box">
+        <span class="box-label">Ingreso Pasivo Mensual</span>
+        <span class="box-value">{{ ltMonthlyPassiveIncome | currencyMxn }}</span>
+        <span class="box-hint">Emergencia + Inversiones</span>
+      </div>
+      <div class="hero-box">
+        <span class="box-label">Cobertura de Gastos</span>
+        <span class="box-value">{{ ltCoveragePercentage | number:'1.0-0' }}%</span>
+        <span class="box-hint">
+          @if (ltCoveragePercentage >= 100) {
+            ¡Libertad alcanzada!
+          } @else {
+            de tus gastos
+          }
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Short-Term Goals Section -->
+  <div class="card short-term-card">
+    <div class="card-header-row">
+      <h3 class="card-title">Metas a Corto Plazo</h3>
+      <button class="add-btn" (click)="toggleShortTermForm()">
+        <ion-icon [name]="showShortTermForm ? 'close-outline' : 'add-outline'"></ion-icon>
+      </button>
+    </div>
+    <p class="section-hint">Ahorro para metas en los próximos 2 años</p>
+
+    <!-- Add Form -->
+    @if (showShortTermForm) {
+      <div class="short-term-form">
+        <div class="form-field">
+          <label>Nombre</label>
+          <input type="text" [(ngModel)]="newShortTermGoal.name" placeholder="Ej: Vacaciones"/>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Meta</label>
+            <input type="number" [(ngModel)]="newShortTermGoal.target_amount" placeholder="0"/>
+          </div>
+          <div class="form-field">
+            <label>Fecha límite</label>
+            <input type="date" [(ngModel)]="newShortTermGoal.deadline"
+                   [min]="getMinDeadline()" [max]="getMaxDeadline()"/>
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Icono</label>
+          <div class="icon-picker">
+            @for (icon of shortTermGoalIcons; track icon.value) {
+              <button class="icon-option"
+                      [class.selected]="newShortTermGoal.icon === icon.value"
+                      (click)="newShortTermGoal.icon = icon.value">
+                <ion-icon [name]="icon.value"></ion-icon>
+              </button>
+            }
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Color</label>
+          <div class="color-picker">
+            @for (color of shortTermGoalColors; track color) {
+              <button class="color-option"
+                      [class.selected]="newShortTermGoal.color === color"
+                      [style.background]="color"
+                      (click)="newShortTermGoal.color = color">
+              </button>
+            }
+          </div>
+        </div>
+        <div class="form-btns">
+          <button class="btn-primary" (click)="addShortTermGoal()">Agregar</button>
+          <button class="btn-secondary" (click)="toggleShortTermForm()">Cancelar</button>
+        </div>
+      </div>
+    }
+
+    <!-- Goals List -->
+    @if (shortTermGoalSvc.goals().length > 0) {
+      <div class="short-term-list">
+        @for (goal of shortTermGoalSvc.goals(); track goal.id) {
+          @if (editingShortTermId === goal.id) {
+            <!-- Edit Form -->
+            <div class="goal-edit-form">
+              <div class="form-row">
+                <input type="text" [(ngModel)]="editShortTermGoal.name"/>
+                <input type="number" [(ngModel)]="editShortTermGoal.target_amount"/>
+              </div>
+              <div class="form-row">
+                <div class="form-field compact">
+                  <label>Ahorrado</label>
+                  <input type="number" [(ngModel)]="editShortTermGoal.current_amount"/>
+                </div>
+                <div class="form-field compact">
+                  <label>Fecha</label>
+                  <input type="date" [(ngModel)]="editShortTermGoal.deadline"
+                         [min]="getMinDeadline()" [max]="getMaxDeadline()"/>
+                </div>
+              </div>
+              <div class="form-btns-inline">
+                <button class="btn-save" (click)="saveShortTermEdit()">
+                  <ion-icon name="checkmark-outline"></ion-icon>
+                </button>
+                <button class="btn-cancel" (click)="cancelShortTermEdit()">
+                  <ion-icon name="close-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+          } @else {
+            <!-- Goal Card -->
+            <div class="goal-card" [style.border-left-color]="goal.color">
+              <div class="goal-header">
+                <div class="goal-icon" [style.background]="goal.color">
+                  <ion-icon [name]="goal.icon"></ion-icon>
+                </div>
+                <div class="goal-info">
+                  <span class="goal-name">{{ goal.name }}</span>
+                  <span class="goal-deadline">{{ formatDeadline(goal.deadline) }} · {{ getMonthsRemaining(goal) }} meses</span>
+                </div>
+                <div class="goal-actions">
+                  <button class="action-btn" (click)="startEditShortTermGoal(goal)">
+                    <ion-icon name="create-outline"></ion-icon>
+                  </button>
+                  <button class="action-btn delete" (click)="deleteShortTermGoal(goal.id)">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </button>
+                </div>
+              </div>
+              <div class="goal-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="getShortTermProgress(goal)" [style.background]="goal.color"></div>
+                </div>
+              </div>
+              <div class="goal-amounts">
+                <div class="amount-row">
+                  <span class="amount-label">Ahorrado</span>
+                  <span class="amount-value">{{ goal.current_amount | currencyMxn }}</span>
+                </div>
+                <div class="amount-row">
+                  <span class="amount-label">Meta</span>
+                  <span class="amount-value">{{ goal.target_amount | currencyMxn }}</span>
+                </div>
+                <div class="amount-row accent">
+                  <span class="amount-label">Mensual</span>
+                  <span class="amount-value">{{ goal.monthly_contribution | currencyMxn }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Short-term summary -->
+      <div class="short-term-summary">
+        <div class="summary-row">
+          <span>Total ahorrado</span>
+          <span class="summary-value">{{ shortTermGoalSvc.totalSaved() | currencyMxn }}</span>
+        </div>
+        <div class="summary-row">
+          <span>Total metas</span>
+          <span class="summary-value">{{ shortTermGoalSvc.totalTargeted() | currencyMxn }}</span>
+        </div>
+        <div class="summary-row highlight">
+          <span>Aporte mensual necesario</span>
+          <span class="summary-value">{{ shortTermGoalSvc.totalMonthlyContribution() | currencyMxn }}</span>
+        </div>
+      </div>
+    }
+
+    @if (shortTermGoalSvc.goals().length === 0 && !showShortTermForm) {
+      <p class="empty-hint">Sin metas de corto plazo. ¡Agrega una!</p>
+    }
+  </div>
+
+  <!-- Withdrawal Rule Tips (Collapsible) -->
+  <div class="card tips collapsible lt-rule-tips" [class.expanded]="ltRuleTipsExpanded">
+    <div class="tips-header" (click)="toggleLtRuleTips()">
+      <h3>La Regla del {{ ltWithdrawalRate }}%</h3>
+      <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+    </div>
+    @if (ltRuleTipsExpanded) {
+      <div class="tips-content">
+        <p>Si retiras el <strong>{{ ltWithdrawalRate }}%</strong> anualmente de tu capital invertido, este debería durar indefinidamente.</p>
+        <div class="rule-example">
+          <span class="example-label">Ejemplo:</span>
+          <span class="example-text">$1,000,000 invertidos → ${{ (10000 * ltWithdrawalRate) | number:'1.0-0' }}/año de ingreso pasivo</span>
+        </div>
+        <div class="rule-formula">
+          <span class="formula-label">Fórmula:</span>
+          <code>Gastos mensuales × 12 × {{ ltWithdrawalMultiplier | number:'1.0-0' }} = Capital necesario</code>
+        </div>
+        <div class="rule-result">
+          <span>Con tus gastos de <strong>{{ ltAutoMonthlyExpenses | currencyMxn }}/mes</strong>, necesitas:</span>
+          <span class="result-amount">{{ ltCapitalNeeded | currencyMxn }}</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Simulador Config -->
+  <div class="card lt-config-card">
+    <div class="lt-config-header">
+      <h3 class="card-title">Simulador de Largo Plazo</h3>
+      <button class="help-toggle" (click)="showLtConfigHelp = !showLtConfigHelp">?</button>
+    </div>
+
+    @if (showLtConfigHelp) {
+      <div class="lt-config-help">
+        <div class="help-item">
+          <strong>Fondo de emergencia</strong>
+          <span>Tu colchón en SOFIPOs/CETES. Genera {{ emergencyFundRate | number:'1.1-1' }}% anual.</span>
+        </div>
+        <div class="help-item">
+          <strong>Invertido</strong>
+          <span>Suma de tus inversiones (ETFs, fondos, CETES). Toca para ir a Inversiones.</span>
+        </div>
+        <div class="help-item">
+          <strong>Retorno</strong>
+          <span>Promedio ponderado de fondo de emergencia + inversiones.</span>
+        </div>
+        <div class="help-item">
+          <strong>Tasa de retiro</strong>
+          <span>% que puedes retirar anualmente de inversiones sin agotar el capital.</span>
+        </div>
+      </div>
+    }
+
+    <!-- Valores del simulador -->
+    <div class="lt-sim-values">
+      <div class="sim-row">
+        <span class="sim-label">Gastos mensuales</span>
+        <span class="sim-value">{{ ltAutoMonthlyExpenses | currencyMxn }}</span>
+      </div>
+      <div class="sim-row">
+        <span class="sim-label">Emergencia ({{ emergencyFundRate | number:'1.0-0' }}%)</span>
+        <span class="sim-value">{{ emergencyCurrentSavings | currencyMxn }}</span>
+      </div>
+      <div class="sim-row clickable" (click)="onInversionesClick()">
+        <span class="sim-label">Invertido <ion-icon name="open-outline"></ion-icon></span>
+        <span class="sim-value">{{ ltCurrentSavings | currencyMxn }}</span>
+      </div>
+      <div class="sim-row">
+        <span class="sim-label">Retorno ponderado</span>
+        <span class="sim-value">{{ ltAnnualReturn | number:'1.1-1' }}%</span>
+      </div>
+      <div class="sim-row editable">
+        <span class="sim-label">Tasa de retiro</span>
+        <div class="sim-input-wrap">
+          <input type="number" [(ngModel)]="ltWithdrawalRate" min="1" max="10"/>
+          <span>%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Niveles de Libertad Financiera</h3>
+    <p class="card-subtitle">Cada nivel representa un hito en tu independencia económica</p>
+    <div class="levels-list">
+      @for (level of financialLevels; track level.name) {
+        <div class="level-card" [class.completed]="isLevelCompleted(level)" [class.current]="ltNextLevel?.name === level.name">
+          <div class="level-header">
+            <div class="level-left">
+              <div class="level-icon" [class]="level.bgClass">
+                <ion-icon [name]="level.icon"></ion-icon>
+              </div>
+              <div>
+                <span class="level-name" [class]="level.color">{{ level.name }}</span>
+                <span class="level-desc">{{ level.description }}</span>
+                <span class="level-meaning">{{ level.meaning }}</span>
+              </div>
+            </div>
+            @if (isLevelCompleted(level)) {
+              <ion-icon name="checkmark-circle" class="level-check"></ion-icon>
+            }
+          </div>
+          <div class="level-target">
+            <span>Meta de ahorro</span>
+            <span class="level-amount">{{ getLevelTarget(level) | currencyMxn }}</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getLevelProgress(level)"></div>
+          </div>
+          @if (!isLevelCompleted(level) && isYearsValid(getYearsToLevel(level))) {
+            <div class="level-time">
+              <ion-icon name="time-outline"></ion-icon>
+              <strong>{{ getYearsToLevel(level) | number:'1.1-1' }} años</strong> para alcanzar
+            </div>
+          }
+          @if (isLevelCompleted(level)) {
+            <div class="level-done">¡Nivel alcanzado!</div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (ltNextLevel) {
+    <div class="card next-level">
+      <h3 class="card-title">Siguiente Nivel: {{ ltNextLevel.name }}</h3>
+      <div class="next-info">
+        <span>Meta</span>
+        <span class="next-amount">{{ getLevelTarget(ltNextLevel) | currencyMxn }}</span>
+      </div>
+      <div class="next-info">
+        <span>Falta por ahorrar</span>
+        <span class="next-amount">{{ getLevelTarget(ltNextLevel) - totalSavings | currencyMxn }}</span>
+      </div>
+      @if (isYearsValid(getYearsToLevel(ltNextLevel))) {
+        <div class="next-time">
+          <span class="time-label">Tiempo estimado</span>
+          <span class="time-value">{{ getYearsToLevel(ltNextLevel) | number:'1.1-1' }} años</span>
+          <span class="time-hint">Ahorrando {{ ltMonthlySavings | currencyMxn }}/mes con {{ ltAnnualReturn | number:'1.0-2' }}% retorno</span>
+        </div>
+      }
+    </div>
+  }
+</main>

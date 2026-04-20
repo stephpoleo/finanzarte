@@ -58,7 +58,7 @@ interface ChartSegment {
 })
 export class PresupuestoTabComponent implements OnInit {
   @Output() navigateToEmergencia = new EventEmitter<void>();
-  @Output() navigateToLargoPlazo = new EventEmitter<void>();
+  @Output() navigateToAhorros = new EventEmitter<void>();
 
   // Income form state
   showIncomeForm = false;
@@ -514,7 +514,7 @@ export class PresupuestoTabComponent implements OnInit {
     this.navigateToEmergencia.emit();
   }
 
-  onLargoPlazoClick(): void {
-    this.navigateToLargoPlazo.emit();
+  onAhorrosClick(): void {
+    this.navigateToAhorros.emit();
   }
 }
