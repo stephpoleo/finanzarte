@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {
   IonContent,
   IonHeader,
@@ -49,7 +49,6 @@ type TabType = 'presupuesto' | 'emergencia' | 'ahorros' | 'inversiones' | 'retir
   selector: 'app-dashboard',
   standalone: true,
   imports: [
-    CommonModule,
     IonContent,
     IonHeader,
     IonFooter,
@@ -62,7 +61,7 @@ type TabType = 'presupuesto' | 'emergencia' | 'ahorros' | 'inversiones' | 'retir
     AhorrosTabComponent,
     InversionesTabComponent,
     RetiroTabComponent
-  ],
+],
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss']
 })

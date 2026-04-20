@@ -14,13 +14,25 @@ export class SupabaseService {
   }
 
   private initClient(): void {
-    const url = environment.supabase.url;
+    let url = environment.supabase.url;
     const key = environment.supabase.anonKey;
+
+    // Resolve relative URLs (e.g., /sb-api) to absolute URLs for Supabase client
+    if (url && url.startsWith('/')) {
+      url = window.location.origin + url;
+    }
 
     // Check if Supabase is configured with real credentials
     if (url && key && !url.includes('YOUR_SUPABASE') && !key.includes('YOUR_SUPABASE')) {
       try {
-        this.supabase = createClient(url, key);
+        this.supabase = createClient(url, key, {
+          auth: {
+            flowType: 'implicit',
+            autoRefreshToken: true,
+            persistSession: true,
+            detectSessionInUrl: true,
+          }
+        });
         this._isConfigured = true;
       } catch (error) {
         console.warn('Failed to initialize Supabase client:', error);

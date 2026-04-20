@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import {
   IonContent,
@@ -45,7 +45,6 @@ import { ExpenseSplitMode } from '../../models/household.model';
   selector: 'app-settings',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     IonContent,
     IonHeader,
@@ -62,7 +61,7 @@ import { ExpenseSplitMode } from '../../models/household.model';
     IonText,
     IonCard,
     IonCardContent
-  ],
+],
   template: `
     <ion-header>
       <ion-toolbar>

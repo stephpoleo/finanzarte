@@ -33,6 +33,10 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "assets"
+              },
+              {
+                "glob": "**/*",
+                "input": "public"
               }
             ],
             "styles": ["src/global.scss", "src/theme/variables.scss"],

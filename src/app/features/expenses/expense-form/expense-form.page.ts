@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
@@ -31,7 +31,6 @@ import { Expense, ExpenseType, ExpenseCategory, EXPENSE_CATEGORIES } from '../..
   selector: 'app-expense-form',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     IonContent,
     IonHeader,
@@ -50,7 +49,7 @@ import { Expense, ExpenseType, ExpenseCategory, EXPENSE_CATEGORIES } from '../..
     IonList,
     IonRadioGroup,
     IonRadio
-  ],
+],
   template: `
     <ion-header>
       <ion-toolbar>

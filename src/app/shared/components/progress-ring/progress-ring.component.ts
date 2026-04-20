@@ -1,10 +1,10 @@
 import { Component, Input, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
   selector: 'app-progress-ring',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="progress-ring-container" [style.width.px]="size" [style.height.px]="size">
       <svg [attr.width]="size" [attr.height]="size" class="progress-ring">

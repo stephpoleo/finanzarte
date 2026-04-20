@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {
   FormBuilder,
   FormGroup,
@@ -29,7 +29,6 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-login',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterLink,
     IonContent,
@@ -39,8 +38,8 @@ import { AuthService } from '../../../core/services/auth.service';
     IonInputPasswordToggle,
     IonText,
     IonSpinner,
-    IonIcon,
-  ],
+    IonIcon
+],
   template: `
     <ion-content [fullscreen]="true" [scrollY]="false">
       <div class="login-page">
@@ -101,6 +100,22 @@ import { AuthService } from '../../../core/services/auth.service';
                 }
               </ion-button>
             </form>
+
+            <div class="forgot-link">
+              <button type="button" (click)="forgotPassword()" [disabled]="isResetting()">
+                @if (isResetting()) {
+                  <ion-spinner name="dots" style="width: 16px; height: 16px;"></ion-spinner>
+                } @else {
+                  ¿Olvidaste tu contraseña?
+                }
+              </button>
+            </div>
+
+            @if (resetMessage()) {
+              <ion-text [color]="resetMessageType()" class="reset-text">
+                <p>{{ resetMessage() }}</p>
+              </ion-text>
+            }
 
             <div class="register-link">
               <p>
@@ -252,9 +267,40 @@ import { AuthService } from '../../../core/services/auth.service';
         font-size: 20px;
       }
 
+      .forgot-link {
+        text-align: center;
+        margin-top: 16px;
+      }
+
+      .forgot-link button {
+        background: none;
+        border: none;
+        color: #4f6df5;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 4px 8px;
+      }
+
+      .forgot-link button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .reset-text {
+        display: block;
+        text-align: center;
+        margin-top: 8px;
+      }
+
+      .reset-text p {
+        margin: 0;
+        font-size: 0.8125rem;
+      }
+
       .register-link {
         text-align: center;
-        margin-top: 24px;
+        margin-top: 16px;
       }
 
       .register-link p {
@@ -344,6 +390,9 @@ export class LoginPage {
   loginForm: FormGroup;
   isLoading = signal(false);
   errorMessage = signal('');
+  isResetting = signal(false);
+  resetMessage = signal('');
+  resetMessageType = signal<'success' | 'danger'>('success');
 
   constructor(
     private fb: FormBuilder,
@@ -363,13 +412,46 @@ export class LoginPage {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    const { email, password } = this.loginForm.value;
-    const { error } = await this.auth.signIn(email, password);
+    try {
+      const { email, password } = this.loginForm.value;
+      const { error } = await this.auth.signIn(email, password);
 
-    this.isLoading.set(false);
+      if (error) {
+        this.errorMessage.set(this.getErrorMessage(error.message));
+      }
+    } catch (err: any) {
+      this.errorMessage.set(this.getErrorMessage(err?.message || 'Error de conexión'));
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
 
-    if (error) {
-      this.errorMessage.set(this.getErrorMessage(error.message));
+  async forgotPassword(): Promise<void> {
+    const email = this.loginForm.get('email')?.value;
+    if (!email) {
+      this.resetMessage.set('Ingresa tu correo electrónico primero');
+      this.resetMessageType.set('danger');
+      return;
+    }
+
+    this.isResetting.set(true);
+    this.resetMessage.set('');
+
+    try {
+      const { error } = await this.auth.resetPassword(email);
+
+      if (error) {
+        this.resetMessage.set(error.message || 'Error al enviar el correo');
+        this.resetMessageType.set('danger');
+      } else {
+        this.resetMessage.set('Se envió un enlace de recuperación a tu correo');
+        this.resetMessageType.set('success');
+      }
+    } catch (err: any) {
+      this.resetMessage.set(err?.message || 'Error inesperado');
+      this.resetMessageType.set('danger');
+    } finally {
+      this.isResetting.set(false);
     }
   }
 
@@ -380,6 +462,9 @@ export class LoginPage {
     if (error.includes('Email not confirmed')) {
       return 'Por favor confirma tu correo electrónico';
     }
-    return 'Error al iniciar sesión. Intenta de nuevo.';
+    if (error.toLowerCase().includes('fetch') || error.toLowerCase().includes('network') || error.toLowerCase().includes('conexión')) {
+      return 'No se pudo conectar al servidor. Verifica tu conexión a internet e intenta de nuevo.';
+    }
+    return error || 'Error desconocido';
   }
 }

@@ -81,3 +81,4 @@ Thumbs.db
 .claude/*.local.json
 .claude
 .docs/
+.vercel

@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import {
   FormBuilder,
   FormGroup,
@@ -36,7 +36,6 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-register',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterLink,
     IonContent,
@@ -50,8 +49,8 @@ import { AuthService } from '../../../core/services/auth.service';
     IonDatetime,
     IonDatetimeButton,
     IonModal,
-    IonLabel,
-  ],
+    IonLabel
+],
   template: `
     <ion-content [fullscreen]="true" [scrollY]="true">
       <div class="register-page">
