@@ -1,1 +1,0 @@
-import{m}from"./chunk-4CI5KK6Q.js";var a=(()=>{let t=class t{transform(i,r=!0){if(i==null)return r?"$0.00":"0.00";let n=i.toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2});return r?`$${n}`:n}};t.\u0275fac=function(r){return new(r||t)},t.\u0275pipe=m({name:"currencyMxn",type:t,pure:!0});let e=t;return e})();export{a};

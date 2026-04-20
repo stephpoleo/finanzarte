@@ -1,1 +1,0 @@
-import"./chunk-D7YYRZS5.js";var o=[{path:"",loadComponent:()=>import("./chunk-XQICNUXS.js").then(e=>e.ExpensesPage)},{path:"add",loadComponent:()=>import("./chunk-B6776YFS.js").then(e=>e.ExpenseFormPage)},{path:"edit/:id",loadComponent:()=>import("./chunk-B6776YFS.js").then(e=>e.ExpenseFormPage)}];export{o as EXPENSES_ROUTES};
