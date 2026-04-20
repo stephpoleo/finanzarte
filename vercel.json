@@ -1,0 +1,26 @@
+{
+  "buildCommand": "node scripts/generate-env.js && npm run build",
+  "outputDirectory": "www",
+  "rewrites": [
+    {
+      "source": "/sb-api/auth/:path*",
+      "destination": "https://wicofxkzfdaeoavkfagf.supabase.co/auth/:path*"
+    },
+    {
+      "source": "/sb-api/rest/:path*",
+      "destination": "https://wicofxkzfdaeoavkfagf.supabase.co/rest/:path*"
+    },
+    {
+      "source": "/sb-api/storage/:path*",
+      "destination": "https://wicofxkzfdaeoavkfagf.supabase.co/storage/:path*"
+    },
+    {
+      "source": "/sb-api/realtime/:path*",
+      "destination": "https://wicofxkzfdaeoavkfagf.supabase.co/realtime/:path*"
+    },
+    {
+      "source": "/((?!sb-api|assets|icons|.*\\.).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
