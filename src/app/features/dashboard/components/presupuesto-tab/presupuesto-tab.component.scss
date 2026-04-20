@@ -562,7 +562,7 @@
 .expense-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   padding: 12px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   min-width: 0;
@@ -596,9 +596,12 @@
 
 .expense-name {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   color: white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .expense-cat {
@@ -609,11 +612,13 @@
 
 .expense-values {
   text-align: right;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .expense-amt {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: white;
 }
@@ -624,9 +629,9 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
-.expense-edit, .expense-del {
-  width: 32px;
-  height: 32px;
+.expense-edit, .expense-del, .expense-share {
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1072,4 +1077,133 @@
 .alloc-arrow {
   font-size: 18px;
   color: #9ca3af;
+}
+
+/* ==================== Household Mode Styles ==================== */
+
+.household-income-breakdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.hh-income-divider {
+  opacity: 0.5;
+}
+
+.household-expense-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.hh-summary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hh-expense-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+
+  ion-icon {
+    font-size: 12px;
+  }
+
+  &.shared {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  &.personal {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.hh-split-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.hh-split-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.hh-split-btn {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &.active {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    font-weight: 600;
+  }
+}
+
+.hh-my-share {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.expense-share {
+  ion-icon {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  &.shared {
+    background: rgba(255, 255, 255, 0.2);
+
+    ion-icon {
+      color: white;
+    }
+  }
+}
+
+.expense-section-hdr.partner {
+  .partner-icon {
+    font-size: 16px;
+    color: #6366f1;
+    margin-right: 4px;
+  }
+}
+
+.partner-shared {
+  border-left: 3px solid #6366f1;
+  margin-left: 4px;
+  padding-left: 8px;
+}
+
+.partner-expense {
+  .expense-cat {
+    color: #6366f1;
+    font-style: italic;
+  }
+
+  .expense-pct {
+    color: #6366f1;
+    font-weight: 500;
+  }
 }

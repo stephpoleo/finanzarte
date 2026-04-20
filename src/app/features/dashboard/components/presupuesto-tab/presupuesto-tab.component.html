@@ -4,15 +4,24 @@
     <div class="income-header">
       <div class="income-title-row">
         <div class="income-icon-box"><ion-icon name="cash-outline"></ion-icon></div>
-        <span class="income-title">Ingresos Mensuales</span>
+        <span class="income-title">{{ isHouseholdMode ? 'Ingreso del Hogar' : 'Ingresos Mensuales' }}</span>
       </div>
       <div class="income-btns">
-        <button class="icon-btn" (click)="toggleIncomeForm()">
-          <ion-icon name="add-outline"></ion-icon>
-        </button>
+        @if (!isHouseholdMode) {
+          <button class="icon-btn" (click)="toggleIncomeForm()">
+            <ion-icon name="add-outline"></ion-icon>
+          </button>
+        }
       </div>
     </div>
     <div class="income-amount">{{ totalIncome | currencyMxn }}</div>
+    @if (isHouseholdMode) {
+      <div class="household-income-breakdown">
+        <span class="hh-income-item">Tú: {{ myIncome | currencyMxn }}</span>
+        <span class="hh-income-divider">|</span>
+        <span class="hh-income-item">Pareja: {{ partnerIncome | currencyMxn }}</span>
+      </div>
+    }
     @if (incomeSources.incomeSources().length === 0 && !showIncomeForm) {
       <p class="income-empty">Agrega tus fuentes de ingreso</p>
     }
@@ -92,13 +101,37 @@
     <div class="expense-header">
       <div class="expense-header-left">
         <div class="expense-icon-box"><ion-icon name="card-outline"></ion-icon></div>
-        <span class="expense-title">Gastos Mensuales</span>
+        <span class="expense-title">{{ isHouseholdMode ? 'Gastos del Hogar' : 'Gastos Mensuales' }}</span>
       </div>
       <button class="icon-btn" (click)="toggleExpenseForm()">
         <ion-icon name="add-outline"></ion-icon>
       </button>
     </div>
-    <div class="expense-amount">{{ totalExpenses | currencyMxn }}</div>
+    <div class="expense-amount">{{ (isHouseholdMode ? expenses.totalExpenses() : totalExpenses) | currencyMxn }}</div>
+    @if (isHouseholdMode) {
+      <div class="household-expense-summary">
+        <div class="hh-summary-row">
+          <span class="hh-expense-tag shared">
+            <ion-icon name="people-outline"></ion-icon>
+            Compartidos: {{ totalSharedExpenses | currencyMxn }}
+          </span>
+          <span class="hh-expense-tag personal">
+            Personales: {{ totalPersonalExpenses | currencyMxn }}
+          </span>
+        </div>
+        <div class="hh-split-row">
+          <div class="hh-split-toggle">
+            <button class="hh-split-btn" [class.active]="household.splitMode() === 'proportional'" (click)="setSplitMode('proportional')">
+              Proporcional
+            </button>
+            <button class="hh-split-btn" [class.active]="household.splitMode() === '50-50'" (click)="setSplitMode('50-50')">
+              50/50
+            </button>
+          </div>
+          <span class="hh-my-share">Mi parte: {{ myShareOfSharedExpenses | currencyMxn }}</span>
+        </div>
+      </div>
+    }
     @if (expenses.expenses().length === 0 && !showExpenseForm) {
       <p class="expense-empty">Agrega tus gastos mensuales</p>
     }
@@ -190,6 +223,11 @@
                     <span class="expense-amt">{{ expense.amount | currencyMxn }}</span>
                     <span class="expense-pct">{{ getExpensePercentage(expense) | number:'1.1-1' }}%</span>
                   </div>
+                  @if (household.isInHousehold()) {
+                    <button class="expense-share" [class.shared]="household.isSharedExpense(expense.id)" (click)="toggleShared(expense.id)" title="Compartir gasto">
+                      <ion-icon name="people-outline"></ion-icon>
+                    </button>
+                  }
                   <button class="expense-edit" (click)="startEditExpense(expense)">
                     <ion-icon name="create-outline"></ion-icon>
                   </button>
@@ -255,6 +293,11 @@
                     <span class="expense-amt">{{ expense.amount | currencyMxn }}</span>
                     <span class="expense-pct">{{ getExpensePercentage(expense) | number:'1.1-1' }}%</span>
                   </div>
+                  @if (household.isInHousehold()) {
+                    <button class="expense-share" [class.shared]="household.isSharedExpense(expense.id)" (click)="toggleShared(expense.id)" title="Compartir gasto">
+                      <ion-icon name="people-outline"></ion-icon>
+                    </button>
+                  }
                   <button class="expense-edit" (click)="startEditExpense(expense)">
                     <ion-icon name="create-outline"></ion-icon>
                   </button>
@@ -266,6 +309,37 @@
             }
           </div>
         }
+      </div>
+    }
+
+    <!-- Partner's Shared Expenses (Household Mode) -->
+    @if (isHouseholdMode && partnerSharedExpenses.length > 0) {
+      <div class="expense-section partner-shared" [class.expanded]="true">
+        <div class="expense-section-hdr partner">
+          <div class="expense-section-left">
+            <ion-icon name="people-outline" class="partner-icon"></ion-icon>
+            <span>Gastos de Pareja (Compartidos)</span>
+            <span class="expense-count">({{ partnerSharedExpenses.length }})</span>
+          </div>
+          <span class="expense-section-total">{{ totalPartnerSharedExpenses | currencyMxn }}</span>
+        </div>
+        <div class="expense-items">
+          @for (expense of partnerSharedExpenses; track expense.id) {
+            <div class="expense-row partner-expense">
+              <div class="expense-icon" [style.background]="getCategoryColor(expense.category)">
+                <ion-icon [name]="getCategoryIcon(expense.category)"></ion-icon>
+              </div>
+              <div class="expense-info">
+                <span class="expense-name">{{ expense.name }}</span>
+                <span class="expense-cat">{{ getCategoryLabel(expense.category) }} · Pareja</span>
+              </div>
+              <div class="expense-values">
+                <span class="expense-amt">{{ expense.amount | currencyMxn }}</span>
+                <span class="expense-pct">Mi parte: {{ household.calculateMyShare(expense.amount, myIncome, partnerIncome) | currencyMxn }}</span>
+              </div>
+            </div>
+          }
+        </div>
       </div>
     }
   </div>

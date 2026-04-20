@@ -1,10 +1,6 @@
-<ion-content>
-  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
-    <ion-refresher-content></ion-refresher-content>
-  </ion-refresher>
-
-  <div class="app-container">
-    <!-- Header -->
+<!-- Header: outside scroll -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="header-toolbar">
     <header class="app-header">
       <div class="header-brand">
         <div class="brand-icon">
@@ -20,33 +16,37 @@
       </button>
     </header>
 
-    <!-- Navigation Tabs -->
-    <nav class="nav-tabs-wrapper">
-      <div class="nav-tabs">
-        <button class="nav-tab" [class.active-green]="activeTab === 'presupuesto'" (click)="navigateToTab('presupuesto')">
-          <ion-icon name="wallet-outline"></ion-icon>
-          <span>Presupuesto</span>
-        </button>
-        <button class="nav-tab" [class.active-cyan]="activeTab === 'emergencia'" (click)="navigateToTab('emergencia')">
-          <ion-icon name="shield-checkmark-outline"></ion-icon>
-          <span>Emergencia</span>
-        </button>
-        <button class="nav-tab" [class.active-amber]="activeTab === 'ahorros'" (click)="navigateToTab('ahorros')">
-          <ion-icon name="leaf-outline"></ion-icon>
-          <span>Ahorros</span>
-        </button>
-        <button class="nav-tab" [class.active-indigo]="activeTab === 'inversiones'" (click)="navigateToTab('inversiones')">
-          <ion-icon name="trending-up-outline"></ion-icon>
-          <span>Inversiones</span>
-        </button>
-        <button class="nav-tab" [class.active-purple]="activeTab === 'retiro'" (click)="navigateToTab('retiro')">
-          <ion-icon name="flag-outline"></ion-icon>
-          <span>Retiro</span>
-        </button>
+    <!-- Household Toggle -->
+    @if (household.isInHousehold()) {
+      <div class="household-toggle-wrapper">
+        <div class="household-toggle">
+          <button
+            class="toggle-btn"
+            [class.active]="household.viewMode() === 'personal'"
+            (click)="household.viewMode.set('personal')">
+            <ion-icon name="person-outline"></ion-icon>
+            <span>Personal</span>
+          </button>
+          <button
+            class="toggle-btn"
+            [class.active]="household.viewMode() === 'household'"
+            (click)="household.viewMode.set('household')">
+            <ion-icon name="people-outline"></ion-icon>
+            <span>Hogar</span>
+          </button>
+        </div>
       </div>
-    </nav>
+    }
+  </ion-toolbar>
+</ion-header>
 
-    <!-- Tab Content -->
+<!-- Scrollable content -->
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="app-container">
     @if (activeTab === 'presupuesto') {
       <app-presupuesto-tab
         (navigateToEmergencia)="navigateToTab('emergencia')"
@@ -75,3 +75,31 @@
     }
   </div>
 </ion-content>
+
+<!-- Bottom Navigation: outside scroll -->
+<ion-footer class="ion-no-border">
+  <ion-toolbar class="footer-toolbar">
+    <nav class="nav-tabs">
+      <button class="nav-tab" [class.active-green]="activeTab === 'presupuesto'" (click)="navigateToTab('presupuesto')">
+        <ion-icon name="wallet-outline"></ion-icon>
+        <span>Presupuesto</span>
+      </button>
+      <button class="nav-tab" [class.active-cyan]="activeTab === 'emergencia'" (click)="navigateToTab('emergencia')">
+        <ion-icon name="shield-checkmark-outline"></ion-icon>
+        <span>Emergencia</span>
+      </button>
+      <button class="nav-tab" [class.active-amber]="activeTab === 'ahorros'" (click)="navigateToTab('ahorros')">
+        <ion-icon name="leaf-outline"></ion-icon>
+        <span>Ahorros</span>
+      </button>
+      <button class="nav-tab" [class.active-indigo]="activeTab === 'inversiones'" (click)="navigateToTab('inversiones')">
+        <ion-icon name="trending-up-outline"></ion-icon>
+        <span>Inversiones</span>
+      </button>
+      <button class="nav-tab" [class.active-purple]="activeTab === 'retiro'" (click)="navigateToTab('retiro')">
+        <ion-icon name="flag-outline"></ion-icon>
+        <span>Retiro</span>
+      </button>
+    </nav>
+  </ion-toolbar>
+</ion-footer>

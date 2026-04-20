@@ -16,9 +16,11 @@ import {
 } from '../models';
 import { SofipoAllocation, CetesAllocation } from '../models/emergency-allocation.model';
 import { ShortTermGoal } from '../models/short-term-goal.model';
+import { Household, HouseholdMember, SharedExpense } from '../models/household.model';
 
 // Common constants
 export const MOCK_USER_ID = 'dev-user-123';
+export const MOCK_PARTNER_USER_ID = 'dev-partner-456';
 const mockNow = new Date().toISOString();
 const mockToday = mockNow.split('T')[0];
 
@@ -299,3 +301,47 @@ export const MOCK_SHORT_TERM_GOALS: ShortTermGoal[] = [
     updated_at: mockNow
   }
 ];
+
+// ==================== Household (Finanzas en Pareja) ====================
+export const MOCK_HOUSEHOLD: Household = {
+  id: 'dev-household-1',
+  name: 'Mi Hogar',
+  expense_split_mode: 'proportional',
+  created_by: MOCK_USER_ID,
+  created_at: mockNow,
+  updated_at: mockNow
+};
+
+export const MOCK_HOUSEHOLD_MEMBERS: HouseholdMember[] = [
+  {
+    id: 'dev-member-1',
+    household_id: 'dev-household-1',
+    user_id: MOCK_USER_ID,
+    role: 'owner',
+    joined_at: mockNow,
+    full_name: 'Usuario de Prueba'
+  },
+  {
+    id: 'dev-member-2',
+    household_id: 'dev-household-1',
+    user_id: MOCK_PARTNER_USER_ID,
+    role: 'member',
+    joined_at: mockNow,
+    full_name: 'Pareja de Prueba'
+  }
+];
+
+// Mark rent and food as shared expenses
+export const MOCK_HOUSEHOLD_SHARED_EXPENSES: SharedExpense[] = [
+  { id: 'se-1', household_id: 'dev-household-1', expense_id: '1', user_id: MOCK_USER_ID, created_at: mockNow }, // Renta
+  { id: 'se-2', household_id: 'dev-household-1', expense_id: '5', user_id: MOCK_USER_ID, created_at: mockNow }, // Comida
+];
+
+// Partner's expenses that are shared with us
+export const MOCK_PARTNER_EXPENSES: Expense[] = [
+  { id: 'p-1', user_id: MOCK_PARTNER_USER_ID, name: 'Internet (casa)', amount: 700, type: 'fixed', category: 'utilities', created_at: mockNow, updated_at: mockNow },
+  { id: 'p-2', user_id: MOCK_PARTNER_USER_ID, name: 'Agua', amount: 300, type: 'fixed', category: 'utilities', created_at: mockNow, updated_at: mockNow },
+];
+
+// Partner's total income (aggregate only)
+export const MOCK_PARTNER_INCOME_TOTAL = 18000;

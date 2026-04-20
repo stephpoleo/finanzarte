@@ -26,13 +26,16 @@ import {
   ellipsisHorizontalOutline,
   sparklesOutline,
   shieldOutline,
-  flagOutline
+  flagOutline,
+  peopleOutline,
+  shareSocialOutline
 } from 'ionicons/icons';
 
 import { IncomeSourceService } from '../../../../core/services/income-source.service';
 import { ExpenseService } from '../../../../core/services/expense.service';
 import { SavingsGoalService } from '../../../../core/services/savings-goal.service';
 import { UserSettingsService } from '../../../../core/services/user-settings.service';
+import { HouseholdService } from '../../../../core/services/household.service';
 import { CurrencyMxnPipe } from '../../../../shared/pipes/currency-mxn.pipe';
 import {
   IncomeSource,
@@ -40,7 +43,8 @@ import {
   ExpenseCategory,
   ExpenseType,
   IncomeFrequency,
-  EXPENSE_CATEGORIES
+  EXPENSE_CATEGORIES,
+  ExpenseSplitMode
 } from '../../../../models';
 
 interface ChartSegment {
@@ -110,7 +114,8 @@ export class PresupuestoTabComponent implements OnInit {
     public incomeSources: IncomeSourceService,
     public expenses: ExpenseService,
     public savingsGoals: SavingsGoalService,
-    public userSettings: UserSettingsService
+    public userSettings: UserSettingsService,
+    public household: HouseholdService
   ) {
     addIcons({
       cashOutline,
@@ -135,7 +140,9 @@ export class PresupuestoTabComponent implements OnInit {
       ellipsisHorizontalOutline,
       sparklesOutline,
       shieldOutline,
-      flagOutline
+      flagOutline,
+      peopleOutline,
+      shareSocialOutline
     });
   }
 
@@ -144,20 +151,93 @@ export class PresupuestoTabComponent implements OnInit {
   }
 
   // Computed values
+  get isHouseholdMode(): boolean {
+    return this.household.isHouseholdMode();
+  }
+
   get totalIncome(): number {
+    if (this.isHouseholdMode) {
+      return this.household.getCombinedIncome(this.incomeSources.totalIncome());
+    }
     return this.incomeSources.totalIncome();
   }
 
+  get myIncome(): number {
+    return this.incomeSources.totalIncome();
+  }
+
+  get partnerIncome(): number {
+    return this.household.getPartnerIncome();
+  }
+
   get totalExpenses(): number {
+    if (this.isHouseholdMode) {
+      return this.totalSharedExpenses + this.totalPersonalExpenses + this.totalPartnerSharedExpenses;
+    }
     return this.expenses.totalExpenses();
   }
 
   get availableSavings(): number {
-    return Math.max(0, this.totalIncome - this.totalExpenses);
+    if (this.isHouseholdMode) {
+      return Math.max(0, this.household.calculateHouseholdAvailable(
+        this.myIncome,
+        this.expenses.expenses()
+      ));
+    }
+    return Math.max(0, this.totalIncome - this.expenses.totalExpenses());
   }
 
   get savingsRate(): number {
-    return this.totalIncome > 0 ? (this.availableSavings / this.totalIncome) * 100 : 0;
+    const income = this.isHouseholdMode ? this.myIncome : this.totalIncome;
+    return income > 0 ? (this.availableSavings / income) * 100 : 0;
+  }
+
+  // Household-specific getters
+  get sharedExpenses(): Expense[] {
+    return this.expenses.expenses().filter(e => this.household.isSharedExpense(e.id));
+  }
+
+  get personalExpenses(): Expense[] {
+    return this.expenses.expenses().filter(e => !this.household.isSharedExpense(e.id));
+  }
+
+  get partnerSharedExpenses(): Expense[] {
+    return this.household.getPartnerSharedExpenses();
+  }
+
+  get totalSharedExpenses(): number {
+    return this.sharedExpenses.reduce((sum, e) => sum + e.amount, 0);
+  }
+
+  get totalPersonalExpenses(): number {
+    return this.personalExpenses.reduce((sum, e) => sum + e.amount, 0);
+  }
+
+  get totalPartnerSharedExpenses(): number {
+    return this.partnerSharedExpenses.reduce((sum, e) => sum + e.amount, 0);
+  }
+
+  get myShareOfSharedExpenses(): number {
+    let total = 0;
+    for (const e of this.sharedExpenses) {
+      total += this.household.calculateMyShare(e.amount, this.myIncome, this.partnerIncome);
+    }
+    for (const e of this.partnerSharedExpenses) {
+      total += this.household.calculateMyShare(e.amount, this.myIncome, this.partnerIncome);
+    }
+    return total;
+  }
+
+  get splitModeLabel(): string {
+    return this.household.splitMode() === 'proportional' ? 'Proporcional' : '50/50';
+  }
+
+  async toggleShared(expenseId: string): Promise<void> {
+    await this.household.toggleSharedExpense(expenseId);
+  }
+
+  async setSplitMode(mode: ExpenseSplitMode): Promise<void> {
+    await this.household.updateSplitMode(mode);
   }
 
   // Emergency fund allocation based on milestone progress

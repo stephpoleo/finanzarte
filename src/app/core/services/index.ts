@@ -8,3 +8,4 @@ export * from './savings-goal.service';
 export * from './financial-rates.service';
 export * from './emergency-allocation.service';
 export * from './short-term-goal.service';
+export * from './household.service';
