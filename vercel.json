@@ -23,7 +23,7 @@
       "destination": "https://wicofxkzfdaeoavkfagf.supabase.co/functions/:path*"
     },
     {
-      "source": "/((?!sb-api|assets|icons|.*\\.).*)",
+      "source": "/((?!sb-api|api|assets|icons|.*\\.).*)",
       "destination": "/index.html"
     }
   ]

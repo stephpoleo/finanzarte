@@ -297,7 +297,7 @@ export class HouseholdService {
       try {
         const inviterName = this.auth.user()?.user_metadata?.['full_name'] || 'Tu pareja';
         console.log(`[Invitation] Sending email to ${email} from ${inviterName}`);
-        const res = await fetch('https://wicofxkzfdaeoavkfagf.supabase.co/functions/v1/send-household-invitation', {
+        const res = await fetch('/api/send-invitation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -307,7 +307,7 @@ export class HouseholdService {
           })
         });
         const fnData = await res.json();
-        console.log('[Invitation] Edge function response:', res.status, fnData);
+        console.log('[Invitation] API response:', res.status, fnData);
       } catch (emailError) {
         console.warn('Could not send invitation email:', emailError);
       }
