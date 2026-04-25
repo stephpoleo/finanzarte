@@ -22,7 +22,7 @@
     </header>
 
     <!-- Household Toggle -->
-    @if (household.isInHousehold()) {
+    @if (household.isInHousehold() && activeTab === 'presupuesto') {
       <div class="household-toggle-wrapper">
         <div class="household-toggle">
           <button

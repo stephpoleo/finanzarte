@@ -120,6 +120,9 @@ export class DashboardPage implements OnInit {
   }
 
   navigateToTab(tab: TabType): void {
+    if (tab !== 'presupuesto') {
+      this.household.viewMode.set('personal');
+    }
     this.activeTab = tab;
   }
 

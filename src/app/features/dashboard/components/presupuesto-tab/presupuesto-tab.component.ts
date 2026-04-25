@@ -185,9 +185,12 @@ export class PresupuestoTabComponent implements OnInit {
     if (!this.household.isInHousehold()) {
       return this.expenses.totalExpenses();
     }
-    // Personal expenses full + only my share of shared expenses
+    // Personal expenses full + my share of all shared expenses (mine + partner's)
     let total = this.totalPersonalExpenses;
     for (const e of this.sharedExpenses) {
+      total += this.household.calculateMyShare(e.amount, this.myIncome, this.partnerIncome);
+    }
+    for (const e of this.partnerSharedExpenses) {
       total += this.household.calculateMyShare(e.amount, this.myIncome, this.partnerIncome);
     }
     return total;
@@ -271,7 +274,11 @@ export class PresupuestoTabComponent implements OnInit {
   // Emergency fund allocation based on milestone progress
   get emergencyRecommendedPct(): number {
     const currentSavings = this.userSettings.emergencyCurrentSavings();
-    const monthlyExpenses = this.totalExpenses || 1;
+    const monthlyExpenses = this.totalExpenses;
+
+    // If expenses haven't loaded yet, assume fund is incomplete
+    if (monthlyExpenses <= 0) return currentSavings < 10000 ? 100 : 50;
+
     const monthsCovered = currentSavings / monthlyExpenses;
 
     // Milestones: Base ($10k), 1 mes, 3 meses, 6 meses, 12 meses, 24 meses
@@ -292,7 +299,8 @@ export class PresupuestoTabComponent implements OnInit {
   }
 
   get emergencyMonthsCovered(): number {
-    const monthlyExpenses = this.totalExpenses || 1;
+    const monthlyExpenses = this.totalExpenses;
+    if (monthlyExpenses <= 0) return 0;
     return this.userSettings.emergencyCurrentSavings() / monthlyExpenses;
   }
 
