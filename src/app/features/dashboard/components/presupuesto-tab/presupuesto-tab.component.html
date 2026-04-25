@@ -22,11 +22,11 @@
         <span class="hh-income-item">Pareja: {{ partnerIncome | currencyMxn }}</span>
       </div>
     }
-    @if (incomeSources.incomeSources().length === 0 && !showIncomeForm) {
+    @if (!isHouseholdMode && incomeSources.incomeSources().length === 0 && !showIncomeForm) {
       <p class="income-empty">Agrega tus fuentes de ingreso</p>
     }
 
-    @if (showIncomeForm) {
+    @if (showIncomeForm && !isHouseholdMode) {
       <div class="income-form">
         <div class="form-field">
           <label>Nombre</label>
@@ -52,7 +52,7 @@
       </div>
     }
 
-    @if (incomeSources.incomeSources().length > 0) {
+    @if (incomeSources.incomeSources().length > 0 && !isHouseholdMode) {
       <div class="income-list">
         @for (income of incomeSources.incomeSources(); track income.id) {
           @if (editingIncomeId === income.id) {
@@ -103,20 +103,19 @@
         <div class="expense-icon-box"><ion-icon name="card-outline"></ion-icon></div>
         <span class="expense-title">{{ isHouseholdMode ? 'Gastos del Hogar' : 'Gastos Mensuales' }}</span>
       </div>
-      <button class="icon-btn" (click)="toggleExpenseForm()">
-        <ion-icon name="add-outline"></ion-icon>
-      </button>
+      @if (!isHouseholdMode) {
+        <button class="icon-btn" (click)="toggleExpenseForm()">
+          <ion-icon name="add-outline"></ion-icon>
+        </button>
+      }
     </div>
-    <div class="expense-amount">{{ (isHouseholdMode ? expenses.totalExpenses() : totalExpenses) | currencyMxn }}</div>
+    <div class="expense-amount">{{ (isHouseholdMode ? totalSharedExpenses + totalPartnerSharedExpenses : totalExpenses) | currencyMxn }}</div>
     @if (isHouseholdMode) {
       <div class="household-expense-summary">
         <div class="hh-summary-row">
           <span class="hh-expense-tag shared">
             <ion-icon name="people-outline"></ion-icon>
-            Compartidos: {{ totalSharedExpenses | currencyMxn }}
-          </span>
-          <span class="hh-expense-tag personal">
-            Personales: {{ totalPersonalExpenses | currencyMxn }}
+            Compartidos: {{ totalSharedExpenses + totalPartnerSharedExpenses | currencyMxn }}
           </span>
         </div>
         <div class="hh-split-row">
@@ -130,13 +129,17 @@
           </div>
           <span class="hh-my-share">Mi parte: {{ myShareOfSharedExpenses | currencyMxn }}</span>
         </div>
+        <button class="hh-details-toggle" (click)="showPartnerDetails = !showPartnerDetails">
+          <ion-icon [name]="showPartnerDetails ? 'chevron-down-outline' : 'chevron-forward-outline'"></ion-icon>
+          {{ showPartnerDetails ? 'Ocultar detalle personal' : 'Ver detalle personal' }}
+        </button>
       </div>
     }
-    @if (expenses.expenses().length === 0 && !showExpenseForm) {
+    @if (!isHouseholdMode && expenses.expenses().length === 0 && !showExpenseForm) {
       <p class="expense-empty">Agrega tus gastos mensuales</p>
     }
 
-    @if (showExpenseForm) {
+    @if (showExpenseForm && !isHouseholdMode) {
       <div class="expense-form">
         <div class="form-field">
           <label>Nombre</label>
@@ -170,7 +173,7 @@
       </div>
     }
 
-    @if (expenses.expenses().length > 0) {
+    @if (expenses.expenses().length > 0 && (!isHouseholdMode || showPartnerDetails)) {
       <!-- Fixed Expenses Section -->
       <div class="expense-section" [class.expanded]="fixedExpensesExpanded">
         <div class="expense-section-hdr" (click)="fixedExpensesExpanded = !fixedExpensesExpanded">

@@ -102,6 +102,9 @@ export class PresupuestoTabComponent implements OnInit {
   fixedExpensesExpanded = false;
   variableExpensesExpanded = false;
 
+  // Household detail toggle
+  showPartnerDetails = false;
+
   // Chart carousel state
   currentChart = 0;
   chartAnimating = false;
