@@ -20,11 +20,13 @@ import {
   IonList,
   IonRadioGroup,
   IonRadio,
+  IonToggle,
   ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { saveOutline } from 'ionicons/icons';
+import { saveOutline, peopleOutline } from 'ionicons/icons';
 import { ExpenseService } from '../../../core/services/expense.service';
+import { HouseholdService } from '../../../core/services/household.service';
 import { Expense, ExpenseType, ExpenseCategory, EXPENSE_CATEGORIES } from '../../../models';
 
 @Component({
@@ -48,7 +50,8 @@ import { Expense, ExpenseType, ExpenseCategory, EXPENSE_CATEGORIES } from '../..
     IonIcon,
     IonList,
     IonRadioGroup,
-    IonRadio
+    IonRadio,
+    IonToggle
 ],
   template: `
     <ion-header>
@@ -124,6 +127,17 @@ import { Expense, ExpenseType, ExpenseCategory, EXPENSE_CATEGORIES } from '../..
             }
           </ion-select>
         </ion-item>
+        <!-- Shared expense toggle (only visible when in a household) -->
+        @if (household.isInHousehold()) {
+          <ion-item>
+            <ion-icon name="people-outline" slot="start" color="primary"></ion-icon>
+            <ion-label>
+              <strong>Gasto compartido</strong>
+              <p>Se divide con tu pareja</p>
+            </ion-label>
+            <ion-toggle [(ngModel)]="isShared" slot="end"></ion-toggle>
+          </ion-item>
+        }
       </ion-list>
 
       <ion-button
@@ -170,6 +184,17 @@ import { Expense, ExpenseType, ExpenseCategory, EXPENSE_CATEGORIES } from '../..
       height: 48px;
       font-weight: 600;
     }
+
+    ion-item ion-icon[slot='start'] {
+      margin-right: 12px;
+      font-size: 20px;
+    }
+
+    ion-item ion-label p {
+      font-size: 0.75rem;
+      color: var(--ion-color-medium);
+      margin-top: 4px;
+    }
   `]
 })
 export class ExpenseFormPage implements OnInit {
@@ -177,6 +202,7 @@ export class ExpenseFormPage implements OnInit {
   amount: number | null = null;
   type: ExpenseType = 'fixed';
   category: ExpenseCategory = 'other';
+  isShared = false;
 
   isEditing = signal(false);
   isSaving = signal(false);
@@ -188,9 +214,10 @@ export class ExpenseFormPage implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private expenseService: ExpenseService,
+    public household: HouseholdService,
     private toastController: ToastController
   ) {
-    addIcons({ saveOutline });
+    addIcons({ saveOutline, peopleOutline });
   }
 
   ngOnInit(): void {
@@ -216,6 +243,7 @@ export class ExpenseFormPage implements OnInit {
       this.amount = expense.amount;
       this.type = expense.type;
       this.category = expense.category;
+      this.isShared = this.household.isSharedExpense(id);
     }
   }
 
@@ -263,6 +291,16 @@ export class ExpenseFormPage implements OnInit {
     await toast.present();
 
     if (!error) {
+      // Toggle shared status if in a household
+      if (this.household.isInHousehold()) {
+        const expenseId = this.expenseId || this.expenseService.expenses()[this.expenseService.expenses().length - 1]?.id;
+        if (expenseId) {
+          const currentlyShared = this.household.isSharedExpense(expenseId);
+          if (this.isShared !== currentlyShared) {
+            await this.household.toggleSharedExpense(expenseId);
+          }
+        }
+      }
       this.router.navigate(['/expenses']);
     }
   }
