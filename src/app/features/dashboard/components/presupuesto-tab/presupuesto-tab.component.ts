@@ -222,7 +222,7 @@ export class PresupuestoTabComponent implements OnInit {
   }
 
   get allPartnerExpenses(): Expense[] {
-    return this.household.getPartnerSharedExpenses();
+    return this.household.getPartnerAllExpenses();
   }
 
   get totalPartnerExpenses(): number {
@@ -230,7 +230,7 @@ export class PresupuestoTabComponent implements OnInit {
   }
 
   get partnerIncomeSources(): IncomeSource[] {
-    return [];
+    return this.household.getPartnerIncomeSources();
   }
 
   get totalSharedExpenses(): number {

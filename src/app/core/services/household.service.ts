@@ -11,12 +11,14 @@ import {
   HouseholdIncomeSummary,
   ExpenseSplitMode
 } from '../../models/household.model';
-import { Expense } from '../../models';
+import { Expense, IncomeSource } from '../../models';
 import {
   MOCK_HOUSEHOLD,
   MOCK_HOUSEHOLD_MEMBERS,
   MOCK_HOUSEHOLD_SHARED_EXPENSES,
   MOCK_PARTNER_EXPENSES,
+  MOCK_PARTNER_ALL_EXPENSES,
+  MOCK_PARTNER_INCOME_SOURCES,
   MOCK_PARTNER_INCOME_TOTAL,
   MOCK_PARTNER_USER_ID,
   MOCK_USER_ID
@@ -32,6 +34,8 @@ export class HouseholdService {
   private invitationsData = signal<HouseholdInvitation[]>([]);
   private sharedExpenseIds = signal<Set<string>>(new Set());
   private partnerSharedExpenses = signal<Expense[]>([]);
+  private partnerAllExpenses = signal<Expense[]>([]);
+  private partnerIncomeSources = signal<IncomeSource[]>([]);
   private partnerIncomeTotal = signal<number>(0);
 
   // View mode toggle
@@ -66,6 +70,12 @@ export class HouseholdService {
   /** Get partner's total income (aggregate only, no details) */
   getPartnerIncome = computed(() => this.partnerIncomeTotal());
 
+  /** Get partner's income sources (detailed breakdown) */
+  getPartnerIncomeSources = computed(() => this.partnerIncomeSources());
+
+  /** Get partner's all expenses (full list, not just shared) */
+  getPartnerAllExpenses = computed(() => this.partnerAllExpenses());
+
   constructor(
     private supabase: SupabaseService,
     private auth: AuthService,
@@ -76,6 +86,8 @@ export class HouseholdService {
       this.membersData.set([...MOCK_HOUSEHOLD_MEMBERS]);
       this.sharedExpenseIds.set(new Set(MOCK_HOUSEHOLD_SHARED_EXPENSES.map(se => se.expense_id)));
       this.partnerSharedExpenses.set([...MOCK_PARTNER_EXPENSES]);
+      this.partnerAllExpenses.set([...MOCK_PARTNER_ALL_EXPENSES]);
+      this.partnerIncomeSources.set([...MOCK_PARTNER_INCOME_SOURCES]);
       this.partnerIncomeTotal.set(MOCK_PARTNER_INCOME_TOTAL);
     }
   }
@@ -128,8 +140,9 @@ export class HouseholdService {
     // Load shared expenses
     await this.loadSharedExpenses(household.id);
 
-    // Load partner income summary
+    // Load partner income and expenses detail
     await this.loadPartnerIncome(household.id, access.userId);
+    await this.loadPartnerDetail(access.userId);
   }
 
   private async loadSharedExpenses(householdId: string): Promise<void> {
@@ -173,6 +186,34 @@ export class HouseholdService {
       const partnerSummary = (data as HouseholdIncomeSummary[])
         .find(d => d.user_id !== myUserId);
       this.partnerIncomeTotal.set(partnerSummary?.total_income || 0);
+    }
+  }
+
+  private async loadPartnerDetail(myUserId: string): Promise<void> {
+    const access = this.env.checkAccess();
+    if (access.mode !== 'prod') return;
+
+    const partnerId = this.partner()?.user_id;
+    if (!partnerId) return;
+
+    // Load partner's income sources
+    const { data: incomes } = await this.supabase.client
+      .from('income_sources')
+      .select('*')
+      .eq('user_id', partnerId);
+
+    if (incomes) {
+      this.partnerIncomeSources.set(incomes);
+    }
+
+    // Load partner's all expenses
+    const { data: expenses } = await this.supabase.client
+      .from('expenses')
+      .select('*')
+      .eq('user_id', partnerId);
+
+    if (expenses) {
+      this.partnerAllExpenses.set(expenses);
     }
   }
 
@@ -418,6 +459,8 @@ export class HouseholdService {
       this.membersData.set([]);
       this.sharedExpenseIds.set(new Set());
       this.partnerSharedExpenses.set([]);
+      this.partnerAllExpenses.set([]);
+      this.partnerIncomeSources.set([]);
       this.partnerIncomeTotal.set(0);
       this.viewMode.set('personal');
       return { error: null };
@@ -444,6 +487,8 @@ export class HouseholdService {
     this.membersData.set([]);
     this.sharedExpenseIds.set(new Set());
     this.partnerSharedExpenses.set([]);
+    this.partnerAllExpenses.set([]);
+    this.partnerIncomeSources.set([]);
     this.partnerIncomeTotal.set(0);
     this.viewMode.set('personal');
     return { error: null };
@@ -569,6 +614,8 @@ export class HouseholdService {
       this.membersData.set([...MOCK_HOUSEHOLD_MEMBERS]);
       this.sharedExpenseIds.set(new Set(MOCK_HOUSEHOLD_SHARED_EXPENSES.map(se => se.expense_id)));
       this.partnerSharedExpenses.set([...MOCK_PARTNER_EXPENSES]);
+      this.partnerAllExpenses.set([...MOCK_PARTNER_ALL_EXPENSES]);
+      this.partnerIncomeSources.set([...MOCK_PARTNER_INCOME_SOURCES]);
       this.partnerIncomeTotal.set(MOCK_PARTNER_INCOME_TOTAL);
     } else {
       this.householdData.set(null);
@@ -576,6 +623,8 @@ export class HouseholdService {
       this.invitationsData.set([]);
       this.sharedExpenseIds.set(new Set());
       this.partnerSharedExpenses.set([]);
+      this.partnerAllExpenses.set([]);
+      this.partnerIncomeSources.set([]);
       this.partnerIncomeTotal.set(0);
     }
     this.viewMode.set('personal');

@@ -351,11 +351,26 @@ export const MOCK_HOUSEHOLD_SHARED_EXPENSES: SharedExpense[] = [
   { id: 'se-2', household_id: 'dev-household-1', expense_id: '5', user_id: MOCK_USER_ID, created_at: mockNow }, // Comida
 ];
 
-// Partner's expenses that are shared with us
+// Partner's income sources (detailed)
+export const MOCK_PARTNER_INCOME_SOURCES: IncomeSource[] = [
+  { id: 'pi-1', user_id: MOCK_PARTNER_USER_ID, name: 'Sueldo', amount: 15000, is_gross: false, frequency: 'monthly', created_at: mockNow, updated_at: mockNow },
+  { id: 'pi-2', user_id: MOCK_PARTNER_USER_ID, name: 'Vales de despensa', amount: 3000, is_gross: false, frequency: 'monthly', created_at: mockNow, updated_at: mockNow },
+];
+
+// Partner's ALL expenses (shared and personal)
+export const MOCK_PARTNER_ALL_EXPENSES: Expense[] = [
+  { id: 'p-1', user_id: MOCK_PARTNER_USER_ID, name: 'Internet (casa)', amount: 700, type: 'fixed', category: 'utilities', created_at: mockNow, updated_at: mockNow },
+  { id: 'p-2', user_id: MOCK_PARTNER_USER_ID, name: 'Agua', amount: 300, type: 'fixed', category: 'utilities', created_at: mockNow, updated_at: mockNow },
+  { id: 'p-3', user_id: MOCK_PARTNER_USER_ID, name: 'Gimnasio', amount: 500, type: 'fixed', category: 'entertainment', created_at: mockNow, updated_at: mockNow },
+  { id: 'p-4', user_id: MOCK_PARTNER_USER_ID, name: 'Spotify', amount: 115, type: 'fixed', category: 'subscriptions', created_at: mockNow, updated_at: mockNow },
+  { id: 'p-5', user_id: MOCK_PARTNER_USER_ID, name: 'Transporte', amount: 1200, type: 'variable', category: 'transport', created_at: mockNow, updated_at: mockNow },
+];
+
+// Partner's expenses that are shared (subset of all - only p-1 and p-2)
 export const MOCK_PARTNER_EXPENSES: Expense[] = [
   { id: 'p-1', user_id: MOCK_PARTNER_USER_ID, name: 'Internet (casa)', amount: 700, type: 'fixed', category: 'utilities', created_at: mockNow, updated_at: mockNow },
   { id: 'p-2', user_id: MOCK_PARTNER_USER_ID, name: 'Agua', amount: 300, type: 'fixed', category: 'utilities', created_at: mockNow, updated_at: mockNow },
 ];
 
-// Partner's total income (aggregate only)
+// Partner's total income (aggregate)
 export const MOCK_PARTNER_INCOME_TOTAL = 18000;
