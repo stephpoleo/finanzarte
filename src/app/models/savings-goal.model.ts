@@ -8,6 +8,7 @@ export interface SavingsGoal {
   monthly_target: number | null;
   color: string;
   icon: string;
+  household_id?: string | null;
   created_at: string;
   updated_at: string;
 }

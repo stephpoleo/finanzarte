@@ -84,6 +84,20 @@ export const MOCK_DEPOSITS: SavingsDeposit[] = [
   { id: '4', goal_id: '2', user_id: MOCK_USER_ID, amount: 8500, note: 'Ahorro vacaciones', deposit_date: mockToday, created_at: mockNow },
 ];
 
+// ==================== Household Savings Goals ====================
+export const MOCK_HOUSEHOLD_GOALS: SavingsGoal[] = [
+  { id: 'hg-1', user_id: MOCK_USER_ID, name: 'Vacaciones Cancún', target_amount: 30000, current_amount: 12000, deadline: '2026-12-31', monthly_target: 3000, color: '#06b6d4', icon: 'airplane-outline', household_id: 'dev-household-1', created_at: mockNow, updated_at: mockNow },
+  { id: 'hg-2', user_id: MOCK_PARTNER_USER_ID, name: 'Muebles Sala', target_amount: 15000, current_amount: 5000, deadline: null, monthly_target: null, color: '#f59e0b', icon: 'home-outline', household_id: 'dev-household-1', created_at: mockNow, updated_at: mockNow },
+];
+
+export const MOCK_HOUSEHOLD_DEPOSITS: SavingsDeposit[] = [
+  { id: 'hd-1', goal_id: 'hg-1', user_id: MOCK_USER_ID, amount: 5000, note: 'Mi parte vacaciones', deposit_date: '2026-03-01', created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: 'hd-2', goal_id: 'hg-1', user_id: MOCK_PARTNER_USER_ID, amount: 4000, note: 'Ahorro pareja', deposit_date: '2026-03-15', created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: 'hd-3', goal_id: 'hg-1', user_id: MOCK_USER_ID, amount: 3000, note: null, deposit_date: mockToday, created_at: mockNow },
+  { id: 'hd-4', goal_id: 'hg-2', user_id: MOCK_PARTNER_USER_ID, amount: 3000, note: 'Ahorro muebles', deposit_date: '2026-04-01', created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() },
+  { id: 'hd-5', goal_id: 'hg-2', user_id: MOCK_USER_ID, amount: 2000, note: null, deposit_date: mockToday, created_at: mockNow },
+];
+
 // ==================== Investments ====================
 export const MOCK_INVESTMENTS: Investment[] = [
   {

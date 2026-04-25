@@ -25,6 +25,7 @@ import {
 import { addIcons } from 'ionicons';
 import { saveOutline } from 'ionicons/icons';
 import { SavingsGoalService } from '../../../core/services/savings-goal.service';
+import { HouseholdService } from '../../../core/services/household.service';
 import { SavingsGoal } from '../../../models';
 
 @Component({
@@ -56,7 +57,7 @@ import { SavingsGoal } from '../../../models';
         <ion-buttons slot="start">
           <ion-back-button defaultHref="/savings"></ion-back-button>
         </ion-buttons>
-        <ion-title>{{ isEditing() ? 'Editar' : 'Nueva' }} Meta</ion-title>
+        <ion-title>{{ isEditing() ? 'Editar' : 'Nueva' }} Meta{{ isHouseholdGoal && !isEditing() ? ' en Pareja' : '' }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="save()" [disabled]="isSaving() || !isValid()">
             @if (isSaving()) {
@@ -179,6 +180,7 @@ export class GoalFormPage implements OnInit {
   isEditing = signal(false);
   isSaving = signal(false);
   goalId: string | null = null;
+  isHouseholdGoal = false;
 
   minDate: string;
 
@@ -186,6 +188,7 @@ export class GoalFormPage implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private savingsGoals: SavingsGoalService,
+    private household: HouseholdService,
     private toastController: ToastController
   ) {
     addIcons({ saveOutline });
@@ -198,6 +201,7 @@ export class GoalFormPage implements OnInit {
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
+    this.isHouseholdGoal = this.route.snapshot.queryParamMap.get('household') === 'true';
 
     if (id) {
       this.goalId = id;
@@ -241,20 +245,27 @@ export class GoalFormPage implements OnInit {
 
     this.isSaving.set(true);
 
-    const goalData = {
+    const goalData: Record<string, unknown> = {
       name: this.name.trim(),
       target_amount: this.targetAmount!,
       deadline: this.hasDeadline ? this.deadline.split('T')[0] : null,
       monthly_target: this.hasMonthlyTarget ? this.monthlyTarget : null
     };
 
+    if (this.isHouseholdGoal && !this.isEditing()) {
+      const h = this.household.household();
+      if (h) {
+        goalData['household_id'] = h.id;
+      }
+    }
+
     let error: Error | null = null;
 
     if (this.isEditing() && this.goalId) {
-      const result = await this.savingsGoals.updateGoal(this.goalId, goalData);
+      const result = await this.savingsGoals.updateGoal(this.goalId, goalData as any);
       error = result.error;
     } else {
-      const result = await this.savingsGoals.addGoal(goalData);
+      const result = await this.savingsGoals.addGoal(goalData as any);
       error = result.error;
     }
 

@@ -19,6 +19,7 @@ import {
   checkmarkCircleOutline
 } from 'ionicons/icons';
 import { SavingsGoalService } from '../../../core/services/savings-goal.service';
+import { EnvironmentService } from '../../../core/services/environment.service';
 import { SavingsGoal, SavingsDeposit } from '../../../models';
 import { CurrencyMxnPipe } from '../../../shared/pipes/currency-mxn.pipe';
 import { ProgressRingComponent } from '../../../shared/components/progress-ring/progress-ring.component';
@@ -81,6 +82,19 @@ import { ProgressRingComponent } from '../../../shared/components/progress-ring/
               </div>
             </div>
 
+            @if (g.household_id) {
+              <div class="contribution-breakdown">
+                <div class="contribution-row">
+                  <span class="contribution-label">Tu</span>
+                  <span class="contribution-value">{{ getMyContribution() | currencyMxn }}</span>
+                </div>
+                <div class="contribution-row">
+                  <span class="contribution-label">Pareja</span>
+                  <span class="contribution-value">{{ getPartnerContribution() | currencyMxn }}</span>
+                </div>
+              </div>
+            }
+
             @if (g.deadline) {
               <div class="info-row">
                 <ion-icon name="calendar-outline"></ion-icon>
@@ -114,7 +128,12 @@ import { ProgressRingComponent } from '../../../shared/components/progress-ring/
                 @for (deposit of deposits(); track deposit.id) {
                   <div class="deposit-item">
                     <div class="deposit-info">
-                      <span class="deposit-amount">{{ deposit.amount | currencyMxn }}</span>
+                      <div class="deposit-header-row">
+                        <span class="deposit-amount">{{ deposit.amount | currencyMxn }}</span>
+                        @if (goal()?.household_id) {
+                          <span class="deposit-author">{{ savingsGoals.getDepositorName(deposit) }}</span>
+                        }
+                      </div>
                       <span class="deposit-date">{{ formatDate(deposit.created_at) }}</span>
                       @if (deposit.note) {
                         <span class="deposit-note">{{ deposit.note }}</span>
@@ -293,6 +312,45 @@ import { ProgressRingComponent } from '../../../shared/components/progress-ring/
       }
     }
 
+    .contribution-breakdown {
+      border-top: 1px solid #f3f4f6;
+      padding-top: 12px;
+      margin-top: 8px;
+    }
+
+    .contribution-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+    }
+
+    .contribution-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .contribution-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .deposit-header-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .deposit-author {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #6366f1;
+      background: #eef2ff;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
     .info-row {
       display: flex;
       align-items: center;
@@ -459,7 +517,8 @@ export class GoalDetailPage implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private savingsGoals: SavingsGoalService,
+    public savingsGoals: SavingsGoalService,
+    private env: EnvironmentService,
     private alertController: AlertController,
     private toastController: ToastController
   ) {
@@ -506,6 +565,20 @@ export class GoalDetailPage implements OnInit {
 
   getRemaining(goal: SavingsGoal): number {
     return Math.max(0, goal.target_amount - goal.current_amount);
+  }
+
+  getMyContribution(): number {
+    const userId = this.env.getUserId();
+    return this.deposits()
+      .filter(d => d.user_id === userId)
+      .reduce((sum, d) => sum + d.amount, 0);
+  }
+
+  getPartnerContribution(): number {
+    const userId = this.env.getUserId();
+    return this.deposits()
+      .filter(d => d.user_id !== userId)
+      .reduce((sum, d) => sum + d.amount, 0);
   }
 
   formatDeadline(deadline: string): string {

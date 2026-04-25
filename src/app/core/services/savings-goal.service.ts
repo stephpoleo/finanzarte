@@ -2,7 +2,7 @@ import { Injectable, signal, computed } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { EnvironmentService } from './environment.service';
 import { SavingsGoal, SavingsDeposit } from '../../models';
-import { MOCK_GOALS, MOCK_DEPOSITS } from '../../data/mock-data';
+import { MOCK_GOALS, MOCK_DEPOSITS, MOCK_HOUSEHOLD_GOALS, MOCK_HOUSEHOLD_DEPOSITS, MOCK_HOUSEHOLD_MEMBERS } from '../../data/mock-data';
 
 @Injectable({
   providedIn: 'root'
@@ -10,8 +10,10 @@ import { MOCK_GOALS, MOCK_DEPOSITS } from '../../data/mock-data';
 export class SavingsGoalService {
   private goalsData = signal<SavingsGoal[]>([]);
   private depositsData = signal<SavingsDeposit[]>([]);
+  private householdGoalsData = signal<SavingsGoal[]>([]);
 
   goals = computed(() => this.goalsData());
+  householdGoals = computed(() => this.householdGoalsData());
 
   totalSaved = computed(() =>
     this.goalsData().reduce((sum, g) => sum + g.current_amount, 0)
@@ -33,6 +35,7 @@ export class SavingsGoalService {
     if (this.env.isDevMode) {
       this.goalsData.set([...MOCK_GOALS]);
       this.depositsData.set([...MOCK_DEPOSITS]);
+      this.householdGoalsData.set([...MOCK_HOUSEHOLD_GOALS]);
     }
   }
 
@@ -52,6 +55,7 @@ export class SavingsGoalService {
       .from('savings_goals')
       .select('*')
       .eq('user_id', access.userId)
+      .is('household_id', null)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -63,11 +67,40 @@ export class SavingsGoalService {
     return data || [];
   }
 
+  async loadHouseholdGoals(householdId: string): Promise<SavingsGoal[]> {
+    const access = this.env.checkAccess();
+
+    if (access.mode === 'dev') {
+      return this.householdGoalsData();
+    }
+
+    if (access.mode === 'error') {
+      console.error('Error loading household goals:', access.error.message);
+      return [];
+    }
+
+    const { data, error } = await this.supabase.client
+      .from('savings_goals')
+      .select('*')
+      .eq('household_id', householdId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading household goals:', error);
+      return [];
+    }
+
+    this.householdGoalsData.set(data || []);
+    return data || [];
+  }
+
   async getGoal(id: string): Promise<SavingsGoal | null> {
     const access = this.env.checkAccess();
 
     if (access.mode === 'dev') {
-      return this.goalsData().find(g => g.id === id) || null;
+      return this.goalsData().find(g => g.id === id)
+        || this.householdGoalsData().find(g => g.id === id)
+        || null;
     }
 
     if (access.mode === 'error') {
@@ -95,9 +128,11 @@ export class SavingsGoalService {
     monthly_target?: number | null;
     color?: string;
     icon?: string;
+    household_id?: string | null;
   }): Promise<{ data: SavingsGoal | null; error: Error | null }> {
     const access = this.env.checkAccess();
     const now = new Date().toISOString();
+    const isHousehold = !!goal.household_id;
 
     if (access.mode === 'dev') {
       const newGoal: SavingsGoal = {
@@ -110,10 +145,15 @@ export class SavingsGoalService {
         monthly_target: goal.monthly_target || null,
         color: goal.color || '#6366f1',
         icon: goal.icon || 'flag-outline',
+        household_id: goal.household_id || null,
         created_at: now,
         updated_at: now
       };
-      this.goalsData.update(goals => [newGoal, ...goals]);
+      if (isHousehold) {
+        this.householdGoalsData.update(goals => [newGoal, ...goals]);
+      } else {
+        this.goalsData.update(goals => [newGoal, ...goals]);
+      }
       return { data: newGoal, error: null };
     }
 
@@ -121,23 +161,32 @@ export class SavingsGoalService {
       return { data: null, error: access.error };
     }
 
+    const insertData: Record<string, unknown> = {
+      user_id: access.userId,
+      name: goal.name,
+      target_amount: goal.target_amount,
+      current_amount: 0,
+      deadline: goal.deadline || null,
+      monthly_target: goal.monthly_target || null,
+      color: goal.color || '#6366f1',
+      icon: goal.icon || 'flag-outline'
+    };
+    if (goal.household_id) {
+      insertData['household_id'] = goal.household_id;
+    }
+
     const { data, error } = await this.supabase.client
       .from('savings_goals')
-      .insert({
-        user_id: access.userId,
-        name: goal.name,
-        target_amount: goal.target_amount,
-        current_amount: 0,
-        deadline: goal.deadline || null,
-        monthly_target: goal.monthly_target || null,
-        color: goal.color || '#6366f1',
-        icon: goal.icon || 'flag-outline'
-      })
+      .insert(insertData)
       .select()
       .single();
 
     if (!error && data) {
-      this.goalsData.update(goals => [data, ...goals]);
+      if (isHousehold) {
+        this.householdGoalsData.update(goals => [data, ...goals]);
+      } else {
+        this.goalsData.update(goals => [data, ...goals]);
+      }
     }
 
     return {
@@ -156,6 +205,9 @@ export class SavingsGoalService {
       this.goalsData.update(goals =>
         goals.map(g => g.id === id ? { ...g, ...updates } : g)
       );
+      this.householdGoalsData.update(goals =>
+        goals.map(g => g.id === id ? { ...g, ...updates } : g)
+      );
       return { error: null };
     }
 
@@ -172,6 +224,9 @@ export class SavingsGoalService {
       this.goalsData.update(goals =>
         goals.map(g => g.id === id ? { ...g, ...updates } : g)
       );
+      this.householdGoalsData.update(goals =>
+        goals.map(g => g.id === id ? { ...g, ...updates } : g)
+      );
     }
 
     return { error: error ? new Error(error.message) : null };
@@ -182,6 +237,7 @@ export class SavingsGoalService {
 
     if (access.mode === 'dev') {
       this.goalsData.update(goals => goals.filter(g => g.id !== id));
+      this.householdGoalsData.update(goals => goals.filter(g => g.id !== id));
       this.depositsData.update(deposits => deposits.filter(d => d.goal_id !== id));
       return { error: null };
     }
@@ -197,9 +253,20 @@ export class SavingsGoalService {
 
     if (!error) {
       this.goalsData.update(goals => goals.filter(g => g.id !== id));
+      this.householdGoalsData.update(goals => goals.filter(g => g.id !== id));
     }
 
     return { error: error ? new Error(error.message) : null };
+  }
+
+  getDepositorName(deposit: SavingsDeposit): string {
+    const userId = this.env.getUserId();
+    if (deposit.user_id === userId) return 'Tú';
+    if (this.env.isDevMode) {
+      const member = MOCK_HOUSEHOLD_MEMBERS.find(m => m.user_id === deposit.user_id);
+      return member?.full_name || 'Pareja';
+    }
+    return 'Pareja';
   }
 
   // Deposits
@@ -207,7 +274,8 @@ export class SavingsGoalService {
     const access = this.env.checkAccess();
 
     if (access.mode === 'dev') {
-      return this.depositsData().filter(d => d.goal_id === goalId);
+      const allDeposits = [...this.depositsData(), ...MOCK_HOUSEHOLD_DEPOSITS];
+      return allDeposits.filter(d => d.goal_id === goalId);
     }
 
     if (access.mode === 'error') {
@@ -349,9 +417,11 @@ export class SavingsGoalService {
     if (this.env.isDevMode) {
       this.goalsData.set([...MOCK_GOALS]);
       this.depositsData.set([...MOCK_DEPOSITS]);
+      this.householdGoalsData.set([...MOCK_HOUSEHOLD_GOALS]);
     } else {
       this.goalsData.set([]);
       this.depositsData.set([]);
+      this.householdGoalsData.set([]);
     }
   }
 }

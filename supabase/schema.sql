@@ -148,6 +148,7 @@ CREATE TABLE IF NOT EXISTS savings_goals (
   monthly_target DECIMAL(12,2),
   color TEXT DEFAULT '#6366f1',
   icon TEXT DEFAULT 'flag-outline',
+  household_id UUID REFERENCES households(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -155,10 +156,13 @@ CREATE TABLE IF NOT EXISTS savings_goals (
 -- Enable RLS
 ALTER TABLE savings_goals ENABLE ROW LEVEL SECURITY;
 
--- Policies for savings_goals
+-- Policies for savings_goals (personal goals: user_id match)
 DROP POLICY IF EXISTS "Users can view own savings goals" ON savings_goals;
 CREATE POLICY "Users can view own savings goals" ON savings_goals
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (
+    auth.uid() = user_id
+    OR household_id = get_user_household_id(auth.uid())
+  );
 
 DROP POLICY IF EXISTS "Users can insert own savings goals" ON savings_goals;
 CREATE POLICY "Users can insert own savings goals" ON savings_goals
@@ -166,7 +170,10 @@ CREATE POLICY "Users can insert own savings goals" ON savings_goals
 
 DROP POLICY IF EXISTS "Users can update own savings goals" ON savings_goals;
 CREATE POLICY "Users can update own savings goals" ON savings_goals
-  FOR UPDATE USING (auth.uid() = user_id);
+  FOR UPDATE USING (
+    auth.uid() = user_id
+    OR household_id = get_user_household_id(auth.uid())
+  );
 
 DROP POLICY IF EXISTS "Users can delete own savings goals" ON savings_goals;
 CREATE POLICY "Users can delete own savings goals" ON savings_goals
@@ -174,6 +181,7 @@ CREATE POLICY "Users can delete own savings goals" ON savings_goals
 
 -- Index for faster queries
 CREATE INDEX IF NOT EXISTS idx_savings_goals_user_id ON savings_goals(user_id);
+CREATE INDEX IF NOT EXISTS idx_savings_goals_household_id ON savings_goals(household_id);
 
 -- =====================================================
 -- SAVINGS DEPOSITS TABLE
@@ -195,7 +203,13 @@ ALTER TABLE savings_deposits ENABLE ROW LEVEL SECURITY;
 -- Policies for savings_deposits
 DROP POLICY IF EXISTS "Users can view own deposits" ON savings_deposits;
 CREATE POLICY "Users can view own deposits" ON savings_deposits
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (
+    auth.uid() = user_id
+    OR goal_id IN (
+      SELECT id FROM savings_goals
+      WHERE household_id = get_user_household_id(auth.uid())
+    )
+  );
 
 DROP POLICY IF EXISTS "Users can insert own deposits" ON savings_deposits;
 CREATE POLICY "Users can insert own deposits" ON savings_deposits
