@@ -104,6 +104,7 @@ export class PresupuestoTabComponent implements OnInit {
 
   // Household detail toggle
   showPartnerDetails = false;
+  partnerSharedExpanded = false;
 
   // Chart carousel state
   currentChart = 0;
