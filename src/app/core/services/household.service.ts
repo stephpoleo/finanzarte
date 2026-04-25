@@ -312,7 +312,7 @@ export class HouseholdService {
     const inviterName = this.auth.user()?.user_metadata?.['full_name'] || 'Tu pareja';
     const householdName = household?.name || 'Mi Hogar';
 
-    const shareText = `${inviterName} te invitó a "${householdName}" en Finanzarte para llevar juntos sus finanzas en pareja.\n\nDescarga la app y regístrate con tu correo (${email}) para aceptar la invitación.`;
+    const shareText = `${inviterName} te invitó a "${householdName}" en Finanzarte para llevar juntos sus finanzas en pareja.\n\nDescarga la app y regístrate con tu correo (${email}) para aceptar la invitación.\n\nhttps://finanzarte.vercel.app`;
 
     if (navigator.share) {
       try {
