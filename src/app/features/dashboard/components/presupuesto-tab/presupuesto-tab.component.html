@@ -131,7 +131,7 @@
         </div>
         <button class="hh-details-toggle" (click)="showPartnerDetails = !showPartnerDetails">
           <ion-icon [name]="showPartnerDetails ? 'chevron-down-outline' : 'chevron-forward-outline'"></ion-icon>
-          {{ showPartnerDetails ? 'Ocultar detalle personal' : 'Ver detalle personal' }}
+          {{ showPartnerDetails ? 'Ocultar detalle de pareja' : 'Ver detalle de pareja' }}
         </button>
       </div>
     }
@@ -173,7 +173,88 @@
       </div>
     }
 
-    @if (expenses.expenses().length > 0 && (!isHouseholdMode || showPartnerDetails)) {
+    <!-- My expenses with share toggles (always visible in household mode) -->
+    @if (isHouseholdMode && expenses.expenses().length > 0) {
+      <div class="expense-section" [class.expanded]="fixedExpensesExpanded">
+        <div class="expense-section-hdr" (click)="fixedExpensesExpanded = !fixedExpensesExpanded">
+          <div class="expense-section-left">
+            <span>Mis Gastos</span>
+            <span class="expense-count">({{ expenses.expenses().length }})</span>
+          </div>
+          <span class="expense-section-total">{{ expenses.totalExpenses() | currencyMxn }}</span>
+          <ion-icon name="chevron-down-outline" class="chevron"></ion-icon>
+        </div>
+        @if (fixedExpensesExpanded) {
+          <div class="expense-items">
+            @for (expense of expenses.expenses(); track expense.id) {
+              <div class="expense-row">
+                <div class="expense-icon" [style.background]="getCategoryColor(expense.category)">
+                  <ion-icon [name]="getCategoryIcon(expense.category)"></ion-icon>
+                </div>
+                <div class="expense-info">
+                  <span class="expense-name">{{ expense.name }}</span>
+                  <span class="expense-cat">{{ getCategoryLabel(expense.category) }}</span>
+                </div>
+                <div class="expense-values">
+                  <span class="expense-amt">{{ expense.amount | currencyMxn }}</span>
+                </div>
+                <button class="expense-share" [class.shared]="household.isSharedExpense(expense.id)" (click)="toggleShared(expense.id)" title="Compartir gasto">
+                  <ion-icon name="people-outline"></ion-icon>
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Partner details (toggle in household mode) -->
+    @if (isHouseholdMode && showPartnerDetails) {
+      <!-- Partner's Income -->
+      <div class="expense-section partner-shared" [class.expanded]="true">
+        <div class="expense-section-hdr partner">
+          <div class="expense-section-left">
+            <ion-icon name="cash-outline" class="partner-icon"></ion-icon>
+            <span>Ingresos de Pareja</span>
+          </div>
+          <span class="expense-section-total">{{ partnerIncome | currencyMxn }}</span>
+        </div>
+      </div>
+
+      <!-- Partner's Shared Expenses -->
+      @if (partnerSharedExpenses.length > 0) {
+        <div class="expense-section partner-shared" [class.expanded]="true">
+          <div class="expense-section-hdr partner">
+            <div class="expense-section-left">
+              <ion-icon name="people-outline" class="partner-icon"></ion-icon>
+              <span>Gastos de Pareja (Compartidos)</span>
+              <span class="expense-count">({{ partnerSharedExpenses.length }})</span>
+            </div>
+            <span class="expense-section-total">{{ totalPartnerSharedExpenses | currencyMxn }}</span>
+          </div>
+          <div class="expense-items">
+            @for (expense of partnerSharedExpenses; track expense.id) {
+              <div class="expense-row partner-expense">
+                <div class="expense-icon" [style.background]="getCategoryColor(expense.category)">
+                  <ion-icon [name]="getCategoryIcon(expense.category)"></ion-icon>
+                </div>
+                <div class="expense-info">
+                  <span class="expense-name">{{ expense.name }}</span>
+                  <span class="expense-cat">{{ getCategoryLabel(expense.category) }} · Pareja</span>
+                </div>
+                <div class="expense-values">
+                  <span class="expense-amt">{{ expense.amount | currencyMxn }}</span>
+                  <span class="expense-pct">Mi parte: {{ household.calculateMyShare(expense.amount, myIncome, partnerIncome) | currencyMxn }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Personal mode: full expense list with edit/delete -->
+    @if (!isHouseholdMode && expenses.expenses().length > 0) {
       <!-- Fixed Expenses Section -->
       <div class="expense-section" [class.expanded]="fixedExpensesExpanded">
         <div class="expense-section-hdr" (click)="fixedExpensesExpanded = !fixedExpensesExpanded">
@@ -312,37 +393,6 @@
             }
           </div>
         }
-      </div>
-    }
-
-    <!-- Partner's Shared Expenses (Household Mode) -->
-    @if (isHouseholdMode && partnerSharedExpenses.length > 0) {
-      <div class="expense-section partner-shared" [class.expanded]="true">
-        <div class="expense-section-hdr partner">
-          <div class="expense-section-left">
-            <ion-icon name="people-outline" class="partner-icon"></ion-icon>
-            <span>Gastos de Pareja (Compartidos)</span>
-            <span class="expense-count">({{ partnerSharedExpenses.length }})</span>
-          </div>
-          <span class="expense-section-total">{{ totalPartnerSharedExpenses | currencyMxn }}</span>
-        </div>
-        <div class="expense-items">
-          @for (expense of partnerSharedExpenses; track expense.id) {
-            <div class="expense-row partner-expense">
-              <div class="expense-icon" [style.background]="getCategoryColor(expense.category)">
-                <ion-icon [name]="getCategoryIcon(expense.category)"></ion-icon>
-              </div>
-              <div class="expense-info">
-                <span class="expense-name">{{ expense.name }}</span>
-                <span class="expense-cat">{{ getCategoryLabel(expense.category) }} · Pareja</span>
-              </div>
-              <div class="expense-values">
-                <span class="expense-amt">{{ expense.amount | currencyMxn }}</span>
-                <span class="expense-pct">Mi parte: {{ household.calculateMyShare(expense.amount, myIncome, partnerIncome) | currencyMxn }}</span>
-              </div>
-            </div>
-          }
-        </div>
       </div>
     }
   </div>

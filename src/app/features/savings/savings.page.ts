@@ -1,7 +1,6 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import {
   IonContent,
   IonHeader,
@@ -24,8 +23,6 @@ import {
   IonText,
   IonRefresher,
   IonRefresherContent,
-  IonSegment,
-  IonSegmentButton,
   RefresherEventDetail
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -36,7 +33,6 @@ import {
   calendarOutline
 } from 'ionicons/icons';
 import { SavingsGoalService } from '../../core/services/savings-goal.service';
-import { HouseholdService } from '../../core/services/household.service';
 import { SavingsGoal } from '../../models';
 import { CurrencyMxnPipe } from '../../shared/pipes/currency-mxn.pipe';
 import { PercentagePipe } from '../../shared/pipes/percentage.pipe';
@@ -47,7 +43,6 @@ import { ProgressRingComponent } from '../../shared/components/progress-ring/pro
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     RouterLink,
     IonContent,
     IonHeader,
@@ -70,8 +65,6 @@ import { ProgressRingComponent } from '../../shared/components/progress-ring/pro
     IonText,
     IonRefresher,
     IonRefresherContent,
-    IonSegment,
-    IonSegmentButton,
     CurrencyMxnPipe,
     PercentagePipe,
     ProgressRingComponent
@@ -91,62 +84,48 @@ import { ProgressRingComponent } from '../../shared/components/progress-ring/pro
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
 
-      <!-- Segment Toggle (only if in household) -->
-      @if (household.isInHousehold()) {
-        <div class="segment-container">
-          <ion-segment [value]="viewMode()" (ionChange)="onSegmentChange($event)">
-            <ion-segment-button value="personal">
-              Personal
-            </ion-segment-button>
-            <ion-segment-button value="household">
-              En pareja
-            </ion-segment-button>
-          </ion-segment>
-        </div>
-      }
-
       <!-- Summary Card -->
       <ion-card class="summary-card">
         <ion-card-content>
           <div class="summary-content">
             <app-progress-ring
-              [progress]="currentOverallProgress()"
+              [progress]="savingsGoals.overallProgress()"
               [size]="100"
               color="#10b981"
             >
-              <span class="progress-value">{{ currentOverallProgress() | percentage:0 }}</span>
+              <span class="progress-value">{{ savingsGoals.overallProgress() | percentage:0 }}</span>
             </app-progress-ring>
             <div class="summary-info">
               <div class="summary-stat">
                 <span class="stat-label">Total Ahorrado</span>
-                <span class="stat-value success">{{ currentTotalSaved() | currencyMxn }}</span>
+                <span class="stat-value success">{{ savingsGoals.totalSaved() | currencyMxn }}</span>
               </div>
               <div class="summary-stat">
                 <span class="stat-label">Meta Total</span>
-                <span class="stat-value">{{ currentTotalTargeted() | currencyMxn }}</span>
+                <span class="stat-value">{{ savingsGoals.totalTargeted() | currencyMxn }}</span>
               </div>
               <div class="summary-stat">
                 <span class="stat-label">Metas Activas</span>
-                <span class="stat-value">{{ currentGoals().length }}</span>
+                <span class="stat-value">{{ savingsGoals.goals().length }}</span>
               </div>
             </div>
           </div>
         </ion-card-content>
       </ion-card>
 
-      @if (currentGoals().length === 0) {
+      @if (savingsGoals.goals().length === 0) {
         <div class="empty-state">
           <ion-icon name="flag-outline" color="medium"></ion-icon>
-          <h3>{{ viewMode() === 'household' ? 'Sin metas en pareja' : 'Sin metas de ahorro' }}</h3>
-          <p>{{ viewMode() === 'household' ? 'Crea una meta compartida con tu pareja' : 'Crea tu primera meta para comenzar a ahorrar' }}</p>
-          <ion-button fill="outline" [routerLink]="['/savings/add']" [queryParams]="viewMode() === 'household' ? { household: true } : {}">
+          <h3>Sin metas de ahorro</h3>
+          <p>Crea tu primera meta para comenzar a ahorrar</p>
+          <ion-button fill="outline" routerLink="/savings/add">
             <ion-icon name="add-outline" slot="start"></ion-icon>
             Crear Meta
           </ion-button>
         </div>
       } @else {
         <div class="goals-list">
-          @for (goal of currentGoals(); track goal.id) {
+          @for (goal of savingsGoals.goals(); track goal.id) {
             <ion-card class="goal-card" [routerLink]="['/savings', goal.id]">
               <ion-card-content>
                 <div class="goal-header">
@@ -186,17 +165,13 @@ import { ProgressRingComponent } from '../../shared/components/progress-ring/pro
       }
 
       <ion-fab slot="fixed" vertical="bottom" horizontal="end">
-        <ion-fab-button [routerLink]="['/savings/add']" [queryParams]="viewMode() === 'household' ? { household: true } : {}">
+        <ion-fab-button routerLink="/savings/add">
           <ion-icon name="add-outline"></ion-icon>
         </ion-fab-button>
       </ion-fab>
     </ion-content>
   `,
   styles: [`
-    .segment-container {
-      padding: 12px 16px 0;
-    }
-
     .summary-card {
       margin: 16px;
     }
@@ -348,52 +323,16 @@ import { ProgressRingComponent } from '../../shared/components/progress-ring/pro
   `]
 })
 export class SavingsPage implements OnInit {
-  viewMode = signal<'personal' | 'household'>('personal');
-
-  currentGoals = computed(() =>
-    this.viewMode() === 'household'
-      ? this.savingsGoals.householdGoals()
-      : this.savingsGoals.goals()
-  );
-
-  currentTotalSaved = computed(() =>
-    this.currentGoals().reduce((sum, g) => sum + g.current_amount, 0)
-  );
-
-  currentTotalTargeted = computed(() =>
-    this.currentGoals().reduce((sum, g) => sum + g.target_amount, 0)
-  );
-
-  currentOverallProgress = computed(() => {
-    const total = this.currentTotalTargeted();
-    return total > 0 ? (this.currentTotalSaved() / total) * 100 : 0;
-  });
-
-  constructor(
-    public savingsGoals: SavingsGoalService,
-    public household: HouseholdService
-  ) {
+  constructor(public savingsGoals: SavingsGoalService) {
     addIcons({ addOutline, flagOutline, trophyOutline, calendarOutline });
   }
 
   ngOnInit(): void {
     this.savingsGoals.loadGoals();
-    const h = this.household.household();
-    if (h) {
-      this.savingsGoals.loadHouseholdGoals(h.id);
-    }
-  }
-
-  onSegmentChange(event: CustomEvent): void {
-    this.viewMode.set(event.detail.value);
   }
 
   async handleRefresh(event: CustomEvent<RefresherEventDetail>): Promise<void> {
     await this.savingsGoals.loadGoals();
-    const h = this.household.household();
-    if (h) {
-      await this.savingsGoals.loadHouseholdGoals(h.id);
-    }
     event.detail.complete();
   }
 
