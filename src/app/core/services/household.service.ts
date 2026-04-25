@@ -103,16 +103,25 @@ export class HouseholdService {
     const household = (memberData as any).households as Household;
     this.householdData.set(household);
 
-    // Load all members with profile info
+    // Load all members
     const { data: members } = await this.supabase.client
       .from('household_members')
-      .select('*, profiles(full_name)')
+      .select('*')
       .eq('household_id', household.id);
 
     if (members) {
+      // Fetch profile names for each member
+      const memberIds = members.map((m: any) => m.user_id);
+      const { data: profiles } = await this.supabase.client
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', memberIds);
+
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p.full_name]));
+
       this.membersData.set(members.map((m: any) => ({
         ...m,
-        full_name: m.profiles?.full_name || 'Sin nombre'
+        full_name: profileMap.get(m.user_id) || 'Sin nombre'
       })));
     }
 
@@ -255,7 +264,7 @@ export class HouseholdService {
 
   // ==================== Invitations ====================
 
-  async invitePartner(email: string): Promise<{ error: Error | null }> {
+  async invitePartner(email: string): Promise<{ error: Error | null; isRegistered?: boolean }> {
     const access = this.env.checkAccess();
     const household = this.householdData();
 
@@ -263,7 +272,7 @@ export class HouseholdService {
 
     if (access.mode === 'dev') {
       // Simulate invitation in dev mode
-      return { error: null };
+      return { error: null, isRegistered: false };
     }
 
     if (access.mode === 'error') return { error: access.error };
@@ -292,30 +301,36 @@ export class HouseholdService {
       return { error: new Error(error.message) };
     }
 
-    // Send email only if the user is NOT registered in the app
-    if (!isRegistered) {
+    return { error: null, isRegistered };
+  }
+
+  /**
+   * Share invitation via native Share API or WhatsApp fallback
+   */
+  async shareInvitation(email: string): Promise<void> {
+    const household = this.householdData();
+    const inviterName = this.auth.user()?.user_metadata?.['full_name'] || 'Tu pareja';
+    const householdName = household?.name || 'Mi Hogar';
+
+    const shareText = `${inviterName} te invitó a "${householdName}" en Finanzarte para llevar juntos sus finanzas en pareja.\n\nDescarga la app y regístrate con tu correo (${email}) para aceptar la invitación.`;
+
+    if (navigator.share) {
       try {
-        const inviterName = this.auth.user()?.user_metadata?.['full_name'] || 'Tu pareja';
-        console.log(`[Invitation] Sending email to ${email} from ${inviterName}`);
-        const res = await fetch('/api/send-invitation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            invited_email: email.toLowerCase().trim(),
-            invited_by_name: inviterName,
-            household_name: household.name
-          })
+        await navigator.share({
+          title: 'Invitación a Finanzarte',
+          text: shareText
         });
-        const fnData = await res.json();
-        console.log('[Invitation] API response:', res.status, fnData);
-      } catch (emailError) {
-        console.warn('Could not send invitation email:', emailError);
+      } catch (err: any) {
+        // User cancelled share - that's ok
+        if (err?.name !== 'AbortError') {
+          console.warn('Share failed:', err);
+        }
       }
     } else {
-      console.log(`[Invitation] User is registered, skipping email`);
+      // Fallback: open WhatsApp with pre-filled message
+      const encoded = encodeURIComponent(shareText);
+      window.open(`https://wa.me/?text=${encoded}`, '_blank');
     }
-
-    return { error: null };
   }
 
   async acceptInvitation(invitationId: string): Promise<{ error: Error | null }> {

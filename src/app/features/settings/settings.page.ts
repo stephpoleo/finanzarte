@@ -557,14 +557,35 @@ export class SettingsPage implements OnInit {
 
   async invitePartner(): Promise<void> {
     if (!this.inviteEmail) return;
-    const { error } = await this.household.invitePartner(this.inviteEmail.trim());
+    const email = this.inviteEmail.trim();
+    const result = await this.household.invitePartner(email);
     const toast = await this.toastController.create({
-      message: error ? error.message : 'Invitación enviada',
+      message: result.error ? result.error.message : 'Invitación creada',
       duration: 2000,
-      color: error ? 'danger' : 'success'
+      color: result.error ? 'danger' : 'success'
     });
     await toast.present();
-    if (!error) this.inviteEmail = '';
+
+    if (!result.error) {
+      // If user is not registered, offer to share invitation
+      if (!result.isRegistered) {
+        const alert = await this.alertController.create({
+          header: 'Compartir invitación',
+          message: `${email} no tiene cuenta en Finanzarte. ¿Quieres enviarle un mensaje para que se registre?`,
+          buttons: [
+            { text: 'No, gracias', role: 'cancel' },
+            {
+              text: 'Compartir',
+              handler: () => {
+                this.household.shareInvitation(email);
+              }
+            }
+          ]
+        });
+        await alert.present();
+      }
+      this.inviteEmail = '';
+    }
   }
 
   async acceptInvitation(id: string): Promise<void> {
