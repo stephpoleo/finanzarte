@@ -184,16 +184,18 @@ export class HouseholdService {
     const email = this.getEmail();
     if (!email) return;
 
-    const { data } = await this.supabase.client
+    const { data, error } = await this.supabase.client
       .from('household_invitations')
-      .select('*, households(name)')
+      .select('*')
       .eq('invited_email', email)
       .eq('status', 'pending');
 
-    if (data) {
+    console.log('[Household] loadInvitations for', email, '- data:', data, '- error:', error);
+
+    if (data && data.length > 0) {
       this.invitationsData.set(data.map((inv: any) => ({
         ...inv,
-        household_name: inv.households?.name || 'Hogar',
+        household_name: 'Hogar',
         invited_by_name: 'Tu pareja'
       })));
     }
