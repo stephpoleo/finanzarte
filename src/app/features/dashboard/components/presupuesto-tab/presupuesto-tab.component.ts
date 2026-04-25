@@ -209,6 +209,18 @@ export class PresupuestoTabComponent implements OnInit {
     return this.household.getPartnerSharedExpenses();
   }
 
+  get allPartnerExpenses(): Expense[] {
+    return this.household.getPartnerSharedExpenses();
+  }
+
+  get totalPartnerExpenses(): number {
+    return this.allPartnerExpenses.reduce((sum, e) => sum + e.amount, 0);
+  }
+
+  get partnerIncomeSources(): IncomeSource[] {
+    return [];
+  }
+
   get totalSharedExpenses(): number {
     return this.sharedExpenses.reduce((sum, e) => sum + e.amount, 0);
   }
