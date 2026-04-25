@@ -178,7 +178,19 @@ export class PresupuestoTabComponent implements OnInit {
     if (this.isHouseholdMode) {
       return this.totalSharedExpenses + this.totalPersonalExpenses + this.totalPartnerSharedExpenses;
     }
-    return this.expenses.totalExpenses();
+    return this.effectivePersonalExpenses;
+  }
+
+  get effectivePersonalExpenses(): number {
+    if (!this.household.isInHousehold()) {
+      return this.expenses.totalExpenses();
+    }
+    // Personal expenses full + only my share of shared expenses
+    let total = this.totalPersonalExpenses;
+    for (const e of this.sharedExpenses) {
+      total += this.household.calculateMyShare(e.amount, this.myIncome, this.partnerIncome);
+    }
+    return total;
   }
 
   get availableSavings(): number {
@@ -188,7 +200,7 @@ export class PresupuestoTabComponent implements OnInit {
         this.expenses.expenses()
       ));
     }
-    return Math.max(0, this.totalIncome - this.expenses.totalExpenses());
+    return Math.max(0, this.totalIncome - this.effectivePersonalExpenses);
   }
 
   get savingsRate(): number {
