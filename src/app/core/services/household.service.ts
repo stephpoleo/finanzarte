@@ -186,7 +186,7 @@ export class HouseholdService {
 
     const { data } = await this.supabase.client
       .from('household_invitations')
-      .select('*, households(name), profiles!household_invitations_invited_by_fkey(full_name)')
+      .select('*, households(name)')
       .eq('invited_email', email)
       .eq('status', 'pending');
 
@@ -194,7 +194,7 @@ export class HouseholdService {
       this.invitationsData.set(data.map((inv: any) => ({
         ...inv,
         household_name: inv.households?.name || 'Hogar',
-        invited_by_name: inv.profiles?.full_name || 'Alguien'
+        invited_by_name: 'Tu pareja'
       })));
     }
   }
