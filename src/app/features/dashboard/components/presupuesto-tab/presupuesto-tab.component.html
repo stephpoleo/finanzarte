@@ -113,14 +113,18 @@
           } @else {
             <div class="income-item">
               <ion-icon name="cash-outline"></ion-icon>
-              <span class="income-item-name">{{ income.name }}</span>
-              <span class="income-item-badge">{{ income.amount | currencyMxn }}{{ getFrequencyLabel(income.frequency) }}</span>
-              <button class="income-item-edit" (click)="startEditIncome(income)">
-                <ion-icon name="create-outline"></ion-icon>
-              </button>
-              <button class="income-item-delete" (click)="deleteIncome(income.id)">
-                <ion-icon name="trash-outline"></ion-icon>
-              </button>
+              <div class="income-item-info">
+                <span class="income-item-name">{{ income.name }}</span>
+                <span class="income-item-badge">{{ income.amount | currencyMxn }}{{ getFrequencyLabel(income.frequency) }}</span>
+              </div>
+              <div class="income-item-actions">
+                <button class="income-item-edit" (click)="startEditIncome(income)">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="income-item-delete" (click)="deleteIncome(income.id)">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
             </div>
           }
         }
