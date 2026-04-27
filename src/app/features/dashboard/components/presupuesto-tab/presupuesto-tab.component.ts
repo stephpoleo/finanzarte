@@ -271,23 +271,25 @@ export class PresupuestoTabComponent implements OnInit {
     await this.household.updateSplitMode(mode);
   }
 
-  // Emergency fund allocation based on milestone progress
+  // Emergency fund allocation based on milestone progress, scaled to the user's target
   get emergencyRecommendedPct(): number {
     const currentSavings = this.userSettings.emergencyCurrentSavings();
     const monthlyExpenses = this.totalExpenses;
+    const targetMonths = this.userSettings.emergencyTargetMonths();
 
     // If expenses haven't loaded yet, assume fund is incomplete
     if (monthlyExpenses <= 0) return currentSavings < 10000 ? 100 : 50;
 
     const monthsCovered = currentSavings / monthlyExpenses;
 
-    // Milestones: Base ($10k), 1 mes, 3 meses, 6 meses, 12 meses, 24 meses
+    // Milestones scale with the user's target so the recommendation only drops to 0
+    // once the configured goal (e.g. 24 meses) is reached.
     if (currentSavings < 10000) return 100; // Aún no alcanza base
-    if (monthsCovered < 1) return 100;
-    if (monthsCovered < 3) return 75;
-    if (monthsCovered < 6) return 50;
-    if (monthsCovered < 12) return 25;
-    return 0; // Fondo de emergencia completo
+    if (monthsCovered >= targetMonths) return 0; // Meta alcanzada
+    if (monthsCovered < targetMonths / 12) return 100;
+    if (monthsCovered < targetMonths / 4) return 75;
+    if (monthsCovered < targetMonths / 2) return 50;
+    return 25;
   }
 
   get emergencyAllocationAmount(): number {

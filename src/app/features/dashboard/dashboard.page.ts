@@ -130,19 +130,21 @@ export class DashboardPage implements OnInit {
     return Math.max(0, this.incomeSources.totalIncome() - this.expenses.totalExpenses());
   }
 
-  // Emergency fund allocation based on milestone progress
+  // Emergency fund allocation based on milestone progress, scaled to the user's target
   get emergencyRecommendedPct(): number {
     const currentSavings = this.userSettings.emergencyCurrentSavings();
     const monthlyExpenses = this.expenses.totalExpenses() || 1;
+    const targetMonths = this.userSettings.emergencyTargetMonths();
     const monthsCovered = currentSavings / monthlyExpenses;
 
-    // Milestones: Base ($10k), 1 mes, 3 meses, 6 meses, 12 meses, 24 meses
+    // Milestones scale with the user's target so the recommendation only drops to 0
+    // once the configured goal (e.g. 24 meses) is reached.
     if (currentSavings < 10000) return 100;
-    if (monthsCovered < 1) return 100;
-    if (monthsCovered < 3) return 75;
-    if (monthsCovered < 6) return 50;
-    if (monthsCovered < 12) return 25;
-    return 0; // Emergency fund complete
+    if (monthsCovered >= targetMonths) return 0;
+    if (monthsCovered < targetMonths / 12) return 100;
+    if (monthsCovered < targetMonths / 4) return 75;
+    if (monthsCovered < targetMonths / 2) return 50;
+    return 25;
   }
 
   goToSettings(): void {

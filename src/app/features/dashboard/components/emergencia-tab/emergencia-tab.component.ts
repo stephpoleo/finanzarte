@@ -251,7 +251,7 @@ export class EmergenciaTabComponent implements OnInit {
     if (next.months <= 1) return 100;
     if (next.months <= 3) return 75;
     if (next.months <= 6) return 50;
-    if (next.months <= 12) return 25;
+    if (next.months <= 24) return 25;
     return 0;
   }
 
