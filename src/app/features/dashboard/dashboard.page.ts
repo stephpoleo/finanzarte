@@ -33,6 +33,7 @@ import { SavingsGoalService } from '../../core/services/savings-goal.service';
 import { IncomeSourceService } from '../../core/services/income-source.service';
 import { InvestmentService } from '../../core/services/investment.service';
 import { UserSettingsService } from '../../core/services/user-settings.service';
+import { EMERGENCY_MILESTONES } from '../../models';
 import { CancellableExpenseService } from '../../core/services/cancellable-expense.service';
 import { ShortTermGoalService } from '../../core/services/short-term-goal.service';
 import { HouseholdService } from '../../core/services/household.service';
@@ -130,21 +131,19 @@ export class DashboardPage implements OnInit {
     return Math.max(0, this.incomeSources.totalIncome() - this.expenses.totalExpenses());
   }
 
-  // Emergency fund allocation based on milestone progress, scaled to the user's target
+  // Emergency fund allocation driven by EMERGENCY_MILESTONES so all tabs agree
+  // on what counts as "complete" (the final 24-month milestone).
   get emergencyRecommendedPct(): number {
     const currentSavings = this.userSettings.emergencyCurrentSavings();
     const monthlyExpenses = this.expenses.totalExpenses() || 1;
-    const targetMonths = this.userSettings.emergencyTargetMonths();
-    const monthsCovered = currentSavings / monthlyExpenses;
 
-    // Milestones scale with the user's target so the recommendation only drops to 0
-    // once the configured goal (e.g. 24 meses) is reached.
     if (currentSavings < 10000) return 100;
-    if (monthsCovered >= targetMonths) return 0;
-    if (monthsCovered < targetMonths / 12) return 100;
-    if (monthsCovered < targetMonths / 4) return 75;
-    if (monthsCovered < targetMonths / 2) return 50;
-    return 25;
+
+    const monthsCovered = currentSavings / monthlyExpenses;
+    for (const m of EMERGENCY_MILESTONES) {
+      if (monthsCovered < m.months) return m.recommendedPercentage;
+    }
+    return 0; // Final milestone reached
   }
 
   goToSettings(): void {
