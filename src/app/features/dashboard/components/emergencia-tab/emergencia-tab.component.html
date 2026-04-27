@@ -229,23 +229,19 @@
           <div class="allocation-list">
             @for (alloc of allocationService.sofipoAllocations(); track alloc.id) {
               <div class="allocation-item sofipo">
-                <div class="allocation-left">
-                  <span class="allocation-icon">🏦</span>
-                  <div class="allocation-info">
-                    <span class="allocation-name">{{ alloc.sofipo_name }}</span>
-                    <span class="allocation-meta">{{ getTermLabel(alloc.term_days) }} · {{ alloc.rate | number:'1.2-2' }}%</span>
-                  </div>
-                </div>
-                <div class="allocation-right">
+                <span class="allocation-icon">🏦</span>
+                <div class="allocation-info">
+                  <span class="allocation-name">{{ alloc.sofipo_name }}</span>
+                  <span class="allocation-meta">{{ getTermLabel(alloc.term_days) }} · {{ alloc.rate | number:'1.2-2' }}%</span>
                   <span class="allocation-amount">{{ alloc.amount | currencyMxn }}</span>
-                  <div class="allocation-actions">
-                    <button class="action-btn edit" (click)="openSofipoForm(alloc)">
-                      <ion-icon name="create-outline"></ion-icon>
-                    </button>
-                    <button class="action-btn delete" (click)="deleteSofipoAllocation(alloc.id)">
-                      <ion-icon name="trash-outline"></ion-icon>
-                    </button>
-                  </div>
+                </div>
+                <div class="allocation-actions">
+                  <button class="action-btn edit" (click)="openSofipoForm(alloc)">
+                    <ion-icon name="create-outline"></ion-icon>
+                  </button>
+                  <button class="action-btn delete" (click)="deleteSofipoAllocation(alloc.id)">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </button>
                 </div>
               </div>
             }
@@ -304,23 +300,19 @@
         @if (allocationService.cetesAllocation(); as cetes) {
           <div class="allocation-list">
             <div class="allocation-item cetes">
-              <div class="allocation-left">
-                <span class="allocation-icon">📊</span>
-                <div class="allocation-info">
-                  <span class="allocation-name">CETES {{ cetes.term_days }} días</span>
-                  <span class="allocation-meta">{{ cetes.rate | number:'1.2-2' }}% anual</span>
-                </div>
-              </div>
-              <div class="allocation-right">
+              <span class="allocation-icon">📊</span>
+              <div class="allocation-info">
+                <span class="allocation-name">CETES {{ cetes.term_days }} días</span>
+                <span class="allocation-meta">{{ cetes.rate | number:'1.2-2' }}% anual</span>
                 <span class="allocation-amount">{{ cetes.amount | currencyMxn }}</span>
-                <div class="allocation-actions">
-                  <button class="action-btn edit" (click)="openCetesForm()">
-                    <ion-icon name="create-outline"></ion-icon>
-                  </button>
-                  <button class="action-btn delete" (click)="deleteCetesAllocation()">
-                    <ion-icon name="trash-outline"></ion-icon>
-                  </button>
-                </div>
+              </div>
+              <div class="allocation-actions">
+                <button class="action-btn edit" (click)="openCetesForm()">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="action-btn delete" (click)="deleteCetesAllocation()">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
               </div>
             </div>
           </div>

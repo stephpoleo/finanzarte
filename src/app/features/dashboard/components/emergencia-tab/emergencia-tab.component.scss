@@ -1216,8 +1216,8 @@
 
 .allocation-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
   padding: 12px;
   background: #f9fafb;
   border-radius: 10px;
@@ -1226,35 +1226,34 @@
 
   &.cetes {
     border-left-color: #3b82f6;
-  }
-}
 
-.allocation-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
+    .allocation-amount {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+  }
 }
 
 .allocation-icon {
   font-size: 1.25rem;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .allocation-info {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  gap: 4px;
 }
 
 .allocation-name {
   font-size: 0.9rem;
   font-weight: 600;
+  line-height: 1.25;
   color: #1f2937;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 .allocation-meta {
@@ -1262,21 +1261,21 @@
   color: #6b7280;
 }
 
-.allocation-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .allocation-amount {
-  font-size: 0.95rem;
+  align-self: flex-start;
+  margin-top: 4px;
+  background: #d1fae5;
+  color: #047857;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
   font-weight: 700;
-  color: #1f2937;
 }
 
 .allocation-actions {
   display: flex;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .action-btn {
