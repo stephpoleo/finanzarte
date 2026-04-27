@@ -150,6 +150,7 @@ export const MOCK_SETTINGS: UserSettings = {
   emergency_monthly_expenses: 15000,
   emergency_current_savings: 45000,
   emergency_target_months: 6,
+  emergency_cash_amount: 0,
   // Long-Term
   longterm_monthly_expenses: 15000,
   longterm_current_savings: 100000,

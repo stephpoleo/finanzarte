@@ -17,6 +17,7 @@ export class UserSettingsService {
   emergencyMonthlyExpenses = computed(() => this.settingsData()?.emergency_monthly_expenses ?? 0);
   emergencyCurrentSavings = computed(() => this.settingsData()?.emergency_current_savings ?? 0);
   emergencyTargetMonths = computed(() => this.settingsData()?.emergency_target_months ?? 6);
+  emergencyCashAmount = computed(() => this.settingsData()?.emergency_cash_amount ?? 0);
 
   emergencyMonthsCovered = computed(() => {
     const expenses = this.emergencyMonthlyExpenses();
@@ -237,6 +238,7 @@ export class UserSettingsService {
     emergency_monthly_expenses?: number;
     emergency_current_savings?: number;
     emergency_target_months?: number;
+    emergency_cash_amount?: number;
   }): Promise<{ error: Error | null }> {
     return this.updateSettings(settings);
   }

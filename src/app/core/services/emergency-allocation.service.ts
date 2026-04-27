@@ -1,6 +1,7 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { EnvironmentService } from './environment.service';
+import { UserSettingsService } from './user-settings.service';
 import {
   SofipoAllocation,
   CetesAllocation,
@@ -14,12 +15,16 @@ import { MOCK_SOFIPO_ALLOCATIONS, MOCK_CETES_ALLOCATION } from '../../data/mock-
   providedIn: 'root'
 })
 export class EmergencyAllocationService {
+  private userSettings = inject(UserSettingsService);
+
   private sofipoAllocationsData = signal<SofipoAllocation[]>([]);
   private cetesAllocationData = signal<CetesAllocation | null>(null);
 
   // Public signals
   sofipoAllocations = computed(() => this.sofipoAllocationsData());
   cetesAllocation = computed(() => this.cetesAllocationData());
+  // Cash is sourced from user_settings (single value); 0 means inactive.
+  cashAmount = computed(() => this.userSettings.emergencyCashAmount());
 
   // Computed totals
   totalSofipoAllocated = computed(() =>
@@ -31,10 +36,12 @@ export class EmergencyAllocationService {
   );
 
   totalAllocated = computed(() =>
-    this.totalSofipoAllocated() + this.totalCetesAllocated()
+    this.totalSofipoAllocated() + this.totalCetesAllocated() + this.cashAmount()
   );
 
-  // Weighted average rate across all allocations
+  // Weighted average rate across all allocations. Cash counts as 0% so it
+  // visually drags the average down and reinforces the "cash loses to
+  // inflation" message.
   weightedAverageRate = computed(() => {
     const total = this.totalAllocated();
     if (total === 0) return 0;
@@ -46,6 +53,7 @@ export class EmergencyAllocationService {
     const cetesWeighted = this.cetesAllocationData()
       ? this.cetesAllocationData()!.amount * this.cetesAllocationData()!.rate
       : 0;
+    // Cash contributes 0 to the numerator -- we still divide by the new total.
 
     return (sofipoWeighted + cetesWeighted) / total;
   });

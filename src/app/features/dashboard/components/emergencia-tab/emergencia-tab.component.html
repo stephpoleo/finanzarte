@@ -21,10 +21,21 @@
       </div>
       <div class="emergency-stats">
         <span class="stat-label">Ahorro Actual</span>
-        <div class="stat-input-row">
-          <span class="currency-prefix">$</span>
-          <input appAmountInput class="stat-input" [(ngModel)]="emergencyCurrentSavings" placeholder="0"/>
-        </div>
+        @if (distributionMode === 'custom') {
+          <div class="stat-display">
+            <span class="currency-prefix">$</span>
+            <span class="stat-value-derived">{{ emergencyCurrentSavings | currencyMxn:false }}</span>
+          </div>
+          <span class="stat-derived-hint">
+            <ion-icon name="calculator-outline"></ion-icon>
+            Calculado automáticamente desde tu desglose
+          </span>
+        } @else {
+          <div class="stat-input-row">
+            <span class="currency-prefix">$</span>
+            <input appAmountInput class="stat-input" [(ngModel)]="emergencyCurrentSavings" placeholder="0"/>
+          </div>
+        }
         @if (getCurrentMilestone()) {
           <span class="stat-hint">
             <ion-icon name="checkmark-circle"></ion-icon>
@@ -85,8 +96,8 @@
           <h3 class="card-title">Dónde Guardar tu Fondo</h3>
         </div>
         <div class="mode-toggle">
-          <button class="mode-btn" [class.active]="distributionMode === 'auto'" (click)="distributionMode = 'auto'">Auto</button>
-          <button class="mode-btn" [class.active]="distributionMode === 'custom'" (click)="distributionMode = 'custom'">Personalizar</button>
+          <button class="mode-btn" [class.active]="distributionMode === 'auto'" (click)="setDistributionMode('auto')">Auto</button>
+          <button class="mode-btn" [class.active]="distributionMode === 'custom'" (click)="setDistributionMode('custom')">Personalizar</button>
         </div>
       </div>
 
@@ -229,23 +240,19 @@
           <div class="allocation-list">
             @for (alloc of allocationService.sofipoAllocations(); track alloc.id) {
               <div class="allocation-item sofipo">
-                <div class="allocation-left">
-                  <span class="allocation-icon">🏦</span>
-                  <div class="allocation-info">
-                    <span class="allocation-name">{{ alloc.sofipo_name }}</span>
-                    <span class="allocation-meta">{{ getTermLabel(alloc.term_days) }} · {{ alloc.rate | number:'1.2-2' }}%</span>
-                  </div>
-                </div>
-                <div class="allocation-right">
+                <span class="allocation-icon">🏦</span>
+                <div class="allocation-info">
+                  <span class="allocation-name">{{ alloc.sofipo_name }}</span>
+                  <span class="allocation-meta">{{ getTermLabel(alloc.term_days) }} · {{ alloc.rate | number:'1.2-2' }}%</span>
                   <span class="allocation-amount">{{ alloc.amount | currencyMxn }}</span>
-                  <div class="allocation-actions">
-                    <button class="action-btn edit" (click)="openSofipoForm(alloc)">
-                      <ion-icon name="create-outline"></ion-icon>
-                    </button>
-                    <button class="action-btn delete" (click)="deleteSofipoAllocation(alloc.id)">
-                      <ion-icon name="trash-outline"></ion-icon>
-                    </button>
-                  </div>
+                </div>
+                <div class="allocation-actions">
+                  <button class="action-btn edit" (click)="openSofipoForm(alloc)">
+                    <ion-icon name="create-outline"></ion-icon>
+                  </button>
+                  <button class="action-btn delete" (click)="deleteSofipoAllocation(alloc.id)">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </button>
                 </div>
               </div>
             }
@@ -304,28 +311,101 @@
         @if (allocationService.cetesAllocation(); as cetes) {
           <div class="allocation-list">
             <div class="allocation-item cetes">
-              <div class="allocation-left">
-                <span class="allocation-icon">📊</span>
-                <div class="allocation-info">
-                  <span class="allocation-name">CETES {{ cetes.term_days }} días</span>
-                  <span class="allocation-meta">{{ cetes.rate | number:'1.2-2' }}% anual</span>
-                </div>
-              </div>
-              <div class="allocation-right">
+              <span class="allocation-icon">📊</span>
+              <div class="allocation-info">
+                <span class="allocation-name">CETES {{ cetes.term_days }} días</span>
+                <span class="allocation-meta">{{ cetes.rate | number:'1.2-2' }}% anual</span>
                 <span class="allocation-amount">{{ cetes.amount | currencyMxn }}</span>
-                <div class="allocation-actions">
-                  <button class="action-btn edit" (click)="openCetesForm()">
-                    <ion-icon name="create-outline"></ion-icon>
-                  </button>
-                  <button class="action-btn delete" (click)="deleteCetesAllocation()">
-                    <ion-icon name="trash-outline"></ion-icon>
-                  </button>
-                </div>
+              </div>
+              <div class="allocation-actions">
+                <button class="action-btn edit" (click)="openCetesForm()">
+                  <ion-icon name="create-outline"></ion-icon>
+                </button>
+                <button class="action-btn delete" (click)="deleteCetesAllocation()">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
               </div>
             </div>
           </div>
         } @else if (!showCetesForm) {
           <p class="empty-msg">No hay asignación en CETES</p>
+        }
+      </div>
+
+      <!-- Physical Cash Allocation Card -->
+      <div class="card allocation-card">
+        <div class="card-header-row">
+          <div class="card-header-left">
+            <span class="section-icon">💵</span>
+            <h3 class="card-title">Efectivo Físico</h3>
+          </div>
+          @if (cashAmount === 0) {
+            <button class="add-btn" (click)="enableCash()">
+              <ion-icon name="add-outline"></ion-icon>
+            </button>
+          } @else {
+            <button class="add-btn delete" (click)="disableCash()" title="Quitar efectivo">
+              <ion-icon name="trash-outline"></ion-icon>
+            </button>
+          }
+        </div>
+
+        @if (cashAmount === 0) {
+          <p class="cash-cta">
+            Reserva opcional para cuando los sistemas digitales fallen (apagones,
+            fallas bancarias, desastres). Sugerido: <strong>{{ cashRecommendedAmount | currencyMxn }}</strong>
+            (≈ 1 semana de gastos).
+          </p>
+        } @else {
+          <div class="cash-input-row">
+            <span class="currency-prefix">$</span>
+            <input
+              appAmountInput
+              class="cash-input"
+              [ngModel]="cashAmount"
+              (ngModelChange)="onCashAmountChange($event)"
+              placeholder="0"/>
+          </div>
+          <span class="cash-recommended">
+            Sugerido: {{ cashRecommendedAmount | currencyMxn }} (1 semana de gastos)
+            <button class="link-btn" (click)="useCashRecommendation()">Usar sugerido</button>
+          </span>
+
+          @if (cashZone === 'ideal') {
+            <div class="cash-zone ideal">
+              <ion-icon name="checkmark-circle"></ion-icon>
+              <span>En el rango sugerido. Cubres una semana sin sistemas digitales sin exponerte a inflación o robo en exceso.</span>
+            </div>
+          } @else if (cashZone === 'low') {
+            <div class="cash-zone low">
+              <ion-icon name="alert-circle-outline"></ion-icon>
+              <span>Quizá no alcance para una emergencia de varios días. Revisa que cubra al menos comida + transporte + emergencias para tu hogar.</span>
+            </div>
+          } @else if (cashZone === 'high') {
+            <div class="cash-zone high">
+              <ion-icon name="warning-outline"></ion-icon>
+              <span>
+                Cantidad alta. La inflación (~4.5% anual) te haría perder
+                <strong>{{ cashInflationLossYearly | currencyMxn }}</strong> por año.
+                El excedente rinde mejor en una SOFIPO flexible (a la vista).
+              </span>
+            </div>
+          } @else if (cashZone === 'too-high') {
+            <div class="cash-zone too-high">
+              <ion-icon name="warning-outline"></ion-icon>
+              <span>
+                Estás <strong>{{ cashExcessOverRecommended | currencyMxn }}</strong> arriba del sugerido.
+                A 4.5% de inflación eso son <strong>{{ cashInflationLossYearly | currencyMxn }}</strong> de
+                pérdida anual. Considera mover el excedente a una SOFIPO flexible.
+              </span>
+            </div>
+          }
+
+          <p class="cash-disclaimer">
+            <ion-icon name="information-circle-outline"></ion-icon>
+            El efectivo no genera rendimiento y se deprecia con la inflación.
+            Mantén solo lo necesario para emergencias donde los sistemas digitales fallen.
+          </p>
         }
       </div>
     }

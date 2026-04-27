@@ -332,6 +332,7 @@ CREATE TABLE IF NOT EXISTS user_settings (
   emergency_monthly_expenses DECIMAL(12,2) DEFAULT 0,
   emergency_current_savings DECIMAL(12,2) DEFAULT 0,
   emergency_target_months INTEGER DEFAULT 6,
+  emergency_cash_amount DECIMAL(12,2) DEFAULT 0,
 
   -- Long-Term Savings Settings
   longterm_monthly_expenses DECIMAL(12,2) DEFAULT 0,
