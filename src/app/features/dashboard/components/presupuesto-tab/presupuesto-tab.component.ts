@@ -111,8 +111,8 @@ export class PresupuestoTabComponent implements OnInit {
   // Chart carousel state
   currentChart = 0;
   chartAnimating = false;
-  chartTitles = ['Distribución del Ingreso', 'Gastos por Categoría'];
-  chartSubtitles = ['Cómo se divide tu ingreso', 'Análisis por tipo de gasto'];
+  chartTitles = ['Distribución del Ingreso', 'Desglose del Ingreso'];
+  chartSubtitles = ['Cómo se divide tu ingreso', 'Categorías y ahorros'];
 
   expenseCategories = EXPENSE_CATEGORIES;
 
@@ -446,15 +446,18 @@ export class PresupuestoTabComponent implements OnInit {
   }
 
   getCategoryColor(category: ExpenseCategory): string {
+    // Distinct hues per category. Cyan and amber are reserved for Fondo de
+    // Emergencia and Ahorro a Largo Plazo (heroes), so utilities and health
+    // use neighbouring but distinct hues to avoid collisions in the donut.
     const colors: Record<ExpenseCategory, string> = {
       rent: '#ef4444',
-      utilities: '#f59e0b',
-      subscriptions: '#8b5cf6',
-      loans: '#ec4899',
-      food: '#10b981',
+      utilities: '#eab308',
+      subscriptions: '#a855f7',
+      loans: '#db2777',
+      food: '#22c55e',
       transport: '#3b82f6',
       entertainment: '#f97316',
-      health: '#06b6d4',
+      health: '#0ea5e9',
       education: '#6366f1',
       other: '#64748b'
     };
