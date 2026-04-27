@@ -22,7 +22,8 @@ import {
   cardOutline,
   peopleOutline,
   constructOutline,
-  ellipsisHorizontalOutline
+  ellipsisHorizontalOutline,
+  calculatorOutline
 } from 'ionicons/icons';
 
 import { UserSettingsService } from '../../../../core/services/user-settings.service';
@@ -73,8 +74,25 @@ export class EmergenciaTabComponent implements OnInit {
   // Calculation toggle
   emergencyCalcByIncome = false;
 
-  // Distribution mode: 'auto' (recommended) or 'custom' (user-defined)
+  // Distribution mode: 'auto' (recommended) or 'custom' (user-defined).
+  // In 'custom' the "Ahorro Actual" hero amount is derived from the sum of
+  // SOFIPO + CETES + cash allocations. Use setDistributionMode() to toggle so
+  // the sync runs when the user switches modes.
   distributionMode: 'auto' | 'custom' = 'auto';
+
+  setDistributionMode(mode: 'auto' | 'custom'): void {
+    this.distributionMode = mode;
+    if (mode === 'custom') this.syncCurrentSavingsToTotal();
+  }
+
+  private syncCurrentSavingsToTotal(): void {
+    if (this.distributionMode !== 'custom') return;
+    const total = this.allocationService.totalAllocated();
+    if (total === this.userSettings.emergencyCurrentSavings()) return;
+    this.userSettings.updateEmergencySettings({
+      emergency_current_savings: total
+    });
+  }
 
   // Tax exempt limit (UMA-based constant)
   taxExemptLimit = TAX_EXEMPT_LIMIT;
@@ -153,7 +171,8 @@ export class EmergenciaTabComponent implements OnInit {
       cardOutline,
       peopleOutline,
       constructOutline,
-      ellipsisHorizontalOutline
+      ellipsisHorizontalOutline,
+      calculatorOutline
     });
   }
 
@@ -165,8 +184,9 @@ export class EmergenciaTabComponent implements OnInit {
     ]);
 
     // Show custom mode by default if user has allocations
-    if (this.allocationService.sofipoAllocations().length > 0 || this.allocationService.cetesAllocation()) {
+    if (this.allocationService.sofipoAllocations().length > 0 || this.allocationService.cetesAllocation() || this.cashAmount > 0) {
       this.distributionMode = 'custom';
+      this.syncCurrentSavingsToTotal();
     }
   }
 
@@ -241,20 +261,24 @@ export class EmergenciaTabComponent implements OnInit {
     this.userSettings.updateEmergencySettings({
       emergency_cash_amount: this.cashRecommendedAmount
     });
+    this.syncCurrentSavingsToTotal();
   }
 
   disableCash(): void {
     this.userSettings.updateEmergencySettings({ emergency_cash_amount: 0 });
+    this.syncCurrentSavingsToTotal();
   }
 
   useCashRecommendation(): void {
     this.userSettings.updateEmergencySettings({
       emergency_cash_amount: this.cashRecommendedAmount
     });
+    this.syncCurrentSavingsToTotal();
   }
 
   onCashAmountChange(value: number): void {
     this.userSettings.updateEmergencySettings({ emergency_cash_amount: value });
+    this.syncCurrentSavingsToTotal();
   }
 
   // Computed values
@@ -509,10 +533,12 @@ export class EmergenciaTabComponent implements OnInit {
       await this.allocationService.addSofipoAllocation(this.sofipoForm);
     }
     this.closeSofipoForm();
+    this.syncCurrentSavingsToTotal();
   }
 
   async deleteSofipoAllocation(id: string): Promise<void> {
     await this.allocationService.deleteSofipoAllocation(id);
+    this.syncCurrentSavingsToTotal();
   }
 
   getTermLabel(termDays: number): string {
@@ -555,9 +581,11 @@ export class EmergenciaTabComponent implements OnInit {
     if (this.cetesForm.amount <= 0) return;
     await this.allocationService.upsertCetesAllocation(this.cetesForm);
     this.closeCetesForm();
+    this.syncCurrentSavingsToTotal();
   }
 
   async deleteCetesAllocation(): Promise<void> {
     await this.allocationService.deleteCetesAllocation();
+    this.syncCurrentSavingsToTotal();
   }
 }

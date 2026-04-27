@@ -21,10 +21,21 @@
       </div>
       <div class="emergency-stats">
         <span class="stat-label">Ahorro Actual</span>
-        <div class="stat-input-row">
-          <span class="currency-prefix">$</span>
-          <input appAmountInput class="stat-input" [(ngModel)]="emergencyCurrentSavings" placeholder="0"/>
-        </div>
+        @if (distributionMode === 'custom') {
+          <div class="stat-display">
+            <span class="currency-prefix">$</span>
+            <span class="stat-value-derived">{{ emergencyCurrentSavings | currencyMxn:false }}</span>
+          </div>
+          <span class="stat-derived-hint">
+            <ion-icon name="calculator-outline"></ion-icon>
+            Calculado automáticamente desde tu desglose
+          </span>
+        } @else {
+          <div class="stat-input-row">
+            <span class="currency-prefix">$</span>
+            <input appAmountInput class="stat-input" [(ngModel)]="emergencyCurrentSavings" placeholder="0"/>
+          </div>
+        }
         @if (getCurrentMilestone()) {
           <span class="stat-hint">
             <ion-icon name="checkmark-circle"></ion-icon>
@@ -85,8 +96,8 @@
           <h3 class="card-title">Dónde Guardar tu Fondo</h3>
         </div>
         <div class="mode-toggle">
-          <button class="mode-btn" [class.active]="distributionMode === 'auto'" (click)="distributionMode = 'auto'">Auto</button>
-          <button class="mode-btn" [class.active]="distributionMode === 'custom'" (click)="distributionMode = 'custom'">Personalizar</button>
+          <button class="mode-btn" [class.active]="distributionMode === 'auto'" (click)="setDistributionMode('auto')">Auto</button>
+          <button class="mode-btn" [class.active]="distributionMode === 'custom'" (click)="setDistributionMode('custom')">Personalizar</button>
         </div>
       </div>
 

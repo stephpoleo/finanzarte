@@ -121,6 +121,35 @@
   gap: 4px;
 }
 
+/* Read-only display when distributionMode === 'custom' (the value is derived
+   from the SOFIPO + CETES + cash allocations sum). */
+.stat-display {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.stat-value-derived {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  padding: 0 4px 4px;
+  border-bottom: 2px dashed rgba(255, 255, 255, 0.35);
+}
+
+.stat-derived-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  opacity: 0.85;
+  margin-top: 6px;
+
+  ion-icon {
+    font-size: 14px;
+  }
+}
+
 .currency-prefix {
   font-size: 1.75rem;
   font-weight: 700;
