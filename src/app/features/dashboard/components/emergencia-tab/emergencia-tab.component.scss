@@ -54,8 +54,11 @@
   color: white;
   margin-bottom: 16px;
 
+  // Plan B is a sub-tab inside Emergencia, so it stays in the cyan family
+  // (deeper shade) instead of jumping to amber. Visually distinct from the
+  // Ahorros sub-tab hero but clearly part of the same section.
   &.planb {
-    background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+    background: linear-gradient(135deg, #0891b2 0%, #155e75 100%);
   }
 }
 
