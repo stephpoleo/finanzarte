@@ -1,0 +1,383 @@
+<main class="main-content">
+  <!-- Hero summary card -->
+  <div class="debts-hero" [class.has-debts]="debtService.totalDebt() > 0">
+    <div class="hero-header">
+      <div class="hero-icon"><ion-icon name="flame-outline"></ion-icon></div>
+      <div>
+        <h3>Deudas</h3>
+        <p>Lo que comprometes antes de poder ahorrar</p>
+      </div>
+    </div>
+
+    <div class="hero-amount-row">
+      <span class="hero-label">Total deuda</span>
+      <span class="hero-amount">{{ debtService.totalDebt() | currencyMxn }}</span>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="stat-label">Mensualidad comprometida</span>
+        <span class="stat-value">{{ debtService.totalMinimumPayment() | currencyMxn }}/mes</span>
+      </div>
+      <div class="hero-stat">
+        <span class="stat-label">Tasa promedio ponderada</span>
+        <span class="stat-value">{{ debtService.weightedAverageRate() | number:'1.1-1' }}% anual</span>
+      </div>
+      @if (monthlyIncome() > 0) {
+        <div class="hero-stat" [class.warning]="debtToIncomeWarning()">
+          <span class="stat-label">Compromiso vs ingreso</span>
+          <span class="stat-value">{{ debtToIncomeRatio() | number:'1.0-1' }}%</span>
+          @if (debtToIncomeWarning()) {
+            <span class="stat-warning-msg">
+              <ion-icon name="warning-outline"></ion-icon>
+              Compromiso alto (más del 36%)
+            </span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Educational comparator banner -->
+  @if (debtService.activeDebts().length > 0) {
+    <div class="comparator-banner" [class.priority]="shouldPrioritizeDebt()">
+      <ion-icon
+        [name]="shouldPrioritizeDebt() ? 'flame-outline' : 'checkmark-circle-outline'"
+        class="comparator-icon">
+      </ion-icon>
+      <div class="comparator-text">
+        @if (shouldPrioritizeDebt()) {
+          <strong>Prioriza pagar deuda.</strong>
+          Tu deuda promedio cuesta <strong>{{ debtService.weightedAverageRate() | number:'1.1-1' }}%</strong>
+          anual. Una inversión típica rinde ~{{ comparisonReturn() | number:'1.1-1' }}%.
+          Pagar deuda primero te hace ganar
+          <strong>{{ comparisonDelta() | number:'1.1-1' }}% extra anual</strong>
+          vs invertir.
+        } @else {
+          <strong>Tu deuda es más barata que tu rendimiento esperado.</strong>
+          Cuesta {{ debtService.weightedAverageRate() | number:'1.1-1' }}% anual; tu inversión esperada
+          rinde ~{{ comparisonReturn() | number:'1.1-1' }}%. Mantén el pago mínimo y considera invertir
+          el excedente.
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Strategy: Avalanche -->
+  @if (debtService.activeDebts().length > 1) {
+    <div class="card strategy-card">
+      <div class="card-header-row">
+        <div class="card-header-left">
+          <span class="section-icon">🎯</span>
+          <h3 class="card-title">Estrategia: Avalancha</h3>
+        </div>
+      </div>
+      <p class="strategy-desc">
+        Paga el mínimo en todas tus deudas. Si tienes capacidad extra, ponla a la deuda con la
+        <strong>tasa más alta</strong> primero — ahorras más en intereses que pagando primero la
+        más chica.
+      </p>
+      <ol class="strategy-list">
+        @for (debt of debtService.avalancheOrder(); track debt.id; let i = $index) {
+          <li class="strategy-item" [class.priority]="i === 0">
+            <span class="strategy-rank">{{ i + 1 }}</span>
+            <div class="strategy-info">
+              <span class="strategy-name">{{ debt.name }}</span>
+              <span class="strategy-meta">{{ debt.interest_rate | number:'1.1-1' }}% anual · {{ debt.current_balance | currencyMxn }}</span>
+            </div>
+            @if (i === 0) {
+              <span class="strategy-badge">Pagar primero</span>
+            }
+          </li>
+        }
+      </ol>
+    </div>
+  }
+
+  <!-- Debts list -->
+  <div class="card list-card">
+    <div class="card-header-row">
+      <div class="card-header-left">
+        <span class="section-icon">📋</span>
+        <h3 class="card-title">Tus deudas</h3>
+      </div>
+      <button class="add-btn" (click)="openForm()" title="Agregar deuda">
+        <ion-icon name="add-outline"></ion-icon>
+      </button>
+    </div>
+
+    @if (debtService.activeDebts().length === 0 && !showForm) {
+      <p class="empty-msg">No tienes deudas registradas. Agrega una para empezar a darle seguimiento.</p>
+    }
+
+    @if (showForm) {
+      <div class="debt-form">
+        <div class="form-field">
+          <label>Tipo</label>
+          <select [(ngModel)]="formData.debt_type">
+            @for (type of debtTypes; track type.value) {
+              <option [ngValue]="type.value">{{ type.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Nombre</label>
+          <input type="text" [(ngModel)]="formData.name" placeholder="Ej: Tarjeta Banamex"/>
+        </div>
+        <div class="form-field">
+          <label>Acreedor (opcional)</label>
+          <input type="text" [(ngModel)]="formData.creditor" placeholder="Banco, tienda, persona"/>
+        </div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Saldo actual</label>
+            <input appAmountInput [(ngModel)]="formData.current_balance" placeholder="0.00"/>
+          </div>
+          <div class="form-field">
+            <label>Tasa anual (%)</label>
+            <input type="number" [(ngModel)]="formData.interest_rate" step="0.1" placeholder="0"/>
+          </div>
+        </div>
+        <div class="form-grid-2">
+          @if (isInstallment()) {
+            <div class="form-field">
+              <label>Total de meses</label>
+              <input type="number" [ngModel]="formData.total_months" (ngModelChange)="onMonthsChange($event)" placeholder="12"/>
+            </div>
+          }
+          <div class="form-field">
+            <label>Pago mínimo / mensualidad</label>
+            <input appAmountInput [(ngModel)]="formData.minimum_payment" placeholder="0.00"/>
+          </div>
+        </div>
+        @if (isInstallment() || formData.debt_type === 'personal_loan' || formData.debt_type === 'auto' || formData.debt_type === 'mortgage') {
+          <div class="form-field">
+            <label>Fecha de inicio</label>
+            <input type="date" [(ngModel)]="formData.start_date"/>
+          </div>
+        }
+        @if (isCreditCard()) {
+          <div class="form-grid-2">
+            <div class="form-field">
+              <label>Límite</label>
+              <input appAmountInput [(ngModel)]="formData.credit_limit" placeholder="0.00"/>
+            </div>
+            <div class="form-field">
+              <label>Día de corte</label>
+              <input type="number" [(ngModel)]="formData.statement_day" min="1" max="31" placeholder="1-31"/>
+            </div>
+          </div>
+          <div class="form-field">
+            <label>Día de pago</label>
+            <input type="number" [(ngModel)]="formData.payment_due_day" min="1" max="31" placeholder="1-31"/>
+          </div>
+        }
+        <div class="form-field">
+          <label>Notas (opcional)</label>
+          <textarea [(ngModel)]="formData.notes" rows="2" placeholder="Detalles, contacto, condiciones..."></textarea>
+        </div>
+        <div class="form-btns">
+          <button class="btn-primary" (click)="saveDebt()">
+            <ion-icon name="checkmark-outline"></ion-icon>
+            {{ editingId ? 'Guardar' : 'Agregar' }}
+          </button>
+          <button class="btn-secondary" (click)="closeForm()">
+            <ion-icon name="close-outline"></ion-icon>
+            Cancelar
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (debtService.activeDebts().length > 0) {
+      <div class="debt-list">
+        @for (debt of debtService.activeDebts(); track debt.id) {
+          <div
+            class="debt-item"
+            [class.expanded]="expandedDebtId() === debt.id"
+            [class.priority]="isMostExpensive(debt) && debtService.activeDebts().length > 1"
+            [style.border-left-color]="getMeta(debt.debt_type).color">
+            <div class="debt-row" (click)="toggleExpanded(debt.id)">
+              <ion-icon [name]="getMeta(debt.debt_type).icon" class="debt-icon" [style.color]="getMeta(debt.debt_type).color"></ion-icon>
+              <div class="debt-info">
+                <span class="debt-name">
+                  {{ debt.name }}
+                  @if (isMostExpensive(debt) && debtService.activeDebts().length > 1) {
+                    <span class="priority-badge"><ion-icon name="flame-outline"></ion-icon> Pagar primero</span>
+                  }
+                </span>
+                @if (debt.creditor) {
+                  <span class="debt-creditor">{{ debt.creditor }}</span>
+                }
+                <span class="debt-meta">
+                  <span class="debt-rate">{{ debt.interest_rate | number:'1.1-1' }}% anual</span>
+                  ·
+                  <span class="debt-min">mín {{ debt.minimum_payment | currencyMxn }}/mes</span>
+                </span>
+                <span class="debt-balance-badge" [style.background]="getMeta(debt.debt_type).color + '20'" [style.color]="getMeta(debt.debt_type).color">
+                  {{ debt.current_balance | currencyMxn }}
+                </span>
+              </div>
+              <ion-icon name="chevron-down-outline" class="debt-chevron"></ion-icon>
+            </div>
+
+            @if (expandedDebtId() === debt.id) {
+              <div class="debt-details">
+                <div class="detail-row">
+                  <span class="detail-label">Tipo</span>
+                  <span>{{ getMeta(debt.debt_type).label }}</span>
+                </div>
+                @if (debt.initial_balance) {
+                  <div class="detail-row">
+                    <span class="detail-label">Saldo original</span>
+                    <span>{{ debt.initial_balance | currencyMxn }}</span>
+                  </div>
+                }
+                @if (debt.interest_rate > 0) {
+                  <div class="detail-row">
+                    <span class="detail-label">Costo de interés / mes</span>
+                    <span>{{ monthlyInterestCost(debt) | currencyMxn }}</span>
+                  </div>
+                }
+                @if (debt.debt_type === 'installment' && monthsRemaining(debt) !== null) {
+                  <div class="detail-row">
+                    <span class="detail-label">Meses restantes</span>
+                    <span>{{ monthsRemaining(debt) }} de {{ debt.total_months }}</span>
+                  </div>
+                }
+                @if (payoffDateLabel(debt)) {
+                  <div class="detail-row">
+                    <span class="detail-label">Termina (al pago mínimo)</span>
+                    <span>{{ payoffDateLabel(debt) }}</span>
+                  </div>
+                }
+                @if (debt.debt_type === 'credit_card' && debt.credit_limit) {
+                  <div class="detail-row">
+                    <span class="detail-label">Límite</span>
+                    <span>{{ debt.credit_limit | currencyMxn }}</span>
+                  </div>
+                }
+                @if (debt.statement_day) {
+                  <div class="detail-row">
+                    <span class="detail-label">Corte / Pago</span>
+                    <span>Día {{ debt.statement_day }}{{ debt.payment_due_day ? ' / Día ' + debt.payment_due_day : '' }}</span>
+                  </div>
+                }
+                @if (debt.notes) {
+                  <div class="detail-row notes">
+                    <span class="detail-label">Notas</span>
+                    <span>{{ debt.notes }}</span>
+                  </div>
+                }
+                <div class="debt-actions">
+                  <button class="action-btn paid" (click)="markPaidOff(debt.id)" title="Marcar como pagada">
+                    <ion-icon name="checkmark-circle-outline"></ion-icon> Pagada
+                  </button>
+                  <button class="action-btn edit" (click)="openForm(debt)" title="Editar">
+                    <ion-icon name="create-outline"></ion-icon>
+                  </button>
+                  <button class="action-btn delete" (click)="deleteDebt(debt.id)" title="Eliminar">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    @if (debtService.paidOffDebts().length > 0) {
+      <button class="link-btn toggle-paid" (click)="showPaidOff = !showPaidOff">
+        {{ showPaidOff ? 'Ocultar' : 'Ver' }} {{ debtService.paidOffDebts().length }} pagadas
+      </button>
+      @if (showPaidOff) {
+        <div class="debt-list paid">
+          @for (debt of debtService.paidOffDebts(); track debt.id) {
+            <div class="debt-item paid-off" [style.border-left-color]="getMeta(debt.debt_type).color">
+              <div class="debt-row">
+                <ion-icon name="checkmark-circle-outline" class="debt-icon paid-icon"></ion-icon>
+                <div class="debt-info">
+                  <span class="debt-name">{{ debt.name }}</span>
+                  <span class="debt-meta">Pagada · {{ debt.initial_balance ?? debt.current_balance | currencyMxn }}</span>
+                </div>
+                <button class="action-btn delete" (click)="deleteDebt(debt.id)" title="Eliminar">
+                  <ion-icon name="trash-outline"></ion-icon>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Extra payment calculator -->
+  @if (debtService.activeDebts().length > 0) {
+    <div class="card calc-card">
+      <div class="card-header-row">
+        <div class="card-header-left">
+          <span class="section-icon">🧮</span>
+          <h3 class="card-title">Calculadora de pago extra</h3>
+        </div>
+      </div>
+      <p class="calc-desc">
+        Pon un monto extra mensual y mira cuándo terminas todas tus deudas con la estrategia avalancha.
+      </p>
+      <div class="calc-input-row">
+        <span class="currency-prefix">$</span>
+        <input
+          appAmountInput
+          class="calc-input"
+          [ngModel]="extraPayment()"
+          (ngModelChange)="setExtraPayment($event)"/>
+        <span class="calc-suffix">/mes</span>
+      </div>
+
+      <div class="calc-result">
+        <div class="calc-row">
+          <span class="calc-label">Tiempo total para liberarte</span>
+          <span class="calc-value">
+            @if (avalanchePlan().totalMonths >= 600) {
+              No alcanza con esta cantidad
+            } @else if (avalanchePlan().totalMonths === 0) {
+              Ya estás libre
+            } @else {
+              {{ avalanchePlan().totalMonths }} meses
+              @if (payoffEndLabel()) {
+                · termina {{ payoffEndLabel() }}
+              }
+            }
+          </span>
+        </div>
+        <div class="calc-row">
+          <span class="calc-label">Intereses totales pagados</span>
+          <span class="calc-value">{{ avalanchePlan().totalInterestPaid | currencyMxn }}</span>
+        </div>
+        @if (avalanchePlan().totalInterestSaved > 0) {
+          <div class="calc-row saved">
+            <span class="calc-label">
+              <ion-icon name="trending-down-outline"></ion-icon>
+              Ahorro vs pagar solo el mínimo
+            </span>
+            <span class="calc-value">{{ avalanchePlan().totalInterestSaved | currencyMxn }}</span>
+          </div>
+        }
+
+        @if (avalanchePlan().steps.length > 0) {
+          <div class="calc-steps">
+            <h4 class="calc-steps-title">Orden de pago</h4>
+            <ol class="calc-steps-list">
+              @for (step of avalanchePlan().steps; track step.debtId) {
+                <li>
+                  <span class="step-name">{{ step.debtName }}</span>
+                  <span class="step-when">termina en mes {{ step.monthsToPayoff }}</span>
+                </li>
+              }
+            </ol>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</main>

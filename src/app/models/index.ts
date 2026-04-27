@@ -9,3 +9,4 @@ export * from './financial-rates.model';
 export * from './emergency-allocation.model';
 export * from './short-term-goal.model';
 export * from './household.model';
+export * from './debt.model';

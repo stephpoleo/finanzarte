@@ -188,7 +188,7 @@
     font-size: 22px;
   }
 
-  &:not(.active-green):not(.active-cyan):not(.active-amber):not(.active-purple):not(.active-indigo):hover {
+  &:not(.active-green):not(.active-cyan):not(.active-amber):not(.active-purple):not(.active-indigo):not(.active-red):hover {
     background: #e5e7eb;
   }
 
@@ -214,6 +214,11 @@
 
   &.active-indigo {
     background: #6366f1;
+    color: white;
+  }
+
+  &.active-red {
+    background: #dc2626;
     color: white;
   }
 }
