@@ -1,4 +1,16 @@
 <main class="main-content">
+  @if (showDebtPriorityBanner) {
+    <div class="debt-priority-banner">
+      <ion-icon name="flame-outline"></ion-icon>
+      <div class="banner-text">
+        <strong>Considera pagar deudas primero.</strong>
+        Tu deuda promedio cuesta {{ debtsWeightedRate | number:'1.1-1' }}% anual; tu inversión esperada
+        rinde ~{{ longtermReturn | number:'1.1-1' }}%. Pagar deuda te hace ganar
+        <strong>{{ debtRateAdvantage | number:'1.1-1' }}% extra anual</strong> vs invertir.
+      </div>
+    </div>
+  }
+
   <div class="hero-card amber">
     <div class="hero-header">
       <div class="hero-icon"><ion-icon name="leaf-outline"></ion-icon></div>

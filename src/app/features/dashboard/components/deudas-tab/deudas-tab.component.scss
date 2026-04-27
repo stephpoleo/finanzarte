@@ -1,0 +1,754 @@
+.main-content {
+  padding: 16px;
+  padding-bottom: 80px;
+}
+
+/* ==================== Hero ==================== */
+.debts-hero {
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+  border-radius: 20px;
+  padding: 20px;
+  color: white;
+  margin-bottom: 16px;
+
+  &:not(.has-debts) {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  }
+}
+
+.hero-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  p {
+    font-size: 0.75rem;
+    opacity: 0.85;
+    margin: 2px 0 0;
+  }
+}
+
+.hero-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+
+  ion-icon {
+    font-size: 24px;
+  }
+}
+
+.hero-amount-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 16px;
+}
+
+.hero-label {
+  font-size: 0.75rem;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.hero-amount {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.hero-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .stat-label {
+    font-size: 0.75rem;
+    opacity: 0.85;
+  }
+
+  .stat-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  .stat-warning-msg {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    margin-top: 2px;
+    color: #fef3c7;
+
+    ion-icon {
+      font-size: 12px;
+    }
+  }
+
+  &.warning {
+    .stat-value {
+      color: #fef3c7;
+    }
+  }
+}
+
+/* ==================== Comparator banner ==================== */
+.comparator-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  font-size: 0.85rem;
+  line-height: 1.45;
+
+  &.priority {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #7f1d1d;
+  }
+
+  strong {
+    font-weight: 700;
+  }
+}
+
+.comparator-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.comparator-text {
+  flex: 1;
+}
+
+/* ==================== Card base ==================== */
+.card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-icon {
+  font-size: 1.25rem;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+}
+
+.add-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  color: #6b7280;
+  cursor: pointer;
+
+  &:hover {
+    background: #e5e7eb;
+  }
+
+  ion-icon {
+    font-size: 20px;
+  }
+}
+
+.empty-msg {
+  font-size: 0.85rem;
+  color: #6b7280;
+  text-align: center;
+  margin: 16px 0;
+}
+
+/* ==================== Strategy card ==================== */
+.strategy-desc {
+  font-size: 0.85rem;
+  color: #4b5563;
+  line-height: 1.45;
+  margin: 0 0 12px;
+
+  strong {
+    color: #1f2937;
+  }
+}
+
+.strategy-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.strategy-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  &.priority {
+    background: #fef2f2;
+    border-color: #fca5a5;
+  }
+}
+
+.strategy-rank {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  color: #4b5563;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.strategy-item.priority .strategy-rank {
+  background: #dc2626;
+  color: white;
+}
+
+.strategy-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.strategy-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+  word-break: break-word;
+}
+
+.strategy-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.strategy-badge {
+  background: #dc2626;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+/* ==================== Debt list ==================== */
+.debt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &.paid {
+    margin-top: 8px;
+  }
+}
+
+.debt-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-left: 3px solid #64748b;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.15s ease;
+
+  &.priority {
+    background: #fffbeb;
+    border-color: #fcd34d;
+  }
+
+  &.paid-off {
+    opacity: 0.65;
+  }
+}
+
+.debt-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.debt-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  margin-top: 2px;
+
+  &.paid-icon {
+    color: #10b981;
+  }
+}
+
+.debt-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.debt-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.25;
+  word-break: break-word;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #dc2626;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+
+  ion-icon {
+    font-size: 11px;
+  }
+}
+
+.debt-creditor {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.debt-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.debt-rate {
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.debt-balance-badge {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.debt-chevron {
+  font-size: 18px;
+  color: #9ca3af;
+  flex-shrink: 0;
+  margin-top: 4px;
+  transition: transform 0.2s ease;
+}
+
+.debt-item.expanded .debt-chevron {
+  transform: rotate(180deg);
+}
+
+.debt-details {
+  padding: 0 12px 12px 44px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 12px;
+  margin-top: 0;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.8rem;
+
+  &.notes {
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+.detail-label {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+.debt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 16px;
+  }
+
+  &:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+  }
+
+  &.paid:hover {
+    background: #d1fae5;
+    color: #047857;
+  }
+
+  &.delete:hover {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  &.edit:hover {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+}
+
+.toggle-paid {
+  display: inline-block;
+  margin-top: 12px;
+  background: none;
+  border: none;
+  color: #06b6d4;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: #06b6d4;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* ==================== Form ==================== */
+.debt-form {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 600;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    color: #1f2937;
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+      border-color: #dc2626;
+    }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 60px;
+  }
+
+  /* Hide number spinners */
+  input[type='number'] {
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      appearance: none;
+    }
+  }
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.form-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.btn-primary,
+.btn-secondary {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 18px;
+  }
+}
+
+.btn-primary {
+  background: #dc2626;
+  color: white;
+
+  &:hover {
+    background: #b91c1c;
+  }
+}
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  color: #6b7280;
+
+  &:hover {
+    background: #f3f4f6;
+    color: #1f2937;
+  }
+}
+
+/* ==================== Calculator ==================== */
+.calc-desc {
+  font-size: 0.85rem;
+  color: #4b5563;
+  line-height: 1.45;
+  margin: 0 0 12px;
+}
+
+.calc-input-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  margin-bottom: 12px;
+
+  .currency-prefix {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #6b7280;
+  }
+
+  .calc-input {
+    flex: 1;
+    min-width: 0;
+    padding: 0 6px;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  .calc-suffix {
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+}
+
+.calc-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-radius: 8px;
+  font-size: 0.85rem;
+
+  .calc-label {
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    ion-icon {
+      font-size: 14px;
+    }
+  }
+
+  .calc-value {
+    font-weight: 700;
+    color: #1f2937;
+    text-align: right;
+  }
+
+  &.saved {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+
+    .calc-label,
+    ion-icon {
+      color: #047857;
+    }
+
+    .calc-value {
+      color: #047857;
+    }
+  }
+}
+
+.calc-steps {
+  margin-top: 4px;
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 10px;
+
+  .calc-steps-title {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 8px;
+  }
+}
+
+.calc-steps-list {
+  list-style: decimal inside;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.85rem;
+
+    .step-name {
+      color: #1f2937;
+      font-weight: 600;
+    }
+
+    .step-when {
+      color: #6b7280;
+      font-size: 0.75rem;
+    }
+  }
+}

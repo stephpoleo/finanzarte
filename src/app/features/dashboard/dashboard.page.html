@@ -59,6 +59,10 @@
       </app-presupuesto-tab>
     }
 
+    @if (activeTab === 'deudas') {
+      <app-deudas-tab></app-deudas-tab>
+    }
+
     @if (activeTab === 'emergencia') {
       <app-emergencia-tab [emergencyAvailableSavings]="emergencyAvailableSavings">
       </app-emergencia-tab>
@@ -88,6 +92,10 @@
       <button class="nav-tab" [class.active-green]="activeTab === 'presupuesto'" (click)="navigateToTab('presupuesto')">
         <ion-icon name="wallet-outline"></ion-icon>
         <span>Presupuesto</span>
+      </button>
+      <button class="nav-tab" [class.active-red]="activeTab === 'deudas'" (click)="navigateToTab('deudas')">
+        <ion-icon name="flame-outline"></ion-icon>
+        <span>Deudas</span>
       </button>
       <button class="nav-tab" [class.active-cyan]="activeTab === 'emergencia'" (click)="navigateToTab('emergencia')">
         <ion-icon name="shield-checkmark-outline"></ion-icon>

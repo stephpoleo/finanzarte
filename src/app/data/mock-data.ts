@@ -17,6 +17,7 @@ import {
 import { SofipoAllocation, CetesAllocation } from '../models/emergency-allocation.model';
 import { ShortTermGoal } from '../models/short-term-goal.model';
 import { Household, HouseholdMember, SharedExpense } from '../models/household.model';
+import { Debt } from '../models/debt.model';
 
 // Common constants
 export const MOCK_USER_ID = 'dev-user-123';
@@ -375,3 +376,57 @@ export const MOCK_PARTNER_EXPENSES: Expense[] = [
 
 // Partner's total income (aggregate)
 export const MOCK_PARTNER_INCOME_TOTAL = 18000;
+
+// Sample debts for dev mode: a high-rate credit card, an MSI installment, and
+// a personal loan. Mix of rates is intentional to exercise the avalanche
+// ordering and the educational comparator.
+export const MOCK_DEBTS: Debt[] = [
+  {
+    id: 'd-1',
+    user_id: MOCK_USER_ID,
+    name: 'Tarjeta Banamex Oro',
+    debt_type: 'credit_card',
+    creditor: 'Citibanamex',
+    current_balance: 18500,
+    initial_balance: 18500,
+    interest_rate: 50.5,
+    minimum_payment: 1200,
+    credit_limit: 35000,
+    statement_day: 5,
+    payment_due_day: 25,
+    is_paid_off: false,
+    created_at: mockNow,
+    updated_at: mockNow
+  },
+  {
+    id: 'd-2',
+    user_id: MOCK_USER_ID,
+    name: 'Refrigerador Samsung',
+    debt_type: 'installment',
+    creditor: 'Liverpool',
+    current_balance: 16000,
+    initial_balance: 24000,
+    interest_rate: 0,
+    minimum_payment: 2000,
+    total_months: 12,
+    start_date: '2025-09-15',
+    is_paid_off: false,
+    created_at: mockNow,
+    updated_at: mockNow
+  },
+  {
+    id: 'd-3',
+    user_id: MOCK_USER_ID,
+    name: 'Préstamo Kueski',
+    debt_type: 'personal_loan',
+    creditor: 'Kueski',
+    current_balance: 32000,
+    initial_balance: 40000,
+    interest_rate: 22.0,
+    minimum_payment: 1800,
+    start_date: '2025-06-01',
+    is_paid_off: false,
+    created_at: mockNow,
+    updated_at: mockNow
+  }
+];

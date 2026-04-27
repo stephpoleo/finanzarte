@@ -36,6 +36,7 @@ import { ExpenseService } from '../../../../core/services/expense.service';
 import { SavingsGoalService } from '../../../../core/services/savings-goal.service';
 import { UserSettingsService } from '../../../../core/services/user-settings.service';
 import { HouseholdService } from '../../../../core/services/household.service';
+import { DebtService } from '../../../../core/services/debt.service';
 import { CurrencyMxnPipe } from '../../../../shared/pipes/currency-mxn.pipe';
 import { AmountInputDirective } from '../../../../shared/directives/amount-input.directive';
 import {
@@ -121,7 +122,8 @@ export class PresupuestoTabComponent implements OnInit {
     public expenses: ExpenseService,
     public savingsGoals: SavingsGoalService,
     public userSettings: UserSettingsService,
-    public household: HouseholdService
+    public household: HouseholdService,
+    public debts: DebtService
   ) {
     addIcons({
       cashOutline,
@@ -177,18 +179,21 @@ export class PresupuestoTabComponent implements OnInit {
   }
 
   get totalExpenses(): number {
+    // Debts are personal commitments and always affect the user's monthly outflow,
+    // even in household mode (debts are not shared in v1).
     if (this.isHouseholdMode) {
-      return this.totalSharedExpenses + this.totalPersonalExpenses + this.totalPartnerSharedExpenses;
+      return this.totalSharedExpenses + this.totalPersonalExpenses + this.totalPartnerSharedExpenses + this.debts.totalMinimumPayment();
     }
     return this.effectivePersonalExpenses;
   }
 
   get effectivePersonalExpenses(): number {
+    const debtCommitment = this.debts.totalMinimumPayment();
     if (!this.household.isInHousehold()) {
-      return this.expenses.totalExpenses();
+      return this.expenses.totalExpenses() + debtCommitment;
     }
-    // Personal expenses full + my share of all shared expenses (mine + partner's)
-    let total = this.totalPersonalExpenses;
+    // Personal expenses full + my share of all shared expenses (mine + partner's) + debts
+    let total = this.totalPersonalExpenses + debtCommitment;
     for (const e of this.sharedExpenses) {
       total += this.household.calculateMyShare(e.amount, this.myIncome, this.partnerIncome);
     }

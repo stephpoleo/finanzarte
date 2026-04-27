@@ -23,7 +23,8 @@ import {
   flagOutline,
   homeOutline,
   personOutline,
-  peopleOutline
+  peopleOutline,
+  flameOutline
 } from 'ionicons/icons';
 
 import { ProfileService } from '../../core/services/profile.service';
@@ -37,14 +38,16 @@ import { EMERGENCY_MILESTONES } from '../../models';
 import { CancellableExpenseService } from '../../core/services/cancellable-expense.service';
 import { ShortTermGoalService } from '../../core/services/short-term-goal.service';
 import { HouseholdService } from '../../core/services/household.service';
+import { DebtService } from '../../core/services/debt.service';
 
 import { PresupuestoTabComponent } from './components/presupuesto-tab/presupuesto-tab.component';
+import { DeudasTabComponent } from './components/deudas-tab/deudas-tab.component';
 import { EmergenciaTabComponent } from './components/emergencia-tab/emergencia-tab.component';
 import { AhorrosTabComponent } from './components/ahorros-tab/ahorros-tab.component';
 import { InversionesTabComponent } from './components/inversiones-tab/inversiones-tab.component';
 import { RetiroTabComponent } from './components/retiro-tab/retiro-tab.component';
 
-type TabType = 'presupuesto' | 'emergencia' | 'ahorros' | 'inversiones' | 'retiro';
+type TabType = 'presupuesto' | 'deudas' | 'emergencia' | 'ahorros' | 'inversiones' | 'retiro';
 
 @Component({
   selector: 'app-dashboard',
@@ -58,6 +61,7 @@ type TabType = 'presupuesto' | 'emergencia' | 'ahorros' | 'inversiones' | 'retir
     IonRefresherContent,
     IonIcon,
     PresupuestoTabComponent,
+    DeudasTabComponent,
     EmergenciaTabComponent,
     AhorrosTabComponent,
     InversionesTabComponent,
@@ -79,6 +83,7 @@ export class DashboardPage implements OnInit {
     private userSettings: UserSettingsService,
     private cancellableExpenses: CancellableExpenseService,
     private shortTermGoals: ShortTermGoalService,
+    private debts: DebtService,
     private router: Router,
     public household: HouseholdService
   ) {
@@ -93,7 +98,8 @@ export class DashboardPage implements OnInit {
       flagOutline,
       homeOutline,
       personOutline,
-      peopleOutline
+      peopleOutline,
+      flameOutline
     });
   }
 
@@ -111,7 +117,8 @@ export class DashboardPage implements OnInit {
       this.userSettings.loadSettings(),
       this.cancellableExpenses.loadExpenses(),
       this.shortTermGoals.loadGoals(),
-      this.household.loadHousehold()
+      this.household.loadHousehold(),
+      this.debts.loadDebts()
     ]);
   }
 

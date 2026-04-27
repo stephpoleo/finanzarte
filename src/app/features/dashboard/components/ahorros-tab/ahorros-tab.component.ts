@@ -40,6 +40,7 @@ import { IncomeSourceService } from '../../../../core/services/income-source.ser
 import { FinancialRatesService } from '../../../../core/services/financial-rates.service';
 import { EmergencyAllocationService } from '../../../../core/services/emergency-allocation.service';
 import { ShortTermGoalService } from '../../../../core/services/short-term-goal.service';
+import { DebtService } from '../../../../core/services/debt.service';
 import { CurrencyMxnPipe } from '../../../../shared/pipes/currency-mxn.pipe';
 import { AmountInputDirective } from '../../../../shared/directives/amount-input.directive';
 import { FINANCIAL_LEVELS, FinancialLevel, SHORT_TERM_GOAL_ICONS, SHORT_TERM_GOAL_COLORS } from '../../../../models';
@@ -118,7 +119,8 @@ export class AhorrosTabComponent implements OnInit {
     public incomeSources: IncomeSourceService,
     public ratesService: FinancialRatesService,
     private allocationService: EmergencyAllocationService,
-    public shortTermGoalSvc: ShortTermGoalService
+    public shortTermGoalSvc: ShortTermGoalService,
+    public debts: DebtService
   ) {
     addIcons({
       leafOutline,
@@ -158,6 +160,16 @@ export class AhorrosTabComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.shortTermGoalSvc.loadGoals();
+  }
+
+  // ==================== Debt-priority banner ====================
+  // Show a soft suggestion to pay debt first if the user has active debts
+  // and the weighted average rate exceeds the expected investment return.
+  get debtsWeightedRate(): number { return this.debts.weightedAverageRate(); }
+  get longtermReturn(): number { return this.userSettings.longtermAnnualReturn(); }
+  get debtRateAdvantage(): number { return this.debtsWeightedRate - this.longtermReturn; }
+  get showDebtPriorityBanner(): boolean {
+    return this.debts.activeDebts().length > 0 && this.debtRateAdvantage > 0;
   }
 
   // Getters/setters synced with UserSettingsService
