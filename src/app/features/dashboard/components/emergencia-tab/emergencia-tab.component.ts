@@ -30,6 +30,7 @@ import { CancellableExpenseService } from '../../../../core/services/cancellable
 import { FinancialRatesService } from '../../../../core/services/financial-rates.service';
 import { EmergencyAllocationService } from '../../../../core/services/emergency-allocation.service';
 import { CurrencyMxnPipe } from '../../../../shared/pipes/currency-mxn.pipe';
+import { AmountInputDirective } from '../../../../shared/directives/amount-input.directive';
 import {
   CancellableExpense,
   CancellableCategory,
@@ -56,7 +57,7 @@ interface EmergencyMilestone {
 @Component({
   selector: 'app-emergencia-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe],
+  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe, AmountInputDirective],
   templateUrl: './emergencia-tab.component.html',
   styleUrls: ['./emergencia-tab.component.scss']
 })
@@ -251,7 +252,7 @@ export class EmergenciaTabComponent implements OnInit {
     if (next.months <= 1) return 100;
     if (next.months <= 3) return 75;
     if (next.months <= 6) return 50;
-    if (next.months <= 12) return 25;
+    if (next.months <= 24) return 25;
     return 0;
   }
 

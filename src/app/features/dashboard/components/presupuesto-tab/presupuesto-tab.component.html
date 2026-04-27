@@ -66,7 +66,7 @@
         </div>
         <div class="form-field">
           <label>Monto</label>
-          <input type="number" [(ngModel)]="newIncome.amount" placeholder="0.00"/>
+          <input appAmountInput [(ngModel)]="newIncome.amount" placeholder="0.00"/>
         </div>
         <div class="form-field">
           <label>Frecuencia</label>
@@ -91,7 +91,7 @@
             <div class="income-edit-form">
               <div class="form-row">
                 <input type="text" [(ngModel)]="editIncome.name"/>
-                <input type="number" [(ngModel)]="editIncome.amount"/>
+                <input appAmountInput [(ngModel)]="editIncome.amount"/>
               </div>
               <div class="form-row">
                 <select [(ngModel)]="editIncome.frequency">
@@ -176,7 +176,7 @@
         <div class="form-grid-2">
           <div class="form-field">
             <label>Monto</label>
-            <input type="number" [(ngModel)]="newExpense.amount" placeholder="0.00"/>
+            <input appAmountInput [(ngModel)]="newExpense.amount" placeholder="0.00"/>
           </div>
           <div class="form-field">
             <label>Tipo</label>
@@ -319,7 +319,7 @@
                 <div class="expense-edit-form">
                   <div class="form-row">
                     <input type="text" [(ngModel)]="editExpense.name"/>
-                    <input type="number" [(ngModel)]="editExpense.amount"/>
+                    <input appAmountInput [(ngModel)]="editExpense.amount"/>
                   </div>
                   <div class="form-row">
                     <select [(ngModel)]="editExpense.type">
@@ -389,7 +389,7 @@
                 <div class="expense-edit-form">
                   <div class="form-row">
                     <input type="text" [(ngModel)]="editExpense.name"/>
-                    <input type="number" [(ngModel)]="editExpense.amount"/>
+                    <input appAmountInput [(ngModel)]="editExpense.amount"/>
                   </div>
                   <div class="form-row">
                     <select [(ngModel)]="editExpense.type">

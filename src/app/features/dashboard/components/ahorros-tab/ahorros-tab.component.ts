@@ -41,13 +41,14 @@ import { FinancialRatesService } from '../../../../core/services/financial-rates
 import { EmergencyAllocationService } from '../../../../core/services/emergency-allocation.service';
 import { ShortTermGoalService } from '../../../../core/services/short-term-goal.service';
 import { CurrencyMxnPipe } from '../../../../shared/pipes/currency-mxn.pipe';
+import { AmountInputDirective } from '../../../../shared/directives/amount-input.directive';
 import { FINANCIAL_LEVELS, FinancialLevel, SHORT_TERM_GOAL_ICONS, SHORT_TERM_GOAL_COLORS } from '../../../../models';
 import { ShortTermGoal } from '../../../../models/short-term-goal.model';
 
 @Component({
   selector: 'app-ahorros-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe],
+  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe, AmountInputDirective],
   templateUrl: './ahorros-tab.component.html',
   styleUrls: ['./ahorros-tab.component.scss']
 })

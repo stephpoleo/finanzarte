@@ -6,6 +6,7 @@ import { addIcons } from 'ionicons';
 import { closeOutline, calendarOutline, walletOutline } from 'ionicons/icons';
 import { SavingsGoalService } from '../../../core/services/savings-goal.service';
 import { SavingsGoal } from '../../../models/savings-goal.model';
+import { AmountInputDirective } from '../../directives/amount-input.directive';
 
 export interface SavingsGoalResult {
   id: string;
@@ -16,7 +17,7 @@ export interface SavingsGoalResult {
 @Component({
   selector: 'app-savings-goal-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonIcon],
+  imports: [CommonModule, FormsModule, IonIcon, AmountInputDirective],
   templateUrl: './savings-goal-modal.component.html',
   styleUrls: ['./savings-goal-modal.component.scss']
 })

@@ -23,7 +23,7 @@
         <span class="stat-label">Ahorro Actual</span>
         <div class="stat-input-row">
           <span class="currency-prefix">$</span>
-          <input type="number" class="stat-input" [(ngModel)]="emergencyCurrentSavings" placeholder="0"/>
+          <input appAmountInput class="stat-input" [(ngModel)]="emergencyCurrentSavings" placeholder="0"/>
         </div>
         @if (getCurrentMilestone()) {
           <span class="stat-hint">
@@ -198,7 +198,7 @@
             <div class="form-grid-2">
               <div class="form-field">
                 <label>Monto</label>
-                <input type="number" [(ngModel)]="sofipoForm.amount" placeholder="0.00"/>
+                <input appAmountInput [(ngModel)]="sofipoForm.amount" placeholder="0.00"/>
               </div>
               <div class="form-field">
                 <label>Plazo</label>
@@ -274,7 +274,7 @@
             <div class="form-grid-2">
               <div class="form-field">
                 <label>Monto</label>
-                <input type="number" [(ngModel)]="cetesForm.amount" placeholder="0.00"/>
+                <input appAmountInput [(ngModel)]="cetesForm.amount" placeholder="0.00"/>
               </div>
               <div class="form-field">
                 <label>Plazo</label>
@@ -462,7 +462,7 @@
           <div class="form-grid-2">
             <div class="form-field">
               <label>Monto Mensual</label>
-              <input type="number" [(ngModel)]="newCancellable.monthly_cost" placeholder="0.00"/>
+              <input appAmountInput [(ngModel)]="newCancellable.monthly_cost" placeholder="0.00"/>
             </div>
             <div class="form-field">
               <label>Categoría</label>

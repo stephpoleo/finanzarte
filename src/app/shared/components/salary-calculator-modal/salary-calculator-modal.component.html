@@ -32,11 +32,10 @@
           <div class="form-section">
             <label class="form-label">Ingreso Neto Mensual</label>
             <input
-              type="number"
+              appAmountInput
               class="form-input"
               [(ngModel)]="netSalary"
               placeholder="0.00"
-              inputmode="decimal"
             />
             <span class="form-hint">Ingreso después de impuestos y deducciones</span>
           </div>
@@ -45,12 +44,11 @@
           <div class="form-section">
             <label class="form-label">Salario Bruto Mensual</label>
             <input
-              type="number"
+              appAmountInput
               class="form-input"
               [(ngModel)]="grossSalary"
               (ngModelChange)="calculateTaxes()"
               placeholder="0.00"
-              inputmode="decimal"
             />
             <span class="form-hint">Ingreso antes de impuestos y deducciones</span>
           </div>
@@ -97,7 +95,7 @@
               <div class="form-group-inline">
                 <label class="form-label">Otras Deducciones</label>
                 <input
-                  type="number"
+                  appAmountInput
                   class="form-input small"
                   [(ngModel)]="otherDeductions"
                   (ngModelChange)="calculateTaxes()"

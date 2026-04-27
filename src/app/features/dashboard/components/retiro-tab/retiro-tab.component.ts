@@ -12,11 +12,12 @@ import {
 import { UserSettingsService } from '../../../../core/services/user-settings.service';
 import { ProfileService } from '../../../../core/services/profile.service';
 import { CurrencyMxnPipe } from '../../../../shared/pipes/currency-mxn.pipe';
+import { AmountInputDirective } from '../../../../shared/directives/amount-input.directive';
 
 @Component({
   selector: 'app-retiro-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe],
+  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe, AmountInputDirective],
   templateUrl: './retiro-tab.component.html',
   styleUrls: ['./retiro-tab.component.scss']
 })
