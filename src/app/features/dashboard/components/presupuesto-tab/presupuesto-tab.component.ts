@@ -45,7 +45,8 @@ import {
   ExpenseType,
   IncomeFrequency,
   EXPENSE_CATEGORIES,
-  ExpenseSplitMode
+  ExpenseSplitMode,
+  EMERGENCY_MILESTONES
 } from '../../../../models';
 
 interface ChartSegment {
@@ -272,25 +273,21 @@ export class PresupuestoTabComponent implements OnInit {
     await this.household.updateSplitMode(mode);
   }
 
-  // Emergency fund allocation based on milestone progress, scaled to the user's target
+  // Emergency fund allocation driven by EMERGENCY_MILESTONES (the same source of
+  // truth shown in the Emergencia tab "Metas de Emergencia" section).
   get emergencyRecommendedPct(): number {
     const currentSavings = this.userSettings.emergencyCurrentSavings();
     const monthlyExpenses = this.totalExpenses;
-    const targetMonths = this.userSettings.emergencyTargetMonths();
 
     // If expenses haven't loaded yet, assume fund is incomplete
     if (monthlyExpenses <= 0) return currentSavings < 10000 ? 100 : 50;
+    if (currentSavings < 10000) return 100; // Aún no alcanza base
 
     const monthsCovered = currentSavings / monthlyExpenses;
-
-    // Milestones scale with the user's target so the recommendation only drops to 0
-    // once the configured goal (e.g. 24 meses) is reached.
-    if (currentSavings < 10000) return 100; // Aún no alcanza base
-    if (monthsCovered >= targetMonths) return 0; // Meta alcanzada
-    if (monthsCovered < targetMonths / 12) return 100;
-    if (monthsCovered < targetMonths / 4) return 75;
-    if (monthsCovered < targetMonths / 2) return 50;
-    return 25;
+    for (const m of EMERGENCY_MILESTONES) {
+      if (monthsCovered < m.months) return m.recommendedPercentage;
+    }
+    return 0; // Final milestone reached
   }
 
   get emergencyAllocationAmount(): number {
