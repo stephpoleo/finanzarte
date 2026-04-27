@@ -54,8 +54,11 @@
   color: white;
   margin-bottom: 16px;
 
+  // Plan B is a sub-tab inside Emergencia, so it stays in the cyan family
+  // (deeper shade) instead of jumping to amber. Visually distinct from the
+  // Ahorros sub-tab hero but clearly part of the same section.
   &.planb {
-    background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+    background: linear-gradient(135deg, #0891b2 0%, #155e75 100%);
   }
 }
 
@@ -219,7 +222,7 @@
     font-weight: 700;
 
     &.highlight {
-      color: #fef3c7;
+      color: #cffafe;
     }
   }
 }
@@ -778,8 +781,8 @@
 
 /* Tips Card - Collapsible */
 .card.tips {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border: 1px solid #fcd34d;
+  background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+  border: 1px solid #67e8f9;
 
   &.collapsible {
     cursor: pointer;
@@ -872,7 +875,7 @@
 
       &:focus {
         outline: none;
-        border-color: #f59e0b;
+        border-color: #06b6d4;
       }
 
       /* Hide number spinners */
@@ -904,7 +907,7 @@
   .btn-primary {
     flex: 1;
     height: 44px;
-    background: #f59e0b;
+    background: #06b6d4;
     color: white;
     border: none;
     border-radius: 8px;
@@ -913,7 +916,7 @@
     cursor: pointer;
 
     &:hover {
-      background: #d97706;
+      background: #0891b2;
     }
   }
 
@@ -993,7 +996,7 @@
 .cancellable-amount {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #f59e0b;
+  color: #0891b2;
 }
 
 .cancellable-delete {
