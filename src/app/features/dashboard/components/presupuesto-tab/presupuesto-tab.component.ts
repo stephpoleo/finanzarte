@@ -45,7 +45,8 @@ import {
   ExpenseType,
   IncomeFrequency,
   EXPENSE_CATEGORIES,
-  ExpenseSplitMode
+  ExpenseSplitMode,
+  EMERGENCY_MILESTONES
 } from '../../../../models';
 
 interface ChartSegment {
@@ -272,25 +273,21 @@ export class PresupuestoTabComponent implements OnInit {
     await this.household.updateSplitMode(mode);
   }
 
-  // Emergency fund allocation based on milestone progress, scaled to the user's target
+  // Emergency fund allocation driven by EMERGENCY_MILESTONES (the same source of
+  // truth shown in the Emergencia tab "Metas de Emergencia" section).
   get emergencyRecommendedPct(): number {
     const currentSavings = this.userSettings.emergencyCurrentSavings();
     const monthlyExpenses = this.totalExpenses;
-    const targetMonths = this.userSettings.emergencyTargetMonths();
 
     // If expenses haven't loaded yet, assume fund is incomplete
     if (monthlyExpenses <= 0) return currentSavings < 10000 ? 100 : 50;
+    if (currentSavings < 10000) return 100; // Aún no alcanza base
 
     const monthsCovered = currentSavings / monthlyExpenses;
-
-    // Milestones scale with the user's target so the recommendation only drops to 0
-    // once the configured goal (e.g. 24 meses) is reached.
-    if (currentSavings < 10000) return 100; // Aún no alcanza base
-    if (monthsCovered >= targetMonths) return 0; // Meta alcanzada
-    if (monthsCovered < targetMonths / 12) return 100;
-    if (monthsCovered < targetMonths / 4) return 75;
-    if (monthsCovered < targetMonths / 2) return 50;
-    return 25;
+    for (const m of EMERGENCY_MILESTONES) {
+      if (monthsCovered < m.months) return m.recommendedPercentage;
+    }
+    return 0; // Final milestone reached
   }
 
   get emergencyAllocationAmount(): number {
@@ -519,7 +516,10 @@ export class PresupuestoTabComponent implements OnInit {
         });
       }
     } else {
-      // Expenses by category
+      // Expenses by category — completes the ring with the recommended split
+      // of the available savings into Fondo de Emergencia + Ahorro a Largo
+      // Plazo so the donut isn't half-empty and surfaces what each peso of the
+      // disposable should fund.
       const byCategory = this.getExpensesByCategory();
       let offset = 0;
 
@@ -533,9 +533,30 @@ export class PresupuestoTabComponent implements OnInit {
         });
         offset += ratio * circumference;
       });
+
+      for (const part of this.getSavingsAllocationParts()) {
+        const ratio = part.amount / total;
+        if (ratio <= 0) continue;
+        const segmentLength = this.chartAnimating ? 0 : ratio * circumference;
+        segments.push({
+          color: part.color,
+          dashArray: `${segmentLength} ${circumference}`,
+          offset: this.chartAnimating ? 0 : -offset
+        });
+        offset += ratio * circumference;
+      }
     }
 
     return segments;
+  }
+
+  // Trailing donut slices that complete the "Gastos por Categoría" ring with
+  // the savings allocation recommendation.
+  private getSavingsAllocationParts(): { label: string; amount: number; color: string }[] {
+    return [
+      { label: 'Fondo de Emergencia', amount: this.emergencyAllocationAmount, color: '#06b6d4' },
+      { label: 'Ahorro a Largo Plazo', amount: this.longtermAllocationAmount, color: '#f59e0b' }
+    ];
   }
 
   getChartLegend(): { label: string; value: number; color: string }[] {
@@ -545,11 +566,17 @@ export class PresupuestoTabComponent implements OnInit {
         { label: 'Disponible', value: this.availableSavings, color: '#10b981' }
       ].filter(item => item.value > 0);
     } else {
-      return this.getExpensesByCategory().map(item => ({
+      const items = this.getExpensesByCategory().map(item => ({
         label: item.label,
         value: item.amount,
         color: item.color
       }));
+      for (const part of this.getSavingsAllocationParts()) {
+        if (part.amount > 0) {
+          items.push({ label: part.label, value: part.amount, color: part.color });
+        }
+      }
+      return items;
     }
   }
 
@@ -570,13 +597,21 @@ export class PresupuestoTabComponent implements OnInit {
       }
     } else {
       const byCategory = this.getExpensesByCategory();
-      if (byCategory.length <= 1) return [];
+      const savingsParts = this.getSavingsAllocationParts().filter(p => p.amount > 0);
+      const totalSlices = byCategory.length + savingsParts.length;
+      if (totalSlices <= 1) return [];
 
       angles.push(0);
 
       let cumulativeRatio = 0;
-      for (let i = 0; i < byCategory.length - 1; i++) {
+      for (let i = 0; i < byCategory.length; i++) {
         cumulativeRatio += byCategory[i].amount / total;
+        // Skip drawing a final separator if there's no trailing slice after.
+        if (i === byCategory.length - 1 && savingsParts.length === 0) break;
+        angles.push(cumulativeRatio * 360);
+      }
+      for (let i = 0; i < savingsParts.length - 1; i++) {
+        cumulativeRatio += savingsParts[i].amount / total;
         angles.push(cumulativeRatio * 360);
       }
     }
