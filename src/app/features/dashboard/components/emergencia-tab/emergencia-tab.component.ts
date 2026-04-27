@@ -196,6 +196,67 @@ export class EmergenciaTabComponent implements OnInit {
   get emergencyTargetMonths(): number { return this.userSettings.emergencyTargetMonths(); }
   set emergencyTargetMonths(value: number) { this.userSettings.updateEmergencySettings({ emergency_target_months: value }); }
 
+  // ==================== Physical Cash Allocation ====================
+  // Optional emergency cash reserve. Recommendation: ~1 week of monthly
+  // expenses, clamped between $1,500 (minimum useful) and $10,000 (theft
+  // risk outweighs benefit beyond that). Zone classification drives the
+  // contextual warning shown below the input.
+
+  private static readonly CASH_RECOMMENDED_MIN = 1500;
+  private static readonly CASH_RECOMMENDED_MAX = 10000;
+  private static readonly INFLATION_RATE = 0.045;
+
+  get cashAmount(): number { return this.userSettings.emergencyCashAmount(); }
+
+  get cashRecommendedAmount(): number {
+    const monthly = this.emergencyMonthlyExpenses;
+    if (monthly <= 0) return EmergenciaTabComponent.CASH_RECOMMENDED_MIN;
+    const oneWeek = monthly / 4;
+    return Math.min(
+      Math.max(oneWeek, EmergenciaTabComponent.CASH_RECOMMENDED_MIN),
+      EmergenciaTabComponent.CASH_RECOMMENDED_MAX
+    );
+  }
+
+  get cashZone(): 'ideal' | 'low' | 'high' | 'too-high' {
+    const amount = this.cashAmount;
+    const recommended = this.cashRecommendedAmount;
+    if (recommended <= 0) return 'ideal';
+    const ratio = amount / recommended;
+    if (ratio < 0.5) return 'low';
+    if (ratio > 3) return 'too-high';
+    if (ratio > 1.5) return 'high';
+    return 'ideal';
+  }
+
+  get cashExcessOverRecommended(): number {
+    return Math.max(0, this.cashAmount - this.cashRecommendedAmount);
+  }
+
+  get cashInflationLossYearly(): number {
+    return this.cashAmount * EmergenciaTabComponent.INFLATION_RATE;
+  }
+
+  enableCash(): void {
+    this.userSettings.updateEmergencySettings({
+      emergency_cash_amount: this.cashRecommendedAmount
+    });
+  }
+
+  disableCash(): void {
+    this.userSettings.updateEmergencySettings({ emergency_cash_amount: 0 });
+  }
+
+  useCashRecommendation(): void {
+    this.userSettings.updateEmergencySettings({
+      emergency_cash_amount: this.cashRecommendedAmount
+    });
+  }
+
+  onCashAmountChange(value: number): void {
+    this.userSettings.updateEmergencySettings({ emergency_cash_amount: value });
+  }
+
   // Computed values
   get emergencyBase(): number {
     return this.emergencyCalcByIncome ? this.emergencyMonthlyIncome : this.emergencyMonthlyExpenses;

@@ -11,6 +11,7 @@ export interface UserSettings {
   emergency_monthly_expenses: number;
   emergency_current_savings: number;
   emergency_target_months: number; // Default 6
+  emergency_cash_amount: number;   // Optional physical-cash portion of the fund. Default 0 = inactive.
 
   // Long-Term Savings Settings
   longterm_monthly_expenses: number;
@@ -38,6 +39,7 @@ export const DEFAULT_USER_SETTINGS: Partial<UserSettings> = {
   emergency_monthly_expenses: 0,
   emergency_current_savings: 0,
   emergency_target_months: 6,
+  emergency_cash_amount: 0,
 
   // Long-Term
   longterm_monthly_expenses: 0,

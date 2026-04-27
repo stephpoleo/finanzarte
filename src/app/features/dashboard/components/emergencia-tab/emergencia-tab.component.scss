@@ -333,6 +333,11 @@
     background: #e5e7eb;
   }
 
+  &.delete:hover {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
   ion-icon {
     font-size: 20px;
   }
@@ -1303,5 +1308,132 @@
   &.delete:hover {
     background: #fef2f2;
     color: #ef4444;
+  }
+}
+
+/* ==================== Physical Cash Allocation ==================== */
+
+.cash-cta {
+  font-size: 0.85rem;
+  color: #4b5563;
+  line-height: 1.45;
+  margin: 8px 0 0;
+
+  strong {
+    color: #1f2937;
+  }
+}
+
+.cash-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  .currency-prefix {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #6b7280;
+  }
+
+  .cash-input {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    padding: 0 6px;
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+.cash-recommended {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: #6b7280;
+
+  .link-btn {
+    background: none;
+    border: none;
+    color: #06b6d4;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+  }
+}
+
+.cash-zone {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+
+  ion-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  strong {
+    font-weight: 700;
+  }
+
+  &.ideal {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+  }
+
+  &.low {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+  }
+
+  &.high {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+  }
+
+  &.too-high {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    color: #991b1b;
+  }
+}
+
+.cash-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 0.7rem;
+  color: #9ca3af;
+  line-height: 1.4;
+
+  ion-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
   }
 }
