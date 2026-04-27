@@ -755,9 +755,13 @@
   }
 }
 
-/* Savings Banner */
+/* Savings Banner — derived/result style: calm so it doesn't compete with
+   the Ingresos/Gastos heroes, with a green accent stripe to signal "this
+   is what you save" (matches the donut's "Disponible" color). */
 .savings-banner {
-  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+  background: #f0fdf4;
+  border: 1px solid #d1fae5;
+  border-left: 4px solid #10b981;
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 16px;
@@ -770,26 +774,26 @@
   margin-bottom: 4px;
 
   ion-icon {
-    color: #ec4899;
+    color: #059669;
     font-size: 16px;
   }
 
   span {
     font-size: 0.875rem;
-    color: #ec4899;
-    font-weight: 500;
+    color: #047857;
+    font-weight: 600;
   }
 }
 
 .banner-amount {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #ec4899;
+  color: #047857;
 }
 
 .banner-rate {
   font-size: 0.8rem;
-  color: #be185d;
+  color: #6b7280;
   margin-top: 4px;
 }
 
