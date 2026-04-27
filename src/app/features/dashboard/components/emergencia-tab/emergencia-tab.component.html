@@ -23,7 +23,15 @@
         <span class="stat-label">Ahorro Actual</span>
         <div class="stat-input-row">
           <span class="currency-prefix">$</span>
-          <input type="number" class="stat-input" [(ngModel)]="emergencyCurrentSavings" placeholder="0"/>
+          <input
+            type="text"
+            inputmode="decimal"
+            class="stat-input"
+            [ngModel]="currentSavingsDisplay"
+            (ngModelChange)="onCurrentSavingsInput($event)"
+            (focus)="onCurrentSavingsFocus()"
+            (blur)="onCurrentSavingsBlur()"
+            placeholder="0"/>
         </div>
         @if (getCurrentMilestone()) {
           <span class="stat-hint">
