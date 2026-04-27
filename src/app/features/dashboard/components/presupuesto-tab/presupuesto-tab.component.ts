@@ -516,8 +516,10 @@ export class PresupuestoTabComponent implements OnInit {
         });
       }
     } else {
-      // Expenses by category — completes the ring with an "Ahorro" segment so
-      // the donut isn't half-empty when expenses don't reach 100% of income.
+      // Expenses by category — completes the ring with the recommended split
+      // of the available savings into Fondo de Emergencia + Ahorro a Largo
+      // Plazo so the donut isn't half-empty and surfaces what each peso of the
+      // disposable should fund.
       const byCategory = this.getExpensesByCategory();
       let offset = 0;
 
@@ -532,18 +534,29 @@ export class PresupuestoTabComponent implements OnInit {
         offset += ratio * circumference;
       });
 
-      const savingsRatio = this.availableSavings / total;
-      if (savingsRatio > 0) {
-        const segmentLength = this.chartAnimating ? 0 : savingsRatio * circumference;
+      for (const part of this.getSavingsAllocationParts()) {
+        const ratio = part.amount / total;
+        if (ratio <= 0) continue;
+        const segmentLength = this.chartAnimating ? 0 : ratio * circumference;
         segments.push({
-          color: '#10b981',
+          color: part.color,
           dashArray: `${segmentLength} ${circumference}`,
           offset: this.chartAnimating ? 0 : -offset
         });
+        offset += ratio * circumference;
       }
     }
 
     return segments;
+  }
+
+  // Trailing donut slices that complete the "Gastos por Categoría" ring with
+  // the savings allocation recommendation.
+  private getSavingsAllocationParts(): { label: string; amount: number; color: string }[] {
+    return [
+      { label: 'Fondo de Emergencia', amount: this.emergencyAllocationAmount, color: '#06b6d4' },
+      { label: 'Ahorro a Largo Plazo', amount: this.longtermAllocationAmount, color: '#f59e0b' }
+    ];
   }
 
   getChartLegend(): { label: string; value: number; color: string }[] {
@@ -558,8 +571,10 @@ export class PresupuestoTabComponent implements OnInit {
         value: item.amount,
         color: item.color
       }));
-      if (this.availableSavings > 0) {
-        items.push({ label: 'Ahorro', value: this.availableSavings, color: '#10b981' });
+      for (const part of this.getSavingsAllocationParts()) {
+        if (part.amount > 0) {
+          items.push({ label: part.label, value: part.amount, color: part.color });
+        }
       }
       return items;
     }
@@ -582,17 +597,21 @@ export class PresupuestoTabComponent implements OnInit {
       }
     } else {
       const byCategory = this.getExpensesByCategory();
-      const hasSavings = this.availableSavings > 0;
-      if (byCategory.length === 0 || (byCategory.length === 1 && !hasSavings)) return [];
+      const savingsParts = this.getSavingsAllocationParts().filter(p => p.amount > 0);
+      const totalSlices = byCategory.length + savingsParts.length;
+      if (totalSlices <= 1) return [];
 
       angles.push(0);
 
       let cumulativeRatio = 0;
-      // Iterate to length when there's a trailing Ahorro segment so we draw
-      // the separator between the last category and Ahorro.
-      const stopAt = hasSavings ? byCategory.length : byCategory.length - 1;
-      for (let i = 0; i < stopAt; i++) {
+      for (let i = 0; i < byCategory.length; i++) {
         cumulativeRatio += byCategory[i].amount / total;
+        // Skip drawing a final separator if there's no trailing slice after.
+        if (i === byCategory.length - 1 && savingsParts.length === 0) break;
+        angles.push(cumulativeRatio * 360);
+      }
+      for (let i = 0; i < savingsParts.length - 1; i++) {
+        cumulativeRatio += savingsParts[i].amount / total;
         angles.push(cumulativeRatio * 360);
       }
     }
