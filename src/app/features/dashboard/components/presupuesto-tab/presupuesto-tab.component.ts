@@ -516,7 +516,8 @@ export class PresupuestoTabComponent implements OnInit {
         });
       }
     } else {
-      // Expenses by category
+      // Expenses by category — completes the ring with an "Ahorro" segment so
+      // the donut isn't half-empty when expenses don't reach 100% of income.
       const byCategory = this.getExpensesByCategory();
       let offset = 0;
 
@@ -530,6 +531,16 @@ export class PresupuestoTabComponent implements OnInit {
         });
         offset += ratio * circumference;
       });
+
+      const savingsRatio = this.availableSavings / total;
+      if (savingsRatio > 0) {
+        const segmentLength = this.chartAnimating ? 0 : savingsRatio * circumference;
+        segments.push({
+          color: '#10b981',
+          dashArray: `${segmentLength} ${circumference}`,
+          offset: this.chartAnimating ? 0 : -offset
+        });
+      }
     }
 
     return segments;
@@ -542,11 +553,15 @@ export class PresupuestoTabComponent implements OnInit {
         { label: 'Disponible', value: this.availableSavings, color: '#10b981' }
       ].filter(item => item.value > 0);
     } else {
-      return this.getExpensesByCategory().map(item => ({
+      const items = this.getExpensesByCategory().map(item => ({
         label: item.label,
         value: item.amount,
         color: item.color
       }));
+      if (this.availableSavings > 0) {
+        items.push({ label: 'Ahorro', value: this.availableSavings, color: '#10b981' });
+      }
+      return items;
     }
   }
 
@@ -567,12 +582,16 @@ export class PresupuestoTabComponent implements OnInit {
       }
     } else {
       const byCategory = this.getExpensesByCategory();
-      if (byCategory.length <= 1) return [];
+      const hasSavings = this.availableSavings > 0;
+      if (byCategory.length === 0 || (byCategory.length === 1 && !hasSavings)) return [];
 
       angles.push(0);
 
       let cumulativeRatio = 0;
-      for (let i = 0; i < byCategory.length - 1; i++) {
+      // Iterate to length when there's a trailing Ahorro segment so we draw
+      // the separator between the last category and Ahorro.
+      const stopAt = hasSavings ? byCategory.length : byCategory.length - 1;
+      for (let i = 0; i < stopAt; i++) {
         cumulativeRatio += byCategory[i].amount / total;
         angles.push(cumulativeRatio * 360);
       }
