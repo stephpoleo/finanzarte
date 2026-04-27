@@ -37,6 +37,7 @@ import { SavingsGoalService } from '../../../../core/services/savings-goal.servi
 import { UserSettingsService } from '../../../../core/services/user-settings.service';
 import { HouseholdService } from '../../../../core/services/household.service';
 import { CurrencyMxnPipe } from '../../../../shared/pipes/currency-mxn.pipe';
+import { AmountInputDirective } from '../../../../shared/directives/amount-input.directive';
 import {
   IncomeSource,
   Expense,
@@ -56,7 +57,7 @@ interface ChartSegment {
 @Component({
   selector: 'app-presupuesto-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe],
+  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe, AmountInputDirective],
   templateUrl: './presupuesto-tab.component.html',
   styleUrls: ['./presupuesto-tab.component.scss']
 })

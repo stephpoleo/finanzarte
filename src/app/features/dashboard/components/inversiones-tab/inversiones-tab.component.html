@@ -72,11 +72,11 @@
         <div class="form-grid-2">
           <div class="form-field">
             <label>Monto Invertido</label>
-            <input type="number" [(ngModel)]="newInvestment.initial_amount" placeholder="0.00"/>
+            <input appAmountInput [(ngModel)]="newInvestment.initial_amount" placeholder="0.00"/>
           </div>
           <div class="form-field">
             <label>Valor Actual</label>
-            <input type="number" [(ngModel)]="newInvestment.current_amount" placeholder="0.00"/>
+            <input appAmountInput [(ngModel)]="newInvestment.current_amount" placeholder="0.00"/>
           </div>
         </div>
         @if (showCetesWarning) {
@@ -217,11 +217,11 @@
             <div class="form-row">
               <div class="form-field-edit">
                 <label>Monto invertido</label>
-                <input type="number" [(ngModel)]="editInvestment.initial_amount" />
+                <input appAmountInput [(ngModel)]="editInvestment.initial_amount" />
               </div>
               <div class="form-field-edit">
                 <label>Valor actual</label>
-                <input type="number" [(ngModel)]="editInvestment.current_amount" />
+                <input appAmountInput [(ngModel)]="editInvestment.current_amount" />
               </div>
             </div>
             <div class="form-btns-inline">

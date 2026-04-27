@@ -24,6 +24,7 @@ import { UserSettingsService } from '../../../../core/services/user-settings.ser
 import { FinancialRatesService } from '../../../../core/services/financial-rates.service';
 import { EmergencyAllocationService } from '../../../../core/services/emergency-allocation.service';
 import { CurrencyMxnPipe } from '../../../../shared/pipes/currency-mxn.pipe';
+import { AmountInputDirective } from '../../../../shared/directives/amount-input.directive';
 import {
   Investment,
   InvestmentType,
@@ -44,7 +45,7 @@ interface ChartSegment {
 @Component({
   selector: 'app-inversiones-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe],
+  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe, AmountInputDirective],
   templateUrl: './inversiones-tab.component.html',
   styleUrls: ['./inversiones-tab.component.scss']
 })

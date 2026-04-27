@@ -30,6 +30,7 @@ import { CancellableExpenseService } from '../../../../core/services/cancellable
 import { FinancialRatesService } from '../../../../core/services/financial-rates.service';
 import { EmergencyAllocationService } from '../../../../core/services/emergency-allocation.service';
 import { CurrencyMxnPipe } from '../../../../shared/pipes/currency-mxn.pipe';
+import { AmountInputDirective } from '../../../../shared/directives/amount-input.directive';
 import {
   CancellableExpense,
   CancellableCategory,
@@ -56,7 +57,7 @@ interface EmergencyMilestone {
 @Component({
   selector: 'app-emergencia-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe],
+  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe, AmountInputDirective],
   templateUrl: './emergencia-tab.component.html',
   styleUrls: ['./emergencia-tab.component.scss']
 })
@@ -191,38 +192,6 @@ export class EmergenciaTabComponent implements OnInit {
 
   get emergencyCurrentSavings(): number { return this.userSettings.emergencyCurrentSavings(); }
   set emergencyCurrentSavings(value: number) { this.userSettings.updateEmergencySettings({ emergency_current_savings: value }); }
-
-  // Draft + display helpers for the "Ahorro Actual" input. We keep the user's
-  // typed value in `currentSavingsDraft` while focused so we don't write to
-  // Supabase on every keystroke (which caused cursor jumps / value resets), and
-  // we show a localized formatted number when the field is not focused.
-  currentSavingsDraft: string | null = null;
-
-  get currentSavingsDisplay(): string {
-    if (this.currentSavingsDraft !== null) return this.currentSavingsDraft;
-    return this.emergencyCurrentSavings.toLocaleString('es-MX', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-  }
-
-  onCurrentSavingsFocus(): void {
-    const v = this.emergencyCurrentSavings;
-    this.currentSavingsDraft = v ? String(v) : '';
-  }
-
-  onCurrentSavingsInput(value: string): void {
-    this.currentSavingsDraft = value;
-  }
-
-  async onCurrentSavingsBlur(): Promise<void> {
-    if (this.currentSavingsDraft === null) return;
-    const cleaned = this.currentSavingsDraft.replace(/[^0-9.]/g, '');
-    const parsed = parseFloat(cleaned);
-    const value = isNaN(parsed) ? 0 : parsed;
-    this.currentSavingsDraft = null;
-    await this.userSettings.updateEmergencySettings({ emergency_current_savings: value });
-  }
 
   get emergencyTargetMonths(): number { return this.userSettings.emergencyTargetMonths(); }
   set emergencyTargetMonths(value: number) { this.userSettings.updateEmergencySettings({ emergency_target_months: value }); }

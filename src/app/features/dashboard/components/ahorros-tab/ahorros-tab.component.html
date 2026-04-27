@@ -97,7 +97,7 @@
         <div class="form-grid-2">
           <div class="form-field">
             <label>Meta</label>
-            <input type="number" [(ngModel)]="newShortTermGoal.target_amount" placeholder="0"/>
+            <input appAmountInput [(ngModel)]="newShortTermGoal.target_amount" placeholder="0"/>
           </div>
           <div class="form-field">
             <label>Fecha límite</label>
@@ -145,12 +145,12 @@
             <div class="goal-edit-form">
               <div class="form-row">
                 <input type="text" [(ngModel)]="editShortTermGoal.name"/>
-                <input type="number" [(ngModel)]="editShortTermGoal.target_amount"/>
+                <input appAmountInput [(ngModel)]="editShortTermGoal.target_amount"/>
               </div>
               <div class="form-row">
                 <div class="form-field compact">
                   <label>Ahorrado</label>
-                  <input type="number" [(ngModel)]="editShortTermGoal.current_amount"/>
+                  <input appAmountInput [(ngModel)]="editShortTermGoal.current_amount"/>
                 </div>
                 <div class="form-field compact">
                   <label>Fecha</label>

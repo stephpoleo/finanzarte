@@ -6,6 +6,7 @@ import { addIcons } from 'ionicons';
 import { closeOutline, calculatorOutline, informationCircleOutline } from 'ionicons/icons';
 import { TaxCalculationService, TaxBreakdown } from '../../../core/services/tax-calculation.service';
 import { CurrencyMxnPipe } from '../../pipes/currency-mxn.pipe';
+import { AmountInputDirective } from '../../directives/amount-input.directive';
 
 export interface SalaryCalculatorResult {
   netAmount: number;
@@ -16,7 +17,7 @@ export interface SalaryCalculatorResult {
 @Component({
   selector: 'app-salary-calculator-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe],
+  imports: [CommonModule, FormsModule, IonIcon, CurrencyMxnPipe, AmountInputDirective],
   templateUrl: './salary-calculator-modal.component.html',
   styleUrls: ['./salary-calculator-modal.component.scss']
 })

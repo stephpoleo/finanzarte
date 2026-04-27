@@ -25,11 +25,10 @@
         <div class="input-with-prefix">
           <span class="input-prefix">$</span>
           <input
-            type="number"
+            appAmountInput
             class="form-input has-prefix"
             [(ngModel)]="targetAmount"
             placeholder="0"
-            inputmode="numeric"
           />
         </div>
       </div>
@@ -76,11 +75,10 @@
             <div class="input-with-prefix">
               <span class="input-prefix">$</span>
               <input
-                type="number"
+                appAmountInput
                 class="form-input has-prefix"
                 [(ngModel)]="monthlyTarget"
                 placeholder="0"
-                inputmode="numeric"
               />
             </div>
             <span class="sub-hint">por mes</span>
