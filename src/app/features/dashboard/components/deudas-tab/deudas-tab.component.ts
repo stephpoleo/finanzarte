@@ -202,11 +202,15 @@ export class DeudasTabComponent implements OnInit {
       notes: this.formData.notes || undefined
     };
     // For credit cards, use CAT as interest_rate for calculations compatibility
-    if (payload.debt_type === 'credit_card' && payload.cat) {
-      payload.interest_rate = payload.cat;
+    if (payload.debt_type === 'credit_card') {
+      const catValue = Number(payload.cat) || 0;
+      payload.cat = catValue;
+      payload.interest_rate = catValue;
     }
     if (this.editingId) {
       await this.debtService.updateDebt(this.editingId, payload);
+      // Collapse expanded view to force refresh
+      this.expandedDebtId.set(null);
     } else {
       await this.debtService.addDebt(payload);
     }
