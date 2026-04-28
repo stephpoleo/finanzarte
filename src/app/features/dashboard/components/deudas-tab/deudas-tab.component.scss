@@ -752,3 +752,296 @@
     }
   }
 }
+
+/* ==================== Form hints ==================== */
+.field-hint {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* ==================== Detail row variants ==================== */
+.detail-row {
+  &.highlight {
+    background: #ecfdf5;
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin: 4px -10px;
+  }
+
+  &.warning {
+    color: #dc2626;
+  }
+}
+
+.highlight-value {
+  font-weight: 700;
+  color: #047857;
+}
+
+.utilization-badge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #d1fae5;
+  color: #047857;
+  margin-left: 6px;
+
+  &.high {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+}
+
+/* ==================== Education section ==================== */
+.education-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.education-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  color: #166534;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #dcfce7;
+  }
+
+  ion-icon {
+    font-size: 18px;
+
+    &:last-child {
+      margin-left: auto;
+      transition: transform 0.2s ease;
+
+      &.rotated {
+        transform: rotate(180deg);
+      }
+    }
+  }
+}
+
+.education-content {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Comparison card */
+.comparison-card {
+  background: #fafafa;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.comparison-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #374151;
+  margin: 0 0 12px;
+
+  ion-icon {
+    font-size: 18px;
+    color: #6b7280;
+  }
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.comparison-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 10px;
+  background: white;
+  border: 1px solid #e5e7eb;
+
+  &.minimum {
+    border-color: #fca5a5;
+    background: #fef2f2;
+  }
+
+  &.total {
+    border-color: #86efac;
+    background: #f0fdf4;
+  }
+}
+
+.comparison-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+}
+
+.comparison-payment {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.comparison-bar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+
+    &.minimum {
+      background: linear-gradient(90deg, #dc2626, #ef4444);
+    }
+
+    &.total {
+      background: linear-gradient(90deg, #10b981, #34d399);
+    }
+  }
+}
+
+.comparison-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+
+  ion-icon {
+    font-size: 14px;
+    color: #6b7280;
+  }
+}
+
+.comparison-interest {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.comparison-savings {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 10px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  color: #047857;
+  font-size: 0.85rem;
+
+  ion-icon {
+    font-size: 18px;
+  }
+
+  strong {
+    font-weight: 700;
+  }
+}
+
+/* Strategies table */
+.strategies-table {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.strategies-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #374151;
+  padding: 12px 14px;
+  margin: 0;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.strategies-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+
+  th, td {
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  th {
+    background: #f9fafb;
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  td {
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr.highlight {
+    background: #f0fdf4;
+
+    td.savings {
+      color: #047857;
+      font-weight: 700;
+    }
+  }
+}
+
+/* Education tip */
+.education-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: #92400e;
+
+  ion-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  p {
+    margin: 0;
+    line-height: 1.4;
+  }
+}
