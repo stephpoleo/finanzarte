@@ -133,10 +133,18 @@
             <label>Saldo actual</label>
             <input appAmountInput [(ngModel)]="formData.current_balance" placeholder="0.00"/>
           </div>
-          <div class="form-field">
-            <label>Tasa anual (%)</label>
-            <input type="number" [(ngModel)]="formData.interest_rate" step="0.1" placeholder="0"/>
-          </div>
+          @if (isCreditCard()) {
+            <div class="form-field">
+              <label>CAT (%)</label>
+              <input type="number" [(ngModel)]="formData.cat" step="0.1" placeholder="65"/>
+              <span class="field-hint">Costo Anual Total - lo encuentras en tu estado de cuenta</span>
+            </div>
+          } @else {
+            <div class="form-field">
+              <label>Tasa anual (%)</label>
+              <input type="number" [(ngModel)]="formData.interest_rate" step="0.1" placeholder="0"/>
+            </div>
+          }
         </div>
         <div class="form-grid-2">
           @if (isInstallment()) {
@@ -157,6 +165,11 @@
           </div>
         }
         @if (isCreditCard()) {
+          <div class="form-field">
+            <label>Pago para no generar intereses (opcional)</label>
+            <input appAmountInput [(ngModel)]="formData.current_period_balance" placeholder="0.00"/>
+            <span class="field-hint">El saldo de tu último corte - si pagas esto, no generas intereses</span>
+          </div>
           <div class="form-grid-2">
             <div class="form-field">
               <label>Límite</label>
@@ -227,13 +240,19 @@
                   <span class="detail-label">Tipo</span>
                   <span>{{ getMeta(debt.debt_type).label }}</span>
                 </div>
+                @if (debt.debt_type === 'credit_card' && debt.cat) {
+                  <div class="detail-row">
+                    <span class="detail-label">CAT</span>
+                    <span>{{ debt.cat | number:'1.1-1' }}% anual</span>
+                  </div>
+                }
                 @if (debt.initial_balance) {
                   <div class="detail-row">
                     <span class="detail-label">Saldo original</span>
                     <span>{{ debt.initial_balance | currencyMxn }}</span>
                   </div>
                 }
-                @if (debt.interest_rate > 0) {
+                @if (getEffectiveRate(debt) > 0) {
                   <div class="detail-row">
                     <span class="detail-label">Costo de interés / mes</span>
                     <span>{{ monthlyInterestCost(debt) | currencyMxn }}</span>
@@ -252,9 +271,22 @@
                   </div>
                 }
                 @if (debt.debt_type === 'credit_card' && debt.credit_limit) {
-                  <div class="detail-row">
+                  <div class="detail-row" [class.warning]="isHighUtilization(debt)">
                     <span class="detail-label">Límite</span>
-                    <span>{{ debt.credit_limit | currencyMxn }}</span>
+                    <span>
+                      {{ debt.credit_limit | currencyMxn }}
+                      @if (getCreditUtilization(debt) !== null) {
+                        <span class="utilization-badge" [class.high]="isHighUtilization(debt)">
+                          {{ getCreditUtilization(debt) | number:'1.0-0' }}% usado
+                        </span>
+                      }
+                    </span>
+                  </div>
+                }
+                @if (debt.debt_type === 'credit_card' && debt.current_period_balance) {
+                  <div class="detail-row highlight">
+                    <span class="detail-label">Pago para no generar intereses</span>
+                    <span class="highlight-value">{{ debt.current_period_balance | currencyMxn }}</span>
                   </div>
                 }
                 @if (debt.statement_day) {
@@ -269,6 +301,97 @@
                     <span>{{ debt.notes }}</span>
                   </div>
                 }
+
+                <!-- Credit card education section -->
+                @if (debt.debt_type === 'credit_card' && getPaymentComparison(debt); as comparison) {
+                  <div class="education-section">
+                    <button class="education-toggle" (click)="toggleEducation(debt.id)">
+                      <ion-icon name="school-outline"></ion-icon>
+                      <span>{{ showEducation() === debt.id ? 'Ocultar' : 'Ver' }} comparativa de pagos</span>
+                      <ion-icon name="chevron-down-outline" [class.rotated]="showEducation() === debt.id"></ion-icon>
+                    </button>
+
+                    @if (showEducation() === debt.id) {
+                      <div class="education-content">
+                        <!-- Payment comparison -->
+                        <div class="comparison-card">
+                          <h4 class="comparison-title">
+                            <ion-icon name="information-circle-outline"></ion-icon>
+                            Si solo pagas el mínimo...
+                          </h4>
+                          <div class="comparison-grid">
+                            <div class="comparison-item minimum">
+                              <span class="comparison-label">Pago mínimo</span>
+                              <span class="comparison-payment">{{ debt.minimum_payment | currencyMxn }}/mes</span>
+                              <div class="comparison-bar">
+                                <div class="bar-fill minimum" style="width: 100%"></div>
+                              </div>
+                              <span class="comparison-time">
+                                <ion-icon name="time-outline"></ion-icon>
+                                {{ formatDuration(comparison.minimum.monthsToPayoff) }}
+                              </span>
+                              <span class="comparison-interest">Pagas {{ comparison.minimum.totalInterest | currencyMxn }} en intereses</span>
+                            </div>
+                            <div class="comparison-item total">
+                              <span class="comparison-label">Pago total</span>
+                              <span class="comparison-payment">{{ debt.current_balance | currencyMxn }}</span>
+                              <div class="comparison-bar">
+                                <div class="bar-fill total" [style.width.%]="(1 / comparison.minimum.monthsToPayoff) * 100"></div>
+                              </div>
+                              <span class="comparison-time">
+                                <ion-icon name="time-outline"></ion-icon>
+                                Este mes
+                              </span>
+                              <span class="comparison-interest">$0 en intereses</span>
+                            </div>
+                          </div>
+                          <div class="comparison-savings">
+                            <ion-icon name="trending-down-outline"></ion-icon>
+                            <span>Ahorras <strong>{{ comparison.savings | currencyMxn }}</strong> si pagas todo</span>
+                          </div>
+                        </div>
+
+                        <!-- Strategy table -->
+                        <div class="strategies-table">
+                          <h4 class="strategies-title">Opciones de pago</h4>
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>Pago mensual</th>
+                                <th>Tiempo</th>
+                                <th>Intereses</th>
+                                <th>Ahorro</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for (strategy of getPaymentStrategies(debt); track strategy.name) {
+                                <tr [class.highlight]="strategy.savingsVsMinimum > 0">
+                                  <td>{{ strategy.monthlyPayment | currencyMxn }}</td>
+                                  <td>{{ formatDuration(strategy.simulation.monthsToPayoff) }}</td>
+                                  <td>{{ strategy.simulation.totalInterest | currencyMxn }}</td>
+                                  <td class="savings">
+                                    @if (strategy.savingsVsMinimum > 0) {
+                                      {{ strategy.savingsVsMinimum | currencyMxn }}
+                                    } @else {
+                                      -
+                                    }
+                                  </td>
+                                </tr>
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <!-- Educational tip -->
+                        <div class="education-tip">
+                          <ion-icon name="help-circle-outline"></ion-icon>
+                          <p>{{ creditEducation.minimumPayment.shortDescription }}</p>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+
                 <div class="debt-actions">
                   <button class="action-btn paid" (click)="markPaidOff(debt.id)" title="Marcar como pagada">
                     <ion-icon name="checkmark-circle-outline"></ion-icon> Pagada

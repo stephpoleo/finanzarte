@@ -155,6 +155,8 @@ CREATE TABLE IF NOT EXISTS debts (
   credit_limit DECIMAL(12,2),
   statement_day INTEGER CHECK (statement_day BETWEEN 1 AND 31),
   payment_due_day INTEGER CHECK (payment_due_day BETWEEN 1 AND 31),
+  cat DECIMAL(5,2),
+  current_period_balance DECIMAL(12,2),
   notes TEXT,
   is_paid_off BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW(),

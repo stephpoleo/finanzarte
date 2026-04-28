@@ -23,13 +23,19 @@ import {
   flashOutline,
   calculatorOutline,
   receiptOutline,
-  chevronDownOutline
+  chevronDownOutline,
+  informationCircleOutline,
+  schoolOutline,
+  timeOutline,
+  helpCircleOutline
 } from 'ionicons/icons';
 
 import { DebtService } from '../../../../core/services/debt.service';
+import { CreditCardCalculatorService, PayoffSimulation, StrategyComparison } from '../../../../core/services/credit-card-calculator.service';
 import { UserSettingsService } from '../../../../core/services/user-settings.service';
 import { IncomeSourceService } from '../../../../core/services/income-source.service';
 import { ExpenseService } from '../../../../core/services/expense.service';
+import { CREDIT_EDUCATION } from '../../../../data/credit-card-education';
 import {
   Debt,
   DebtType,
@@ -61,6 +67,10 @@ export class DeudasTabComponent implements OnInit {
   extraPayment = signal<number>(0);
   showCalculatorResult = signal<boolean>(false);
 
+  // Credit card education state
+  showEducation = signal<string | null>(null);
+  creditEducation = CREDIT_EDUCATION;
+
   // Educational comparator
   comparisonReturn = computed(() => this.userSettings.longtermAnnualReturn());
   comparisonDelta = computed(() => this.debtService.weightedAverageRate() - this.comparisonReturn());
@@ -80,6 +90,7 @@ export class DeudasTabComponent implements OnInit {
 
   constructor(
     public debtService: DebtService,
+    public creditCardCalc: CreditCardCalculatorService,
     public userSettings: UserSettingsService,
     public incomeSources: IncomeSourceService,
     public expenses: ExpenseService
@@ -104,7 +115,11 @@ export class DeudasTabComponent implements OnInit {
       flashOutline,
       calculatorOutline,
       receiptOutline,
-      chevronDownOutline
+      chevronDownOutline,
+      informationCircleOutline,
+      schoolOutline,
+      timeOutline,
+      helpCircleOutline
     });
   }
 
@@ -132,6 +147,8 @@ export class DeudasTabComponent implements OnInit {
       credit_limit: undefined,
       statement_day: undefined,
       payment_due_day: undefined,
+      cat: undefined,
+      current_period_balance: undefined,
       notes: ''
     };
   }
@@ -152,6 +169,8 @@ export class DeudasTabComponent implements OnInit {
         credit_limit: debt.credit_limit ?? undefined,
         statement_day: debt.statement_day ?? undefined,
         payment_due_day: debt.payment_due_day ?? undefined,
+        cat: debt.cat ?? undefined,
+        current_period_balance: debt.current_period_balance ?? undefined,
         notes: debt.notes ?? ''
       };
     } else {
@@ -209,7 +228,8 @@ export class DeudasTabComponent implements OnInit {
   }
 
   monthlyInterestCost(debt: Debt): number {
-    return debt.current_balance * (debt.interest_rate / 100) / 12;
+    const rate = this.getEffectiveRate(debt);
+    return debt.current_balance * (rate / 100) / 12;
   }
 
   /**
@@ -274,5 +294,43 @@ export class DeudasTabComponent implements OnInit {
         this.formData.minimum_payment = Math.round((this.formData.current_balance / months) * 100) / 100;
       }
     }
+  }
+
+  // ==================== Credit card education ====================
+
+  toggleEducation(debtId: string): void {
+    this.showEducation.update(current => current === debtId ? null : debtId);
+  }
+
+  getPaymentComparison(debt: Debt): { minimum: PayoffSimulation; total: PayoffSimulation; savings: number } | null {
+    if (debt.debt_type !== 'credit_card') return null;
+    const comparison = this.creditCardCalc.generateComparisonTable(debt);
+    return {
+      minimum: comparison.minimum,
+      total: comparison.total,
+      savings: comparison.savingsIfPayTotal
+    };
+  }
+
+  getPaymentStrategies(debt: Debt): StrategyComparison[] {
+    return this.creditCardCalc.compareStrategies(debt, [0, 500, 1000]);
+  }
+
+  formatDuration(months: number): string {
+    return this.creditCardCalc.formatDuration(months);
+  }
+
+  getEffectiveRate(debt: Debt): number {
+    return this.creditCardCalc.getEffectiveRate(debt);
+  }
+
+  getCreditUtilization(debt: Debt): number | null {
+    if (debt.debt_type !== 'credit_card' || !debt.credit_limit) return null;
+    return (debt.current_balance / debt.credit_limit) * 100;
+  }
+
+  isHighUtilization(debt: Debt): boolean {
+    const util = this.getCreditUtilization(debt);
+    return util !== null && util > 30;
   }
 }

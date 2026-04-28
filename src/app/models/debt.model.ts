@@ -27,6 +27,10 @@ export interface Debt {
   statement_day?: number | null;
   /** Day of month the credit card payment is due (1-31). */
   payment_due_day?: number | null;
+  /** CAT (Costo Anual Total) for credit cards, percentage. */
+  cat?: number | null;
+  /** Balance to pay to avoid interest charges (credit cards). */
+  current_period_balance?: number | null;
   notes?: string | null;
   is_paid_off: boolean;
   created_at: string;
@@ -46,6 +50,8 @@ export interface DebtFormData {
   credit_limit?: number;
   statement_day?: number;
   payment_due_day?: number;
+  cat?: number;
+  current_period_balance?: number;
   notes?: string;
   is_paid_off?: boolean;
 }
