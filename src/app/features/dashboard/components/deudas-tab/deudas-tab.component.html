@@ -83,7 +83,7 @@
             <span class="strategy-rank">{{ i + 1 }}</span>
             <div class="strategy-info">
               <span class="strategy-name">{{ debt.name }}</span>
-              <span class="strategy-meta">{{ debt.interest_rate | number:'1.1-1' }}% anual · {{ debt.current_balance | currencyMxn }}</span>
+              <span class="strategy-meta">{{ getEffectiveRate(debt) | number:'1.1-1' }}% anual · {{ debt.current_balance | currencyMxn }}</span>
             </div>
             @if (i === 0) {
               <span class="strategy-badge">Pagar primero</span>
@@ -223,7 +223,7 @@
                   <span class="debt-creditor">{{ debt.creditor }}</span>
                 }
                 <span class="debt-meta">
-                  <span class="debt-rate">{{ debt.interest_rate | number:'1.1-1' }}% anual</span>
+                  <span class="debt-rate">{{ getEffectiveRate(debt) | number:'1.1-1' }}% anual</span>
                   ·
                   <span class="debt-min">mín {{ debt.minimum_payment | currencyMxn }}/mes</span>
                 </span>
