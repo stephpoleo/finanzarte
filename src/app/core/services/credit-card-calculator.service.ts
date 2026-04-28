@@ -233,10 +233,10 @@ export class CreditCardCalculatorService {
    * Gets the effective rate to use for calculations (CAT for credit cards, interest rate otherwise).
    */
   getEffectiveRate(debt: Debt): number {
-    if (debt.debt_type === 'credit_card' && debt.cat) {
-      return debt.cat;
+    if (debt.debt_type === 'credit_card') {
+      return debt.cat ?? debt.interest_rate ?? 0;
     }
-    return debt.interest_rate;
+    return debt.interest_rate ?? 0;
   }
 
   /**
