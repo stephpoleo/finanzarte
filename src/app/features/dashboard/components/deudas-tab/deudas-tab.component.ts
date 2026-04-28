@@ -156,6 +156,10 @@ export class DeudasTabComponent implements OnInit {
   openForm(debt?: Debt): void {
     if (debt) {
       this.editingId = debt.id;
+      // For credit cards, use CAT or fall back to interest_rate
+      const catValue = debt.debt_type === 'credit_card'
+        ? (debt.cat ?? debt.interest_rate)
+        : undefined;
       this.formData = {
         name: debt.name,
         debt_type: debt.debt_type,
@@ -169,7 +173,7 @@ export class DeudasTabComponent implements OnInit {
         credit_limit: debt.credit_limit ?? undefined,
         statement_day: debt.statement_day ?? undefined,
         payment_due_day: debt.payment_due_day ?? undefined,
-        cat: debt.cat ?? undefined,
+        cat: catValue,
         current_period_balance: debt.current_period_balance ?? undefined,
         notes: debt.notes ?? ''
       };
@@ -197,6 +201,10 @@ export class DeudasTabComponent implements OnInit {
       start_date: this.formData.start_date || undefined,
       notes: this.formData.notes || undefined
     };
+    // For credit cards, use CAT as interest_rate for calculations compatibility
+    if (payload.debt_type === 'credit_card' && payload.cat) {
+      payload.interest_rate = payload.cat;
+    }
     if (this.editingId) {
       await this.debtService.updateDebt(this.editingId, payload);
     } else {

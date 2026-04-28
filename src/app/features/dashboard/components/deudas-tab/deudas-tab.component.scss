@@ -866,17 +866,19 @@
 .comparison-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 8px;
 }
 
 .comparison-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 12px;
+  gap: 4px;
+  padding: 10px;
   border-radius: 10px;
   background: white;
   border: 1px solid #e5e7eb;
+  min-width: 0;
+  overflow: hidden;
 
   &.minimum {
     border-color: #fca5a5;
@@ -898,9 +900,10 @@
 }
 
 .comparison-payment {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #1f2937;
+  word-break: break-word;
 }
 
 .comparison-bar {
