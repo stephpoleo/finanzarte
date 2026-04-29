@@ -204,9 +204,13 @@ export class DeudasTabComponent implements OnInit {
     // For credit cards, use CAT as interest_rate for calculations compatibility
     if (payload.debt_type === 'credit_card') {
       const catValue = Number(payload.cat) || 0;
-      payload.cat = catValue;
+      payload.cat = catValue || undefined;
       payload.interest_rate = catValue;
     }
+    // Remove undefined fields to avoid Supabase errors if columns don't exist yet
+    if (!payload.cat) delete payload.cat;
+    if (!payload.current_period_balance) delete payload.current_period_balance;
+
     if (this.editingId) {
       await this.debtService.updateDebt(this.editingId, payload);
       // Collapse expanded view to force refresh
