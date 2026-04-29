@@ -191,7 +191,13 @@ export class DeudasTabComponent implements OnInit {
   }
 
   async saveDebt(): Promise<void> {
+    console.log('saveDebt called', this.formData);
     if (!this.formData.name || this.formData.current_balance <= 0 || this.formData.minimum_payment <= 0) {
+      console.log('Validation failed:', {
+        name: this.formData.name,
+        balance: this.formData.current_balance,
+        minPayment: this.formData.minimum_payment
+      });
       return;
     }
     // Strip empty strings to null for nullable fields.
@@ -211,12 +217,16 @@ export class DeudasTabComponent implements OnInit {
     if (!payload.cat) delete payload.cat;
     if (!payload.current_period_balance) delete payload.current_period_balance;
 
+    console.log('Payload to save:', payload);
+
     if (this.editingId) {
-      await this.debtService.updateDebt(this.editingId, payload);
+      const result = await this.debtService.updateDebt(this.editingId, payload);
+      console.log('Update result:', result);
       // Collapse expanded view to force refresh
       this.expandedDebtId.set(null);
     } else {
-      await this.debtService.addDebt(payload);
+      const result = await this.debtService.addDebt(payload);
+      console.log('Add result:', result);
     }
     this.closeForm();
   }
