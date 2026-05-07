@@ -270,6 +270,19 @@ export class PresupuestoTabComponent implements OnInit {
     return this.household.splitMode() === 'proportional' ? 'Proporcional' : '50/50';
   }
 
+  /** My share of every shared expense, as a percentage. Drives the
+   *  informational "Tú X% · Pareja Y%" row under the split toggle. */
+  get mySplitPct(): number {
+    if (this.household.splitMode() === '50-50') return 50;
+    const total = this.myIncome + this.partnerIncome;
+    if (total <= 0) return 50;
+    return (this.myIncome / total) * 100;
+  }
+
+  get partnerSplitPct(): number {
+    return 100 - this.mySplitPct;
+  }
+
   async toggleShared(expenseId: string): Promise<void> {
     await this.household.toggleSharedExpense(expenseId);
   }

@@ -165,6 +165,17 @@
           </div>
           <span class="hh-my-share">Mi parte: {{ myShareOfSharedExpenses | currencyMxn }}</span>
         </div>
+        <div class="hh-split-pcts">
+          <span class="hh-split-pct mine">
+            <ion-icon name="person-outline"></ion-icon>
+            Tú {{ mySplitPct | number:'1.0-0' }}%
+          </span>
+          <span class="hh-split-divider">·</span>
+          <span class="hh-split-pct partner">
+            <ion-icon name="people-outline"></ion-icon>
+            Pareja {{ partnerSplitPct | number:'1.0-0' }}%
+          </span>
+        </div>
       </div>
     }
     @if (!isHouseholdMode && expenses.expenses().length === 0 && !showExpenseForm) {
