@@ -1207,6 +1207,38 @@
   color: #6b7280;
 }
 
+.hh-split-pcts {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.hh-split-pct {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+
+  ion-icon {
+    font-size: 13px;
+  }
+
+  &.mine {
+    color: #047857;
+  }
+
+  &.partner {
+    color: #4338ca;
+  }
+}
+
+.hh-split-divider {
+  color: #d1d5db;
+}
+
 .hh-partner-toggle {
   display: flex;
   align-items: center;
