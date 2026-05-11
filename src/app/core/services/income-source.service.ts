@@ -12,8 +12,27 @@ export class IncomeSourceService {
 
   incomeSources = computed(() => this.incomeSourcesData());
 
+  /** Sum of every income source. Use for: display of "Ingresos Mensuales",
+   *  household proportional split, anywhere we represent full economic
+   *  capacity. */
   totalIncome = computed(() =>
     this.incomeSourcesData().reduce((sum, s) => sum + s.amount, 0)
+  );
+
+  /** Sum of non-restricted (spendable cash) income. Use for: Disponible para
+   *  Ahorro, debt-to-income ratio, extra-payment suggestions, anywhere we
+   *  represent capacity to redirect money to savings/debt/investments. */
+  cashIncome = computed(() =>
+    this.incomeSourcesData()
+      .filter(s => !s.is_restricted)
+      .reduce((sum, s) => sum + s.amount, 0)
+  );
+
+  /** Sum of restricted-only income (e.g. vales). Informational. */
+  restrictedIncome = computed(() =>
+    this.incomeSourcesData()
+      .filter(s => s.is_restricted)
+      .reduce((sum, s) => sum + s.amount, 0)
   );
 
   constructor(
@@ -57,6 +76,7 @@ export class IncomeSourceService {
     amount: number;
     is_gross?: boolean;
     gross_amount?: number;
+    is_restricted?: boolean;
     frequency?: IncomeFrequency;
   }): Promise<{ data: IncomeSource | null; error: Error | null }> {
     const access = this.env.checkAccess();
@@ -70,6 +90,7 @@ export class IncomeSourceService {
         amount: incomeSource.amount,
         is_gross: incomeSource.is_gross || false,
         gross_amount: incomeSource.gross_amount,
+        is_restricted: incomeSource.is_restricted || false,
         frequency: incomeSource.frequency || 'monthly',
         created_at: now,
         updated_at: now
@@ -90,6 +111,7 @@ export class IncomeSourceService {
         amount: incomeSource.amount,
         is_gross: incomeSource.is_gross || false,
         gross_amount: incomeSource.gross_amount,
+        is_restricted: incomeSource.is_restricted || false,
         frequency: incomeSource.frequency || 'monthly'
       })
       .select()

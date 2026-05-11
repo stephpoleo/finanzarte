@@ -66,6 +66,7 @@ export const MOCK_INCOME_SOURCES: IncomeSource[] = [
     amount: 21500,
     is_gross: true,
     gross_amount: 25000,
+    is_restricted: false,
     frequency: 'monthly',
     created_at: mockNow,
     updated_at: mockNow
@@ -355,8 +356,8 @@ export const MOCK_HOUSEHOLD_SHARED_EXPENSES: SharedExpense[] = [
 
 // Partner's income sources (detailed)
 export const MOCK_PARTNER_INCOME_SOURCES: IncomeSource[] = [
-  { id: 'pi-1', user_id: MOCK_PARTNER_USER_ID, name: 'Sueldo', amount: 15000, is_gross: false, frequency: 'monthly', created_at: mockNow, updated_at: mockNow },
-  { id: 'pi-2', user_id: MOCK_PARTNER_USER_ID, name: 'Vales de despensa', amount: 3000, is_gross: false, frequency: 'monthly', created_at: mockNow, updated_at: mockNow },
+  { id: 'pi-1', user_id: MOCK_PARTNER_USER_ID, name: 'Sueldo', amount: 15000, is_gross: false, is_restricted: false, frequency: 'monthly', created_at: mockNow, updated_at: mockNow },
+  { id: 'pi-2', user_id: MOCK_PARTNER_USER_ID, name: 'Vales de despensa', amount: 3000, is_gross: false, is_restricted: true, frequency: 'monthly', created_at: mockNow, updated_at: mockNow },
 ];
 
 // Partner's ALL expenses (shared and personal)

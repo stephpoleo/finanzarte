@@ -220,6 +220,55 @@
   line-height: 1.25;
   color: #1f2937;
   word-break: break-word;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Tag for restricted income (vales). Calm amber so it's visible without
+   shouting; the user just needs to know "this one doesn't count toward cash". */
+.restricted-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Checkbox + helper hint pattern shared between Add and Edit income forms.
+   The hint sits below the toggle and explains what "restringido" means. */
+.form-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #1f2937;
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: #10b981;
+    cursor: pointer;
+  }
+
+  &.edit {
+    margin-top: 4px;
+  }
+}
+
+.form-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: #6b7280;
 }
 
 .income-item-badge {

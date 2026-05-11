@@ -7,6 +7,10 @@ export interface IncomeSource {
   amount: number;
   is_gross: boolean; // true if calculated from gross salary
   gross_amount?: number; // original gross if calculated
+  /** Restricted income (e.g., vales de despensa) — counts toward total income
+   *  but is excluded from cash-based capacity calculations (savings, debt
+   *  payment, extra-payment recommendations). */
+  is_restricted?: boolean;
   frequency: IncomeFrequency;
   created_at: string;
   updated_at: string;

@@ -77,6 +77,17 @@
             <option value="annual">Anual</option>
           </select>
         </div>
+        <div class="form-field">
+          <label class="form-checkbox">
+            <input type="checkbox" [(ngModel)]="newIncome.is_restricted"/>
+            <span>Ingreso restringido</span>
+          </label>
+          <small class="form-hint">
+            Solo se puede gastar en cosas específicas — ej. vales de despensa
+            (solo súper). Cuenta en tu Ingreso Total, pero NO se incluye al
+            calcular Disponible para Ahorro ni tu capacidad de pago de deuda.
+          </small>
+        </div>
         <div class="form-btns">
           <button class="btn-primary-light" (click)="addIncome()">Agregar</button>
           <button class="btn-secondary-light" (click)="toggleIncomeForm()">Cancelar</button>
@@ -101,6 +112,10 @@
                   <option value="annual">Anual</option>
                 </select>
               </div>
+              <label class="form-checkbox edit">
+                <input type="checkbox" [(ngModel)]="editIncome.is_restricted"/>
+                <span>Ingreso restringido</span>
+              </label>
               <div class="form-btns-inline">
                 <button class="btn-save" (click)="saveIncomeEdit()">
                   <ion-icon name="checkmark-outline"></ion-icon>
@@ -114,7 +129,12 @@
             <div class="income-item">
               <ion-icon name="cash-outline"></ion-icon>
               <div class="income-item-info">
-                <span class="income-item-name">{{ income.name }}</span>
+                <span class="income-item-name">
+                  {{ income.name }}
+                  @if (income.is_restricted) {
+                    <span class="restricted-badge">Restringido</span>
+                  }
+                </span>
                 <span class="income-item-badge">{{ income.amount | currencyMxn }}{{ getFrequencyLabel(income.frequency) }}</span>
               </div>
               <div class="income-item-actions">
