@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS income_sources (
   amount DECIMAL(12,2) NOT NULL,
   is_gross BOOLEAN DEFAULT FALSE,
   gross_amount DECIMAL(12,2),
+  is_restricted BOOLEAN DEFAULT FALSE,
   frequency TEXT CHECK (frequency IN ('monthly', 'biweekly', 'weekly', 'annual')) DEFAULT 'monthly',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

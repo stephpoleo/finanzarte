@@ -69,18 +69,20 @@ export class PresupuestoTabComponent implements OnInit {
 
   // Income form state
   showIncomeForm = false;
-  newIncome: { name: string; amount: number; frequency: IncomeFrequency } = {
+  newIncome: { name: string; amount: number; frequency: IncomeFrequency; is_restricted: boolean } = {
     name: '',
     amount: 0,
-    frequency: 'monthly'
+    frequency: 'monthly',
+    is_restricted: false
   };
 
   // Income edit state
   editingIncomeId: string | null = null;
-  editIncome: { name: string; amount: number; frequency: IncomeFrequency } = {
+  editIncome: { name: string; amount: number; frequency: IncomeFrequency; is_restricted: boolean } = {
     name: '',
     amount: 0,
-    frequency: 'monthly'
+    frequency: 'monthly',
+    is_restricted: false
   };
 
   // Expense form state
@@ -210,7 +212,10 @@ export class PresupuestoTabComponent implements OnInit {
         this.expenses.expenses()
       ));
     }
-    return Math.max(0, this.totalIncome - this.effectivePersonalExpenses);
+    // Personal mode: use cashIncome (excludes restricted sources like vales)
+    // so the Disponible para Ahorro reflects what can actually be redirected
+    // to savings, debt, or investment.
+    return Math.max(0, this.incomeSources.cashIncome() - this.effectivePersonalExpenses);
   }
 
   get savingsRate(): number {
@@ -347,7 +352,7 @@ export class PresupuestoTabComponent implements OnInit {
   }
 
   resetIncomeForm(): void {
-    this.newIncome = { name: '', amount: 0, frequency: 'monthly' };
+    this.newIncome = { name: '', amount: 0, frequency: 'monthly', is_restricted: false };
   }
 
   async addIncome(): Promise<void> {
@@ -355,7 +360,8 @@ export class PresupuestoTabComponent implements OnInit {
     await this.incomeSources.addIncomeSource({
       name: this.newIncome.name,
       amount: this.newIncome.amount,
-      frequency: this.newIncome.frequency
+      frequency: this.newIncome.frequency,
+      is_restricted: this.newIncome.is_restricted
     });
     this.showIncomeForm = false;
     this.resetIncomeForm();
@@ -367,7 +373,8 @@ export class PresupuestoTabComponent implements OnInit {
     this.editIncome = {
       name: income.name,
       amount: income.amount,
-      frequency: income.frequency
+      frequency: income.frequency,
+      is_restricted: income.is_restricted ?? false
     };
   }
 
@@ -376,7 +383,8 @@ export class PresupuestoTabComponent implements OnInit {
     await this.incomeSources.updateIncomeSource(this.editingIncomeId, {
       name: this.editIncome.name,
       amount: this.editIncome.amount,
-      frequency: this.editIncome.frequency
+      frequency: this.editIncome.frequency,
+      is_restricted: this.editIncome.is_restricted
     });
     this.cancelIncomeEdit();
     this.syncEmergencySettings();
@@ -384,7 +392,7 @@ export class PresupuestoTabComponent implements OnInit {
 
   cancelIncomeEdit(): void {
     this.editingIncomeId = null;
-    this.editIncome = { name: '', amount: 0, frequency: 'monthly' };
+    this.editIncome = { name: '', amount: 0, frequency: 'monthly', is_restricted: false };
   }
 
   async deleteIncome(id: string): Promise<void> {

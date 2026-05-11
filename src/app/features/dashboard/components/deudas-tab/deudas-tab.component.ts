@@ -77,7 +77,10 @@ export class DeudasTabComponent implements OnInit {
   shouldPrioritizeDebt = computed(() => this.comparisonDelta() > 0);
 
   // Debt-to-income ratio
-  monthlyIncome = computed(() => this.incomeSources.totalIncome());
+  // Cash income only — restricted sources (vales) cannot be used to pay debt,
+  // so debt-to-income ratio and the default extra-payment suggestion should
+  // exclude them.
+  monthlyIncome = computed(() => this.incomeSources.cashIncome());
   debtToIncomeRatio = computed(() => {
     const income = this.monthlyIncome();
     if (income <= 0) return 0;

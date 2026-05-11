@@ -198,9 +198,10 @@ export class AhorrosTabComponent implements OnInit {
 
   get emergencyCurrentSavings(): number { return this.userSettings.emergencyCurrentSavings(); }
 
-  // Available savings from Presupuesto (income - expenses)
+  // Available savings from Presupuesto. Uses cashIncome so restricted sources
+  // (vales) don't inflate the amount we can allocate to short/long-term savings.
   get availableSavings(): number {
-    return Math.max(0, this.incomeSources.totalIncome() - this.expenses.totalExpenses());
+    return Math.max(0, this.incomeSources.cashIncome() - this.expenses.totalExpenses());
   }
 
   // Savings recommended amount (after emergency allocation)

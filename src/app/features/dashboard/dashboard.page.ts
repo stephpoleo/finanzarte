@@ -135,7 +135,9 @@ export class DashboardPage implements OnInit {
   }
 
   get emergencyAvailableSavings(): number {
-    return Math.max(0, this.incomeSources.totalIncome() - this.expenses.totalExpenses());
+    // Use cashIncome so restricted-income sources (vales) don't inflate the
+    // amount the user could realistically redirect to the emergency fund.
+    return Math.max(0, this.incomeSources.cashIncome() - this.expenses.totalExpenses());
   }
 
   // Emergency fund allocation driven by EMERGENCY_MILESTONES so all tabs agree
